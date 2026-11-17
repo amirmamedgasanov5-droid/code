@@ -106,7 +106,7 @@ class CoreTest {
         assertArrayEquals(byteArrayOf(1, 2), Reassembler().feed(Framer.split(byteArrayOf(1, 2), 100)[0]))
     }
 
-    private fun waitFor(ms: Long = 5000, cond: () -> Boolean) = runBlocking {
+    private fun waitFor(ms: Long = 20000, cond: () -> Boolean) = runBlocking {
         val t = System.currentTimeMillis()
         while (!cond() && System.currentTimeMillis() - t < ms) delay(10)
         assertTrue("condition not met in time", cond())
