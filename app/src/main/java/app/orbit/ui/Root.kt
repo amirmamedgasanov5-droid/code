@@ -99,6 +99,7 @@ private fun AppNav(pendingOpen: MutableState<String?>) {
                     is Route.Forward -> ForwardScreen(r.msg)
                     Route.Search -> SearchScreen()
                     Route.Mesh -> MeshScreen()
+                    Route.Reliable -> ReliableScreen()
                     Route.Wheel -> WheelScreen()
                     is Route.Call -> CallScreen(r.peerId)
                 }

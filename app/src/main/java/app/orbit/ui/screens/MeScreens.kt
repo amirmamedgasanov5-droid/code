@@ -73,6 +73,8 @@ fun MeTab() {
         }
         Spacer(Modifier.height(14.dp))
         Card {
+            SettingsRow("Reliable notifications", if (isBatteryExempt(LocalContext.current)) "On — messages and calls arrive in the background" else "Action needed: allow background activity", Icons.Rounded.NotificationsActive, if (isBatteryExempt(LocalContext.current)) Color(0xFF12B981) else Color(0xFFFF6B5E), onClick = { nav.push(Route.Reliable) })
+            Divider(60.dp)
             SettingsRow("Appearance", "Theme, accent colour, bubbles", Icons.Rounded.Palette, Color(0xFF9B5CFF), onClick = { nav.push(Route.Appearance) })
             Divider(60.dp)
             SettingsRow("Connection", "Status, Bluetooth, Wi-Fi, relay", Icons.Rounded.Hub, Color(0xFF12B981), onClick = { nav.push(Route.Mesh) })

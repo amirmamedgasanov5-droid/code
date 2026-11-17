@@ -50,6 +50,15 @@ class MeshService : Service() {
         return START_STICKY
     }
 
+    /** Swiped away from recents: schedule a restart so notifications keep working. */
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        try {
+            val pi = PendingIntent.getService(this, 1, Intent(this, MeshService::class.java), PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE)
+            (getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager).set(android.app.AlarmManager.ELAPSED_REALTIME_WAKEUP, android.os.SystemClock.elapsedRealtime() + 1500, pi)
+        } catch (_: Exception) {}
+        super.onTaskRemoved(rootIntent)
+    }
+
     override fun onDestroy() { job?.cancel(); wake?.let { if (it.isHeld) it.release() }; super.onDestroy() }
 
     companion object {

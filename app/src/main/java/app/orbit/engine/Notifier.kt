@@ -43,7 +43,7 @@ class Notifier(private val ctx: Context) {
         if (Build.VERSION.SDK_INT >= 33 && ctx.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
         val pi = PendingIntent.getActivity(ctx, 7, Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val n = NotificationCompat.Builder(ctx, CH_LIVE).setSmallIcon(android.R.drawable.sym_action_call).setContentTitle("Incoming call").setContentText(name).setContentIntent(pi)
-            .setCategory(NotificationCompat.CATEGORY_CALL).setPriority(NotificationCompat.PRIORITY_MAX).setOngoing(true).setTimeoutAfter(45_000).build()
+            .setCategory(NotificationCompat.CATEGORY_CALL).setPriority(NotificationCompat.PRIORITY_MAX).setFullScreenIntent(pi, true).setVisibility(NotificationCompat.VISIBILITY_PUBLIC).setOngoing(true).setTimeoutAfter(45_000).build()
         try { nm.notify("call".hashCode(), n) } catch (_: SecurityException) {}
     }
     fun cancel(chatId: String) { nm.cancel(chatId.hashCode()); history.remove(chatId) }

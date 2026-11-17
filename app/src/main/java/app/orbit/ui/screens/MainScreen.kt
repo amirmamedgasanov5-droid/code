@@ -43,6 +43,8 @@ fun MainScreen() {
     val engine = LocalEngine.current
     val chats by engine.chats.collectAsState()
     val nav = LocalNav.current
+    val ctx0 = androidx.compose.ui.platform.LocalContext.current
+    LaunchedEffect(Unit) { if (!isBatteryExempt(ctx0) && engine.db.getKv("rel.shown") == null) { engine.db.setKv("rel.shown", "1"); nav.push(Route.Reliable) } }
     LaunchedEffect(Unit) { if (engine.canSpin() && !prefs.wheelShown) { prefs.wheelShown = true; nav.push(Route.Wheel) } }
     val unreadTotal = chats.filter { !it.muted && !it.archived }.sumOf { it.unread }
     Column(Modifier.fillMaxSize().background(p.bg)) {
