@@ -38,8 +38,8 @@ fun OrbitRoot(app: OrbitApp, pendingOpen: MutableState<String?>, requestPerms: (
             Box(Modifier.fillMaxSize().background(p.bg)) {
                 when {
                     !ready -> {}
-                    !hasId -> Onboarding(onDone = { requestPerms() })
-                    else -> AppNav(pendingOpen)
+                    !hasId -> Onboarding(onDone = { })
+                    else -> PermissionGate(requestPerms) { AppNav(pendingOpen) }
                 }
             }
         }

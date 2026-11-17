@@ -67,6 +67,8 @@ class MeshNode(
         @Volatile var since = now()
         val has: MutableSet<Long> = ConcurrentHashMap.newKeySet()
         val q = Channel<ByteArray>(Channel.UNLIMITED)
+        /** inbound control/envelope frames are handled strictly in arrival order per link */
+        val inbox = Channel<ByteArray>(Channel.UNLIMITED)
         val queued = AtomicInteger(0)
         var job: Job? = null
         var helloSent = false
@@ -148,13 +150,16 @@ class MeshNode(
                 for (f in ls.q) { ls.queued.decrementAndGet(); if (!link.send(f)) break }
             } catch (_: CancellationException) {} catch (_: Exception) {}
         }
+        scope.launch(Dispatchers.Default) {
+            for (f in ls.inbox) { try { handleFrame(ls, f) } catch (e: Exception) { /* malformed frame from neighbour: ignore */ } }
+        }
         _linkCount.value = links.size
         ls.enqueue(helloFrame()); ls.helloSent = true
     }
 
     override fun onLinkDown(link: Link) {
         val ls = links.remove(link.linkId) ?: return
-        ls.job?.cancel(); ls.q.close()
+        ls.job?.cancel(); ls.q.close(); ls.inbox.close()
         _linkCount.value = links.size
         publishPeers()
         ls.peer?.let { p -> if (!isConnected(p.id)) handler?.onPeerDown(p) }
@@ -163,9 +168,8 @@ class MeshNode(
     override fun onFrame(link: Link, frame: ByteArray) {
         val ls = links[link.linkId] ?: return
         if (frame.isEmpty()) return
-        scope.launch(Dispatchers.Default) {
-            try { handleFrame(ls, frame) } catch (e: Exception) { /* malformed frame from neighbour: ignore */ }
-        }
+        if (frame[0].toInt() == FrameType.LIVE) scope.launch(Dispatchers.Default) { try { handleFrame(ls, frame) } catch (_: Exception) {} }  // perishable audio: never queue behind slow work
+        else ls.inbox.trySend(frame)
     }
 
     // ------------------------------------------------------------------ protocol

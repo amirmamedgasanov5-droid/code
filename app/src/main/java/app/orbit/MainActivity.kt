@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import app.orbit.engine.MeshService
+import app.orbit.engine.Perms
 import app.orbit.ui.OrbitRoot
 
 class MainActivity : ComponentActivity() {
@@ -25,7 +26,7 @@ class MainActivity : ComponentActivity() {
         handleIntent(intent)
         lifecycle.addObserver(LifecycleEventObserver { _, e ->
             when (e) {
-                Lifecycle.Event.ON_START -> { app.engine.inForeground = true; if (app.engine.hasIdentity.value) MeshService.start(this) }
+                Lifecycle.Event.ON_START -> { app.engine.inForeground = true; if (app.engine.hasIdentity.value && Perms.allGranted(this)) MeshService.start(this) }
                 Lifecycle.Event.ON_STOP -> app.engine.inForeground = false
                 else -> {}
             }
@@ -46,7 +47,7 @@ class MainActivity : ComponentActivity() {
         val need = ArrayList<String>()
         if (Build.VERSION.SDK_INT >= 31) { need += Manifest.permission.BLUETOOTH_SCAN; need += Manifest.permission.BLUETOOTH_ADVERTISE; need += Manifest.permission.BLUETOOTH_CONNECT }
         else need += Manifest.permission.ACCESS_FINE_LOCATION
-        if (Build.VERSION.SDK_INT >= 33) { need += Manifest.permission.NEARBY_WIFI_DEVICES; need += Manifest.permission.POST_NOTIFICATIONS }
+        if (Build.VERSION.SDK_INT >= 33) need += Manifest.permission.NEARBY_WIFI_DEVICES
         else if (Build.VERSION.SDK_INT >= 31) need += Manifest.permission.ACCESS_FINE_LOCATION
         val missing = need.filter { ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED }
         if (missing.isNotEmpty()) permLauncher.launch(missing.toTypedArray()) else onPermsDone()
@@ -55,6 +56,7 @@ class MainActivity : ComponentActivity() {
     private val permLauncher = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()) { onPermsDone() }
     private fun onPermsDone() {
         val app = application as OrbitApp
+        if (!Perms.allGranted(this)) return
         MeshService.start(this)
         app.transports.restart()
     }

@@ -50,7 +50,7 @@ class ScreenShots {
 
     @Before fun setup() {
         val app = ApplicationProvider.getApplicationContext<Application>()
-        engine = Engine(app)
+        engine = Engine(app, "shots-${System.nanoTime()}.db")
         engine.attachIdentityForTest(me, Profile("Amir", "Building serverless things", "🚀", 2, "amir"))
         runBlocking { engine.openLink("orbit://u/" + Base32.encode(alice.address) + "?n=Alice"); engine.openLink("orbit://u/" + Base32.encode(bob.address) + "?n=Bob") }
         val t = System.currentTimeMillis()

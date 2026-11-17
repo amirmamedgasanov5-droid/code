@@ -31,6 +31,7 @@ class MeshService : Service() {
             if (Build.VERSION.SDK_INT >= 34) startForeground(1, notif("Looking for nearby phones…"), ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
             else startForeground(1, notif("Looking for nearby phones…"))
         } catch (e: Exception) { stopSelf(); return START_NOT_STICKY }
+        if (!Perms.allGranted(this)) { stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); return START_NOT_STICKY }
         val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
         wake = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "orbit:mesh").also { it.setReferenceCounted(false); it.acquire(10 * 60 * 1000L) }
         job?.cancel()

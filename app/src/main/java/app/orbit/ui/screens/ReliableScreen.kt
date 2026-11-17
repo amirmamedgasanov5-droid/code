@@ -22,6 +22,8 @@ import app.orbit.ui.*
 import app.orbit.ui.components.*
 import app.orbit.ui.theme.OrbitTheme
 
+fun notificationsAllowed(ctx: Context): Boolean = androidx.core.app.NotificationManagerCompat.from(ctx).areNotificationsEnabled()
+
 fun isBatteryExempt(ctx: Context): Boolean = try { (ctx.getSystemService(Context.POWER_SERVICE) as PowerManager).isIgnoringBatteryOptimizations(ctx.packageName) } catch (e: Exception) { true }
 
 @Composable
@@ -42,7 +44,7 @@ fun ReliableScreen() {
                     exempt = isBatteryExempt(ctx)
                 })
                 Divider(60.dp)
-                SettingsRow("2. Notifications on", "Make sure messages, calls and the Orbit service are not silenced", Icons.Rounded.Notifications, onClick = {
+                SettingsRow("2. Notifications", if (notificationsAllowed(ctx)) "Allowed" else "Off — tap to open settings and allow", Icons.Rounded.Notifications, if (notificationsAllowed(ctx)) Color(0xFF12B981) else Color(0xFFFF6B5E), onClick = {
                     open(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, ctx.packageName))
                 })
                 Divider(60.dp)
