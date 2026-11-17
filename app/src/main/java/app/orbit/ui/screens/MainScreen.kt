@@ -34,8 +34,7 @@ import app.orbit.ui.theme.OrbitTheme
 
 private data class Tab(val label: String, val icon: ImageVector, val iconOn: ImageVector)
 private val tabs = listOf(
-    Tab("Chats", Icons.Rounded.ChatBubbleOutline, Icons.Rounded.ChatBubble), Tab("Contacts", Icons.Rounded.PeopleOutline, Icons.Rounded.People),
-    Tab("Explore", Icons.Rounded.Explore, Icons.Rounded.Explore), Tab("Mesh", Icons.Rounded.Hub, Icons.Rounded.Hub), Tab("Me", Icons.Rounded.PersonOutline, Icons.Rounded.Person),
+    Tab("Chats", Icons.Rounded.ChatBubbleOutline, Icons.Rounded.ChatBubble), Tab("People", Icons.Rounded.PeopleOutline, Icons.Rounded.People), Tab("Profile", Icons.Rounded.PersonOutline, Icons.Rounded.Person),
 )
 
 @Composable
@@ -43,11 +42,13 @@ fun MainScreen() {
     val prefs = LocalPrefs.current; val p = OrbitTheme.p
     val engine = LocalEngine.current
     val chats by engine.chats.collectAsState()
+    val nav = LocalNav.current
+    LaunchedEffect(Unit) { if (engine.canSpin() && !prefs.wheelShown) { prefs.wheelShown = true; nav.push(Route.Wheel) } }
     val unreadTotal = chats.filter { !it.muted && !it.archived }.sumOf { it.unread }
     Column(Modifier.fillMaxSize().background(p.bg)) {
         Box(Modifier.weight(1f)) {
             Crossfade(prefs.tab, label = "tab") { t ->
-                when (t) { 0 -> ChatsTab(); 1 -> ContactsTab(); 2 -> ExploreTab(); 3 -> MeshTab(); else -> MeTab() }
+                when (t) { 0 -> ChatsTab(); 1 -> PeopleTab(); else -> MeTab() }
             }
         }
         Row(Modifier.fillMaxWidth().background(p.surface).navigationBarsPadding().height(64.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -68,13 +69,15 @@ fun MainScreen() {
 }
 
 // ============================================================ CHATS
-private enum class Filter(val label: String) { ALL("All"), DIRECT("Personal"), GROUPS("Groups"), CHANNELS("Channels"), UNREAD("Unread"), ARCHIVE("Archive") }
+private enum class Filter(val label: String) { ALL("All"), UNREAD("Unread"), GROUPS("Groups"), CHANNELS("Channels"), ARCHIVE("Archive") }
 
 @Composable
 fun ChatsTab() {
     val engine = LocalEngine.current; val nav = LocalNav.current; val p = OrbitTheme.p; val prefs = LocalPrefs.current
     val chats by engine.chats.collectAsState(); val contacts by engine.contacts.collectAsState(); val online by engine.online.collectAsState(); val typing by engine.typing.collectAsState()
     val linkCount by engine.mesh.linkCount.collectAsState()
+    val relayOn by engine.relayOnline.collectAsState(); val lastSpin by engine.lastSpin.collectAsState()
+    val spinReady = remember(lastSpin) { engine.canSpin() }
     var filter by remember { mutableStateOf(Filter.ALL) }
     var query by remember { mutableStateOf("") }
     var searching by remember { mutableStateOf(false) }
@@ -84,7 +87,7 @@ fun ChatsTab() {
     val shown = remember(chats, filter, query) {
         chats.filter { c ->
             (if (filter == Filter.ARCHIVE) c.archived else !c.archived) &&
-            when (filter) { Filter.DIRECT -> c.type == ChatType.DIRECT || c.type == ChatType.SAVED; Filter.GROUPS -> c.type == ChatType.GROUP; Filter.CHANNELS -> c.type == ChatType.CHANNEL; Filter.UNREAD -> c.unread > 0; else -> true } &&
+            when (filter) { Filter.GROUPS -> c.type == ChatType.GROUP; Filter.CHANNELS -> c.type == ChatType.CHANNEL; Filter.UNREAD -> c.unread > 0; else -> true } &&
             (query.isBlank() || c.title.contains(query, true))
         }
     }
@@ -98,7 +101,7 @@ fun ChatsTab() {
                         if (!s) Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Orbit", style = MaterialTheme.typography.titleLarge)
                             Spacer(Modifier.width(10.dp))
-                            MeshChip(linkCount) { prefs.tab = 3 }
+                            MeshChip(linkCount, relayOn) { nav.push(Route.Mesh) }
                         } else {
                             Row(Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(20.dp)).background(p.surfaceHigh).padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Rounded.Search, null, tint = p.textDim, modifier = Modifier.size(20.dp)); Spacer(Modifier.width(8.dp))
@@ -110,7 +113,6 @@ fun ChatsTab() {
                         }
                     }
                     IconButton(onClick = { searching = !searching; if (!searching) query = "" }) { Icon(if (searching) Icons.Rounded.Close else Icons.Rounded.Search, "Search", tint = p.text) }
-                    if (!searching) IconButton(onClick = { nav.push(Route.Search) }) { Icon(Icons.Rounded.ManageSearch, "Search messages", tint = p.text) }
                 }
                 Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Filter.values().filter { it != Filter.ARCHIVE || chats.any { c -> c.archived } }.forEach { f ->
@@ -129,6 +131,24 @@ fun ChatsTab() {
                 } else EmptyState("🔍", "Nothing here", "No chats match this filter.")
             }
             LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 90.dp)) {
+                if (spinReady && !searching) item {
+                    Row(Modifier.fillMaxWidth().padding(12.dp).clip(RoundedCornerShape(18.dp)).background(Brush.linearGradient(listOf(Color(0xFFFF8A5B), Color(0xFFFF4D8D)))).pressable({ nav.push(Route.Wheel) }).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("🎡", fontSize = 30.sp); Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) { Text("Free spin is ready!", color = Color.White, fontWeight = FontWeight.Bold); Text("Win 5 – 250 coins for gifts", color = Color.White.copy(alpha = 0.9f), fontSize = 13.sp) }
+                        Text("Spin", color = Color.White, fontWeight = FontWeight.ExtraBold)
+                    }
+                }
+                if (searching && query.length >= 2) {
+                    val hits = engine.search(query)
+                    if (hits.isNotEmpty()) item { SectionLabel("Messages") }
+                    items(hits, key = { "m" + it.id }) { m ->
+                        val c = chats.firstOrNull { it.id == m.chatId }
+                        Row(Modifier.fillMaxWidth().clickable { nav.push(Route.Chat(m.chatId)) }.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Avatar(c?.title ?: "?", c?.emoji ?: "", c?.color ?: 0, 40.dp); Spacer(Modifier.width(12.dp))
+                            Column { Text(c?.title ?: "Chat", fontWeight = FontWeight.SemiBold); Text(m.text, maxLines = 1, overflow = TextOverflow.Ellipsis, color = p.textDim) }
+                        }
+                    }
+                }
                 items(shown, key = { it.id }) { c ->
                     Box(Modifier.animateItem()) {
                         ChatRow(c, online, typing, contacts, onClick = { nav.push(Route.Chat(c.id)) }, onLong = { menuFor = c })
@@ -172,15 +192,15 @@ fun SheetItem(icon: ImageVector, title: String, subtitle: String?, danger: Boole
 }
 
 @Composable
-fun MeshChip(links: Int, onClick: () -> Unit) {
+fun MeshChip(links: Int, relay: Boolean, onClick: () -> Unit) {
     val p = OrbitTheme.p
-    val on = links > 0
+    val on = links > 0 || relay
     val inf = rememberInfiniteTransition(label = "pulse")
     val a by inf.animateFloat(0.35f, 1f, infiniteRepeatable(tween(1100), RepeatMode.Reverse), label = "a")
     Row(Modifier.height(24.dp).clip(RoundedCornerShape(12.dp)).background((if (on) p.success else p.textDim).copy(alpha = 0.14f)).clickable(onClick = onClick).padding(horizontal = 9.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(7.dp).clip(CircleShape).background((if (on) p.success else p.textDim).copy(alpha = if (on) a else 0.7f)))
         Spacer(Modifier.width(6.dp))
-        Text(if (on) "$links nearby" else "searching", fontSize = 11.5.sp, color = if (on) p.success else p.textDim, fontWeight = FontWeight.SemiBold)
+        Text(if (links > 0) "$links nearby" else if (relay) "online" else "connecting…", fontSize = 11.5.sp, color = if (on) p.success else p.textDim, fontWeight = FontWeight.SemiBold)
     }
 }
 
@@ -222,12 +242,24 @@ private fun ChatRow(c: Chat, online: Set<String>, typing: Map<String, Long>, con
 
 // ============================================================ CONTACTS
 @Composable
+fun PeopleTab() {
+    val p = OrbitTheme.p
+    var seg by remember { mutableIntStateOf(0) }
+    Column(Modifier.fillMaxSize()) {
+        Row(Modifier.fillMaxWidth().background(p.surface).statusBarsPadding().padding(horizontal = 16.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("Contacts", "Discover").forEachIndexed { i, l -> val sel = seg == i
+                Box(Modifier.weight(1f).height(38.dp).clip(RoundedCornerShape(19.dp)).background(if (sel) p.accent else p.surfaceHigh).clickable { seg = i }, contentAlignment = Alignment.Center) { Text(l, color = if (sel) Color.White else p.textDim, fontWeight = FontWeight.SemiBold) } }
+        }
+        Box(Modifier.weight(1f)) { if (seg == 0) ContactsTab() else ExploreTab() }
+    }
+}
+
+@Composable
 fun ContactsTab() {
     val engine = LocalEngine.current; val nav = LocalNav.current; val p = OrbitTheme.p
     val contacts by engine.contacts.collectAsState(); val online by engine.online.collectAsState()
     val list = contacts.values.filter { !it.stranger || true }.sortedWith(compareByDescending<Contact> { it.id in online }.thenBy { it.displayName.lowercase() })
     Column(Modifier.fillMaxSize()) {
-        TopBar("Contacts", null, actions = { IconButton(onClick = { nav.push(Route.AddContact) }) { Icon(Icons.Rounded.PersonAdd, "Add", tint = p.accent) } })
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
             item { SettingsRow("Add contact", "Link, QR code, nearby, username", Icons.Rounded.PersonAdd, onClick = { nav.push(Route.AddContact) }) }
             item { SettingsRow("My QR code & link", "Let a friend scan you", Icons.Rounded.QrCode2, tint = Color(0xFF9B5CFF), onClick = { nav.push(Route.MyQr) }) }
@@ -255,9 +287,7 @@ fun ExploreTab() {
     var q by remember { mutableStateOf("") }
     val results = remember(dir, q, contacts, chats) { dir.filter { e -> e.id != engine.myId && (q.isBlank() || e.name.contains(q, true) || e.username.contains(q.trimStart('@'), true) || e.desc.contains(q, true)) } }
     Column(Modifier.fillMaxSize()) {
-        Column(Modifier.background(p.surface).statusBarsPadding().padding(horizontal = 16.dp, vertical = 10.dp)) {
-            Text("Explore", style = MaterialTheme.typography.titleLarge)
-            Spacer(Modifier.height(10.dp))
+        Column(Modifier.background(p.surface).padding(horizontal = 16.dp, vertical = 6.dp)) {
             Row(Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(22.dp)).background(p.surfaceHigh).padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Rounded.Search, null, tint = p.textDim); Spacer(Modifier.width(8.dp))
                 BasicTextField(q, { q = it }, Modifier.weight(1f), singleLine = true, textStyle = androidx.compose.ui.text.TextStyle(color = p.text, fontSize = 16.sp), cursorBrush = SolidColor(p.accent),

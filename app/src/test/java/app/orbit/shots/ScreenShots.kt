@@ -99,5 +99,8 @@ class ScreenShots {
     @Test fun myQr() = shoot("/tmp/shots/11_qr.png") { MyQrScreen() }
     @Test fun appearance() = shoot("/tmp/shots/12_appearance.png") { AppearanceScreen() }
     @Test fun giftDetail() { val g = engine.myGifts().firstOrNull(); shoot("/tmp/shots/13_giftdetail.png") { GiftDetailScreen(g?.id ?: "") } }
+    @Test fun wheel() = shoot("/tmp/shots/15_wheel.png") { WheelScreen() }
+    @Test fun people() = shoot("/tmp/shots/16_people.png") { PeopleTab() }
+    @Test fun connection() = shoot("/tmp/shots/17_connection.png") { MeshTab(onBack = {}) }
     @Test fun walkie() = shoot("/tmp/shots/14_walkie.png") { WalkieScreen() }
 }

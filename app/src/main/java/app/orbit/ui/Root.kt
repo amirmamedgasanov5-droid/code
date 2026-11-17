@@ -66,6 +66,7 @@ private fun AppNav(pendingOpen: MutableState<String?>) {
         }
     }
     CompositionLocalProvider(LocalNav provides nav) {
+      Box(Modifier.fillMaxSize()) {
         AnimatedContent(
             targetState = nav.top,
             transitionSpec = {
@@ -97,8 +98,13 @@ private fun AppNav(pendingOpen: MutableState<String?>) {
                     Route.Walkie -> WalkieScreen()
                     is Route.Forward -> ForwardScreen(r.msg)
                     Route.Search -> SearchScreen()
+                    Route.Mesh -> MeshScreen()
+                    Route.Wheel -> WheelScreen()
+                    is Route.Call -> CallScreen(r.peerId)
                 }
             }
         }
+        IncomingCallOverlay()
+      }
     }
 }

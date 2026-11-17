@@ -57,18 +57,25 @@ fun MeTab() {
                 }
             }
         }
+        val coins by engine.coins.collectAsState()
+        Row(Modifier.padding(horizontal = 12.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Brush.linearGradient(listOf(Color(0xFFFFB020), Color(0xFFFF7A45)))).pressable({ nav.push(Route.Wheel) }).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("💰", fontSize = 34.sp); Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) { Text("$coins coins", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp); Text(if (engine.canSpin()) "Free spin ready — tap to win up to 250" else "Wheel of fortune · one free spin a day", color = Color.White.copy(alpha = 0.92f), fontSize = 13.sp) }
+            Icon(Icons.Rounded.ChevronRight, null, tint = Color.White)
+        }
+        Spacer(Modifier.height(14.dp))
         Card {
             SettingsRow("Saved messages", "Notes to self, synced nowhere", Icons.Rounded.Bookmark, Color(0xFF2F8CFF), onClick = { nav.push(Route.Chat("saved")) })
             Divider(60.dp)
             SettingsRow("My gifts", "${gifts.count { it.second && it.first.owner == engine.myId }} collectibles", Icons.Rounded.CardGiftcard, Color(0xFFFF4D8D), onClick = { nav.push(Route.Inventory) })
             Divider(60.dp)
-            SettingsRow("Gift shop", "${engine.mintsLeft()} mints left today", Icons.Rounded.Storefront, Color(0xFFF5A524), onClick = { nav.push(Route.GiftShop(null)) })
+            SettingsRow("Gift shop", "Buy gifts with coins", Icons.Rounded.Storefront, Color(0xFFF5A524), onClick = { nav.push(Route.GiftShop(null)) })
         }
         Spacer(Modifier.height(14.dp))
         Card {
             SettingsRow("Appearance", "Theme, accent colour, bubbles", Icons.Rounded.Palette, Color(0xFF9B5CFF), onClick = { nav.push(Route.Appearance) })
             Divider(60.dp)
-            SettingsRow("Network & mesh", "Bluetooth, Wi-Fi, internet P2P", Icons.Rounded.Hub, Color(0xFF12B981), onClick = { nav.push(Route.Network) })
+            SettingsRow("Connection", "Status, Bluetooth, Wi-Fi, relay", Icons.Rounded.Hub, Color(0xFF12B981), onClick = { nav.push(Route.Mesh) })
             Divider(60.dp)
             SettingsRow("Privacy & recovery key", "Back up your identity", Icons.Rounded.Key, Color(0xFFFF6B5E), onClick = { nav.push(Route.Privacy) })
         }
@@ -219,6 +226,7 @@ fun Onboarding(onDone: () -> Unit) {
     var name by remember { mutableStateOf("") }; var emoji by remember { mutableStateOf("🚀") }; var color by remember { mutableIntStateOf((0..7).random()) }
     var restore by remember { mutableStateOf(false) }; var rk by remember { mutableStateOf("") }; var err by remember { mutableStateOf(false) }
     var created by remember { mutableStateOf(false) }
+    var useRelay by remember { mutableStateOf(true) }
     val hasId by engine.hasIdentity.collectAsState()
     LaunchedEffect(hasId) { if (hasId && created) step = 2 }
 
@@ -255,7 +263,12 @@ fun Onboarding(onDone: () -> Unit) {
                                 OutlinedTextField(name, { name = it.take(40) }, Modifier.fillMaxWidth(), label = { Text("Your name") }, singleLine = true, shape = RoundedCornerShape(16.dp))
                             }
                         }
+                        Row(Modifier.fillMaxWidth().clickable { useRelay = !useRelay }.padding(vertical = 8.dp), verticalAlignment = Alignment.Top) {
+                            Checkbox(useRelay, { useRelay = it })
+                            Column { Text("Use cloud relay as a fallback", fontWeight = FontWeight.SemiBold); Text("So messages arrive even when phones can't connect directly. Only encrypted data passes through a public ntfy server (it sees your IP and timing, never content). You can turn it off any time.", fontSize = 12.sp, color = p.textDim) }
+                        }
                         GradientButton(if (restore) "Restore" else "Create", {
+                            engine.db.setKv("t.relay", if (useRelay) "1" else "0")
                             val ok = engine.createIdentity(Profile(name.trim(), "", emoji, color, ""), if (restore) rk else null)
                             if (!ok) err = true else created = true
                         }, Modifier.fillMaxWidth(), enabled = name.isNotBlank() && (!restore || rk.length > 20))

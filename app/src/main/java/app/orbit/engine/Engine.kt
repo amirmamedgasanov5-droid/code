@@ -25,10 +25,10 @@ sealed class ParsedLink {
  * The brain: owns identity, storage, mesh node and every application protocol
  * (chats, groups, channels, receipts, directory, gifts). UI observes StateFlows only.
  */
-class Engine(val ctx: Context) : MeshHandler {
+class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val single = Dispatchers.Default.limitedParallelism(1)
-    val db = Db(ctx)
+    val db = Db(ctx, dbName)
     val mediaDir = File(ctx.filesDir, "media").also { it.mkdirs() }
     var notifier: Notifier? = null
 
@@ -45,6 +45,15 @@ class Engine(val ctx: Context) : MeshHandler {
     private val _typing = MutableStateFlow<Map<String, Long>>(emptyMap()); val typing: StateFlow<Map<String, Long>> = _typing
     private val _online = MutableStateFlow<Set<String>>(emptySet()); val online: StateFlow<Set<String>> = _online
     private val _events = MutableSharedFlow<String>(extraBufferCapacity = 16); val events: SharedFlow<String> = _events
+
+    // ---- cloud relay (optional fallback), wallet, calls
+    private var relay: app.orbit.core.net.CloudRelay? = null
+    private val _relayOnline = MutableStateFlow(false); val relayOnline: StateFlow<Boolean> = _relayOnline
+    private val _coins = MutableStateFlow(0); val coins: StateFlow<Int> = _coins
+    private val _lastSpin = MutableStateFlow(0L); val lastSpin: StateFlow<Long> = _lastSpin
+    class IncomingCall(val from: String, val rid: String, val key: String, val ts: Long)
+    private val _incomingCall = MutableStateFlow<IncomingCall?>(null); val incomingCall: StateFlow<IncomingCall?> = _incomingCall
+    private val _callEvents = MutableSharedFlow<Pair<String, String>>(extraBufferCapacity = 8); val callEvents: SharedFlow<Pair<String, String>> = _callEvents // (type, fromId)
 
     private val chatMap = ConcurrentHashMap<String, Chat>()
     private val msgFlows = ConcurrentHashMap<String, MutableStateFlow<List<Message>>>()
@@ -72,6 +81,8 @@ class Engine(val ctx: Context) : MeshHandler {
         db.chats().forEach { chatMap[it.id] = it }
         reindexTags(); publishChats()
         _directory.value = db.directory(); _gifts.value = db.gifts()
+        _coins.value = db.getKv("coins")?.toIntOrNull() ?: WELCOME_COINS.also { db.setKv("coins", it.toString()) }
+        _lastSpin.value = db.getKv("lastSpin")?.toLongOrNull() ?: 0L
     }
 
     private fun startMesh() {
@@ -86,9 +97,23 @@ class Engine(val ctx: Context) : MeshHandler {
             delay(5_000)
             while (isActive) { if (mesh.linkCount.value > 0) announceAll(); delay(6 * 3600_000L) }
         }
+        mesh.onLocalSubmit = { e -> relay?.publish(e) }
+        configureRelay()
         _meshReady.value = true
     }
+
+    fun relayEnabled() = db.getKv("t.relay") != "0"
+    fun relayUrl() = db.getKv("relay.url") ?: "https://ntfy.sh"
+    fun setRelay(on: Boolean, url: String? = null) { db.setKv("t.relay", if (on) "1" else "0"); if (url != null) db.setKv("relay.url", url.trim().trimEnd('/')); configureRelay() }
+    fun configureRelay() {
+        relay?.stop(); relay = null; _relayOnline.value = false
+        if (!relayEnabled() || identity == null) return
+        val r = app.orbit.core.net.CloudRelay(scope, relayUrl(), { tagIndex.keys.map { it.unhex() } }, { env -> mesh.ingestExternal(env) })
+        relay = r; r.start()
+        scope.launch { r.online.collect { _relayOnline.value = it } }
+    }
     private val _meshReady = MutableStateFlow(false); val meshReady: StateFlow<Boolean> = _meshReady
+    companion object { const val WELCOME_COINS = 50 }
 
     fun createIdentity(p: Profile, recoveryKey: String? = null): Boolean {
         val id = try { if (recoveryKey.isNullOrBlank()) Identity.generate() else Identity.fromRecoveryKey(recoveryKey) } catch (e: Exception) { return false }
@@ -487,8 +512,30 @@ class Engine(val ctx: Context) : MeshHandler {
                     val nm = m.copy(status = Status.READ); db.updateMessage(nm); replaceInFlow(nm); refreshLastStatus(m.chatId) }
             }
             "gi" -> handleGroupInvite(sender, j)
+            "call" -> {
+                val fresh = now() - j.optLong("ts", 0) < 45_000
+                _contacts.value[sender.id] ?: addContactInternal(sender, "", true, j.optJSONObject("from"))
+                if (fresh && _incomingCall.value == null) {
+                    _incomingCall.value = IncomingCall(sender.id, j.optString("rid"), j.optString("key"), now())
+                    notifier?.onCall(contactName(sender.id))
+                } else if (!fresh) systemMessage(sender.id, "Missed call")
+            }
+            "call_cancel" -> { _incomingCall.value?.takeIf { it.from == sender.id && it.rid == j.optString("rid") }?.let { _incomingCall.value = null; notifier?.cancel("call"); systemMessage(sender.id, "Missed call") } }
+            "call_decline", "call_end" -> _callEvents.tryEmit(type to sender.id)
         }
     }
+
+    fun dismissIncomingCall() { _incomingCall.value = null; notifier?.cancel("call") }
+
+    /** Call signalling travels as a short-lived DM (works through the relay too). */
+    fun sendCallSignal(contactId: String, j: JSONObject) {
+        scope.launch(single) {
+            val me = identity ?: return@launch; val c = _contacts.value[contactId] ?: return@launch
+            j.put("ts", now()).put("from", myCard())
+            mesh.submit(Envelope.direct(me, Peer.fromId(c.id, c.boxPub), Pay.enc(j), ttlMs = 60_000))
+        }
+    }
+    fun logCall(contactId: String, text: String) { scope.launch(single) { if (chatMap[contactId] != null) systemMessage(contactId, text) } }
 
     private fun incomingMessage(chatId: String, senderId: String, j: JSONObject, blob: ByteArray): Message? {
         val id = j.optString("i"); if (id.length != 32) return null
@@ -736,26 +783,35 @@ class Engine(val ctx: Context) : MeshHandler {
     }
 
     // ============================================================ gifts
-    private fun dayKey() = now() / 86400_000
-    fun mintsLeft(): Int {
-        val used = if (db.getKv("mint.day") == dayKey().toString()) (db.getKv("mint.cnt")?.toIntOrNull() ?: 0) else 0
-        return (GiftLogic.DAILY_MINT_LIMIT - used).coerceAtLeast(0)
-    }
+    fun price(model: Int) = app.orbit.gifts.GiftCatalog.models[model].basePrice
+    fun addCoins(n: Int) { _coins.value = (_coins.value + n).coerceAtLeast(0); db.setKv("coins", _coins.value.toString()) }
     private fun nextSerial(model: Int): Int { val k = "serial.$model"; val n = (db.getKv(k)?.toIntOrNull() ?: 0) + 1; db.setKv(k, n.toString()); return n }
 
-    /** Mint a fresh collectible and send it. Provenance is a signed chain, verified by every receiver. */
-    fun sendNewGift(chatId: String, model: Int, message: String, onMinted: (Gift) -> Unit = {}): Boolean {
-        if (chatMap[chatId]?.type != ChatType.DIRECT || mintsLeft() <= 0) return false
+    // wheel of fortune: (prize, weight). Expected value 18 coins, one free spin every 24 h.
+    val wheelPrizes = listOf(5 to 30, 10 to 25, 15 to 18, 20 to 12, 30 to 8, 50 to 4, 100 to 2, 250 to 1)
+    fun nextSpinAt() = _lastSpin.value + 24L * 3600_000
+    fun canSpin() = now() >= nextSpinAt()
+    /** Decides the outcome (secure random), pays it out and returns the winning segment index. */
+    @Synchronized fun spinWheel(): Int {
+        if (!canSpin()) return -1
+        var r = Rand.sr.nextInt(wheelPrizes.sumOf { it.second }); var idx = 0
+        for ((i, p) in wheelPrizes.withIndex()) { if (r < p.second) { idx = i; break }; r -= p.second }
+        addCoins(wheelPrizes[idx].first)
+        _lastSpin.value = now(); db.setKv("lastSpin", _lastSpin.value.toString())
+        return idx
+    }
+
+    /** Buy a gift with coins: mint it on this device; keep it (to == null) or hand it straight to a contact. */
+    fun buyGift(model: Int, message: String, to: String?, onDone: (Gift?) -> Unit = {}) {
         scope.launch(single) {
-            val me = identity ?: return@launch
-            if (db.getKv("mint.day") != dayKey().toString()) { db.setKv("mint.day", dayKey().toString()); db.setKv("mint.cnt", "0") }
-            db.setKv("mint.cnt", ((db.getKv("mint.cnt")?.toIntOrNull() ?: 0) + 1).toString())
+            val me = identity ?: return@launch onDone(null)
+            val cost = price(model)
+            if (_coins.value < cost || (to != null && _contacts.value[to] == null)) return@launch onDone(null)
+            addCoins(-cost)
             val g0 = GiftLogic.mint(me, _profile.value.name, model, nextSerial(model), message)
-            val g = GiftLogic.transfer(me, g0, chatId, message)
-            deliverGift(chatId, g, message)
-            onMinted(g)
+            if (to == null) { db.putGift(g0, true); _gifts.value = db.gifts(); onDone(g0) }
+            else { val g = GiftLogic.transfer(me, g0, to, message); deliverGift(to, g, message); onDone(g) }
         }
-        return true
     }
 
     fun regift(chatId: String, gift: Gift, message: String) {

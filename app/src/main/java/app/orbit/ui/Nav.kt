@@ -23,6 +23,9 @@ sealed interface Route {
     data object Privacy : Route
     data object Walkie : Route
     data class Forward(val msg: Message) : Route
+    data object Mesh : Route
+    data object Wheel : Route
+    data class Call(val peerId: String) : Route
     data object Search : Route
 }
 
@@ -44,5 +47,6 @@ class UiPrefs(private val read: (String) -> String?, private val write: (String,
     var textScale by mutableFloatStateOf(read("ui.text")?.toFloatOrNull() ?: 1f)
     var compact by mutableStateOf(read("ui.compact") == "1")
     var tab by mutableIntStateOf(0)
+    var wheelShown by mutableStateOf(false)
     fun save() { write("ui.theme", themeMode.ordinal.toString()); write("ui.accent", accent.toString()); write("ui.radius", bubbleRadius.toString()); write("ui.text", textScale.toString()); write("ui.compact", if (compact) "1" else "0") }
 }

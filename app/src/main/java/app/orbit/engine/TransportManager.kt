@@ -23,7 +23,7 @@ class TransportManager(private val ctx: Context, private val engine: Engine) {
     data class Prefs(val nearby: Boolean = true, val lan: Boolean = true, val internet: Boolean = true)
     fun prefs(): Prefs = Prefs(
         engine.db.getKv("t.nearby") != "0", engine.db.getKv("t.lan") != "0", engine.db.getKv("t.inet") != "0")
-    fun setPref(name: String, on: Boolean) { engine.db.setKv("t.$name", if (on) "1" else "0"); restart() }
+    fun setPref(name: String, on: Boolean) { if (name == "relay") { engine.setRelay(on); return }; engine.db.setKv("t.$name", if (on) "1" else "0"); restart() }
 
     @Synchronized fun start() {
         val id = engine.identity ?: return

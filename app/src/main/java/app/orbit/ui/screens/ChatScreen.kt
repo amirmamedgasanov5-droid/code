@@ -135,6 +135,7 @@ fun ChatScreen(chatId: String) {
                     AnimatedContent(sub, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "sub") { s -> Text(s, style = MaterialTheme.typography.bodySmall, color = if (s == "typing…" || s == "online") p.accent else p.textDim, maxLines = 1) }
                 }
             }
+            if (chat.type == ChatType.DIRECT) { val startCall = rememberCallStarter(chatId); IconButton(onClick = startCall) { Icon(Icons.Rounded.Call, "Call", tint = p.accent) } }
             if (chat.type == ChatType.DIRECT) IconButton(onClick = { nav.push(Route.GiftShop(chatId)) }) { Icon(Icons.Rounded.CardGiftcard, "Gift", tint = p.accent) }
             if ((chat.type == ChatType.GROUP) || (chat.type == ChatType.CHANNEL && chat.isOwner)) IconButton(onClick = { nav.push(Route.Live("new:$chatId")) }) { Icon(Icons.Rounded.Podcasts, "Live", tint = p.accent) }
             Box {

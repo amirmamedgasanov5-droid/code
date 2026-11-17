@@ -13,6 +13,9 @@ import kotlinx.coroutines.flow.StateFlow
 import org.json.JSONObject
 import java.util.concurrent.atomic.AtomicLong
 
+enum class CallStatus { RINGING, CONNECTING, ACTIVE, ENDED }
+class CallState(val peerId: String, val outgoing: Boolean, val status: CallStatus, val startedAt: Long, val reason: String = "")
+
 class LiveInfo(val rid: String, val key: String, val host: String, val title: String, val chatId: String)
 
 /** Owns the (single) active live room and the walkie-talkie; wires audio hardware to the protocol cores. */
@@ -23,6 +26,77 @@ class LiveManager(private val ctx: Context, private val engine: Engine) {
     private val _mic = MutableStateFlow(false); val mic: StateFlow<Boolean> = _mic
     private val seq = AtomicLong(0)
     private var job: Job? = null
+
+    private val _call = MutableStateFlow<CallState?>(null); val call: StateFlow<CallState?> = _call
+    private val _speaker = MutableStateFlow(false); val speaker: StateFlow<Boolean> = _speaker
+    private var callJob: Job? = null
+    private var callRid = ""
+    private var autoMic = false
+    private val am = ctx.getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
+
+    fun setSpeaker(on: Boolean) { _speaker.value = on; try { am.mode = android.media.AudioManager.MODE_IN_COMMUNICATION; @Suppress("DEPRECATION") am.isSpeakerphoneOn = on } catch (_: Exception) {} }
+
+    /** Outgoing 1:1 voice call: a private room + a short-lived ring signal sent as a DM (also reachable through the relay). */
+    fun startCall(peerId: String) {
+        if (_call.value != null && _call.value?.status != CallStatus.ENDED) return
+        leave()
+        val rid = Rand.bytes(16); val key = Rand.bytes(32); val me = engine.identity ?: return
+        callRid = rid.hex(); autoMic = true
+        val core = LiveCore(me, engine.mesh, rid, key, me.id, "call", ::card, LiveSub.ROOM, autoSpeaker = true)
+        attach(core, LiveInfo(callRid, key.hex(), me.id, "call", peerId))
+        setSpeaker(false)
+        _call.value = CallState(peerId, true, CallStatus.RINGING, now())
+        engine.sendCallSignal(peerId, JSONObject().put("t", "call").put("rid", callRid).put("key", key.hex()).put("host", me.id))
+        setMic(true)
+        watchCall(peerId, true)
+    }
+
+    fun acceptCall(inc: Engine.IncomingCall) {
+        engine.dismissIncomingCall()
+        leave(); callRid = inc.rid; autoMic = true
+        join(inc.rid, inc.key, inc.from, "call", inc.from)
+        setSpeaker(false)
+        _call.value = CallState(inc.from, false, CallStatus.CONNECTING, now())
+        watchCall(inc.from, false)
+    }
+
+    fun declineCall(inc: Engine.IncomingCall) { engine.dismissIncomingCall(); engine.sendCallSignal(inc.from, JSONObject().put("t", "call_decline").put("rid", inc.rid)) }
+
+    fun hangup(reason: String = "") {
+        val c = _call.value ?: return
+        if (c.status == CallStatus.ENDED) return
+        if (c.outgoing && c.status == CallStatus.RINGING) { engine.sendCallSignal(c.peerId, JSONObject().put("t", "call_cancel").put("rid", callRid)); engine.logCall(c.peerId, "Cancelled call") }
+        else { engine.sendCallSignal(c.peerId, JSONObject().put("t", "call_end").put("rid", callRid)); if (c.status == CallStatus.ACTIVE) engine.logCall(c.peerId, "Call · ${(now() - c.startedAt) / 1000 / 60}:${"%02d".format((now() - c.startedAt) / 1000 % 60)}") }
+        finishCall(c, reason)
+    }
+
+    private fun finishCall(c: CallState, reason: String) {
+        callJob?.cancel(); autoMic = false
+        _call.value = CallState(c.peerId, c.outgoing, CallStatus.ENDED, c.startedAt, reason)
+        leave(); try { am.mode = android.media.AudioManager.MODE_NORMAL; @Suppress("DEPRECATION") am.isSpeakerphoneOn = false } catch (_: Exception) {}
+        engine.scope.launch { delay(2500); if (_call.value?.status == CallStatus.ENDED) _call.value = null }
+    }
+
+    private fun watchCall(peer: String, outgoing: Boolean) {
+        callJob?.cancel()
+        callJob = engine.scope.launch {
+            val started = now()
+            launch { engine.callEvents.collect { (type, from) ->
+                val c = _call.value ?: return@collect
+                if (from == c.peerId && c.status != CallStatus.ENDED) { if (type == "call_decline") { engine.logCall(peer, "Declined call"); finishCall(c, "Declined") } else finishCall(c, "Ended") }
+            } }
+            while (isActive) {
+                delay(500)
+                val c = _call.value ?: break; if (c.status == CallStatus.ENDED) break
+                val st = _room.value?.state?.value
+                val together = st != null && st.participants.size >= 2
+                if (together && c.status != CallStatus.ACTIVE) _call.value = CallState(c.peerId, c.outgoing, CallStatus.ACTIVE, now())
+                if (st?.ended == true) { finishCall(c, "Ended"); break }
+                if (c.status == CallStatus.RINGING && now() - started > 45_000) { hangup("No answer"); break }
+                if (c.status == CallStatus.CONNECTING && now() - started > 30_000) { engine.logCall(peer, "Call failed — no direct connection"); finishCall(c, "No direct connection"); break }
+            }
+        }
+    }
 
     init { engine.liveHandler = { peer, frame, _ -> onLive(peer, frame) } }
 
@@ -58,6 +132,7 @@ class LiveManager(private val ctx: Context, private val engine: Engine) {
                 // keep the mic aligned with the role the host gave us
                 val role = core.myRole; val muted = core.state.value.me(engine.myId)?.muted == true
                 if ((role == Role.LISTENER || muted) && _mic.value) setMic(false)
+                if (autoMic && role != Role.LISTENER && !muted && !_mic.value) setMic(true)
             }
         }
     }

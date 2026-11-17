@@ -10,7 +10,7 @@ import app.orbit.core.mesh.Envelope
 import app.orbit.core.mesh.EnvelopeStore
 import org.json.JSONObject
 
-class Db(ctx: Context) : SQLiteOpenHelper(ctx, "orbit.db", null, 1) {
+class Db(ctx: Context, name: String = "orbit.db") : SQLiteOpenHelper(ctx, name, null, 1) {
     override fun onConfigure(db: SQLiteDatabase) { db.enableWriteAheadLogging() }
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE kv(k TEXT PRIMARY KEY, v TEXT)")

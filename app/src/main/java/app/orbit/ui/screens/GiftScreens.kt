@@ -52,62 +52,77 @@ fun TierChip(t: Tier, modifier: Modifier = Modifier) {
 @Composable
 fun GiftShopScreen(chatId: String?) {
     val engine = LocalEngine.current; val nav = LocalNav.current; val p = OrbitTheme.p
-    val contacts by engine.contacts.collectAsState()
+    val contacts by engine.contacts.collectAsState(); val coins by engine.coins.collectAsState()
     var selected by remember { mutableStateOf<Int?>(null) }
-    var target by remember { mutableStateOf(chatId) }
     var msg by remember { mutableStateOf("") }
     var revealed by remember { mutableStateOf<Gift?>(null) }
     var picking by remember { mutableStateOf(false) }
-    val left = engine.mintsLeft()
+    var pickedFor by remember { mutableStateOf(chatId) }
 
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
-            TopBar("Gift shop", { nav.pop() }, subtitle = "$left mints left today", actions = { IconButton({ nav.push(Route.Inventory) }) { Icon(Icons.Rounded.CardGiftcard, null, tint = p.accent) } })
+            TopBar("Gift shop", { nav.pop() }, actions = {
+                Row(Modifier.padding(end = 8.dp).clip(RoundedCornerShape(16.dp)).background(Color(0xFFFFB020).copy(alpha = 0.2f)).clickable { nav.push(Route.Wheel) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) { Text("💰", fontSize = 16.sp); Spacer(Modifier.width(5.dp)); Text("$coins", fontWeight = FontWeight.ExtraBold, color = Color(0xFFFFB020)); Text("  +", color = Color(0xFFFFB020), fontWeight = FontWeight.Bold) }
+                IconButton({ nav.push(Route.Inventory) }) { Icon(Icons.Rounded.CardGiftcard, null, tint = p.accent) }
+            })
             LazyVerticalGrid(GridCells.Fixed(2), contentPadding = PaddingValues(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
-                    Text("Every gift is minted on your phone with a unique random seed that fixes its material, backdrop, symbol and pattern. It is signed by you and carries a cryptographic chain of owners, so anyone can verify its history without a server.", style = MaterialTheme.typography.bodySmall, color = p.textDim, modifier = Modifier.padding(4.dp))
+                    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Brush.linearGradient(listOf(Color(0xFFFF8A5B), Color(0xFFFF4D8D)))).pressable({ nav.push(Route.Wheel) }).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("🎡", fontSize = 26.sp); Spacer(Modifier.width(10.dp)); Column(Modifier.weight(1f)) { Text("Need coins?", color = Color.White, fontWeight = FontWeight.Bold); Text(if (engine.canSpin()) "Free spin ready: win up to 250" else "Free spin once a day", color = Color.White.copy(alpha = 0.9f), fontSize = 12.sp) }; Icon(Icons.Rounded.ChevronRight, null, tint = Color.White)
+                    }
                 }
                 items((0 until GiftCatalog.models.size).toList()) { m ->
-                    val m0 = GiftCatalog.models[m]
+                    val m0 = GiftCatalog.models[m]; val price = engine.price(m)
                     Column(Modifier.clip(RoundedCornerShape(20.dp)).background(p.surface).pressable({ selected = m })) {
                         Box(Modifier.fillMaxWidth().aspectRatio(0.9f)) { Gift3D(previewGift(m)) }
-                        Column(Modifier.padding(12.dp)) { Text(m0.name, fontWeight = FontWeight.Bold); Text("Limited · ${GiftLogic.SUPPLY} per issuer", fontSize = 12.sp, color = p.textDim) }
+                        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) { Text(m0.name, fontWeight = FontWeight.Bold); Text("Unique every time", fontSize = 11.5.sp, color = p.textDim) }
+                            Text("💰 $price", Modifier.clip(RoundedCornerShape(10.dp)).background(if (coins >= price) p.accent else p.surfaceHigh).padding(horizontal = 9.dp, vertical = 5.dp), color = if (coins >= price) Color.White else p.textDim, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
+                        }
                     }
                 }
             }
         }
-        // detail sheet
         selected?.let { m ->
+            val price = engine.price(m); val enough = coins >= price
+            val tc = pickedFor?.let { contacts[it] }
             ModalBottomSheet({ selected = null }, containerColor = p.surface, contentColor = p.text) {
                 Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(Modifier.size(230.dp).clip(RoundedCornerShape(24.dp))) { Gift3D(previewGift(m), interactive = true) }
+                    Box(Modifier.size(210.dp).clip(RoundedCornerShape(24.dp))) { Gift3D(previewGift(m), interactive = true) }
                     Spacer(Modifier.height(8.dp))
                     Text(GiftCatalog.models[m].name, style = MaterialTheme.typography.titleLarge)
-                    Text("Actual traits are revealed when it is minted — each one is unique.", color = p.textDim, fontSize = 13.sp, textAlign = TextAlign.Center)
-                    Spacer(Modifier.height(12.dp))
-                    val tc = target?.let { contacts[it] }
-                    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(p.surfaceHigh).clickable { picking = true }.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        if (tc != null) { Avatar(tc.displayName, tc.emoji, tc.color, 32.dp); Spacer(Modifier.width(10.dp)); Text(tc.displayName, Modifier.weight(1f)) } else { Icon(Icons.Rounded.PersonAdd, null, tint = p.accent); Spacer(Modifier.width(10.dp)); Text("Choose recipient", Modifier.weight(1f), color = p.textDim) }
-                        Icon(Icons.Rounded.ChevronRight, null, tint = p.textDim)
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(msg, { msg = it.take(120) }, Modifier.fillMaxWidth(), placeholder = { Text("Add a message (optional)") }, shape = RoundedCornerShape(14.dp), singleLine = true)
+                    Text("Material, backdrop and rarity are drawn at random when you buy — each gift is one of a kind.", color = p.textDim, fontSize = 13.sp, textAlign = TextAlign.Center)
                     Spacer(Modifier.height(14.dp))
-                    GradientButton(if (left <= 0) "No mints left today" else "Mint & send", {
-                        val t = target ?: return@GradientButton
-                        if (engine.sendNewGift(t, m, msg.trim()) { g -> revealed = g }) { selected = null }
-                    }, Modifier.fillMaxWidth(), enabled = target != null && left > 0, icon = Icons.Rounded.CardGiftcard)
+                    if (!enough) {
+                        Text("You need ${price - coins} more coins", color = p.danger, fontWeight = FontWeight.SemiBold)
+                        Spacer(Modifier.height(8.dp))
+                        GradientButton("Spin the wheel for free coins", { selected = null; nav.push(Route.Wheel) }, Modifier.fillMaxWidth(), icon = Icons.Rounded.Casino)
+                    } else {
+                        GradientButton("Buy for me · 💰 $price", { engine.buyGift(m, "", null) { g -> if (g != null) { revealed = g; pickedFor = null } }; selected = null }, Modifier.fillMaxWidth(), icon = Icons.Rounded.ShoppingBag)
+                        Spacer(Modifier.height(10.dp))
+                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(p.surfaceHigh).clickable { picking = true }.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            if (tc != null) { Avatar(tc.displayName, tc.emoji, tc.color, 30.dp); Spacer(Modifier.width(10.dp)); Text("Gift to ${tc.displayName}", Modifier.weight(1f)) } else { Icon(Icons.Rounded.CardGiftcard, null, tint = p.accent); Spacer(Modifier.width(10.dp)); Text("Or buy as a present for a friend…", Modifier.weight(1f), color = p.textDim) }
+                            Icon(Icons.Rounded.ChevronRight, null, tint = p.textDim)
+                        }
+                        if (tc != null) {
+                            Spacer(Modifier.height(8.dp))
+                            OutlinedTextField(msg, { msg = it.take(120) }, Modifier.fillMaxWidth(), placeholder = { Text("Add a message (optional)") }, shape = RoundedCornerShape(14.dp), singleLine = true)
+                            Spacer(Modifier.height(10.dp))
+                            GradientButton("Buy & send · 💰 $price", { val t = pickedFor!!; engine.buyGift(m, msg.trim(), t) { g -> if (g != null) revealed = g }; selected = null }, Modifier.fillMaxWidth(), icon = Icons.Rounded.CardGiftcard)
+                        }
+                    }
                 }
             }
         }
         if (picking) ModalBottomSheet({ picking = false }, containerColor = p.surface, contentColor = p.text) {
             LazyColumn(Modifier.padding(bottom = 24.dp)) {
+                if (contacts.isEmpty()) item { Text("Add a contact first.", Modifier.padding(20.dp), color = p.textDim) }
                 listItems(contacts.values.filter { !it.blocked }.sortedBy { it.displayName }.toList()) { c ->
-                    Row(Modifier.fillMaxWidth().clickable { target = c.id; picking = false }.padding(horizontal = 16.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) { Avatar(c.displayName, c.emoji, c.color, 40.dp); Spacer(Modifier.width(12.dp)); Text(c.displayName) }
+                    Row(Modifier.fillMaxWidth().clickable { pickedFor = c.id; picking = false }.padding(horizontal = 16.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) { Avatar(c.displayName, c.emoji, c.color, 40.dp); Spacer(Modifier.width(12.dp)); Text(c.displayName) }
                 }
             }
         }
-        revealed?.let { g -> UnboxOverlay(g) { revealed = null; target?.let { t -> nav.pop(); nav.push(Route.Chat(t)) } } }
+        revealed?.let { g -> UnboxOverlay(g) { revealed = null; if (g.owner != engine.myId && chatId != null || (g.transfers.isNotEmpty())) { nav.pop(); g.transfers.lastOrNull()?.let { nav.push(Route.Chat(it.toId)) } } else { nav.replaceTop(Route.GiftDetail(g.id)) } } }
     }
 }
 

@@ -13,8 +13,14 @@ Native Android app (Kotlin, Jetpack Compose). No server, no phone number, no acc
 - **Gifts**: 10 animated software-rendered 3D collectibles, unique traits/rarity from a seed, signed mint + signed ownership chain verified by every receiver.
 - Offline app sharing (send the APK over Bluetooth), QR/link/nearby/username contact discovery.
 
+## v1.1 (fixes after first device test)
+- **Delivery**: optional *cloud relay* fallback (ntfy-compatible, default `ntfy.sh`, any URL). Only already end-to-end encrypted envelopes pass through; works through any NAT, stores up to ~12 h for offline recipients. Toggle in Profile → Connection; asked at onboarding.
+- **Calls**: 1:1 voice calls with ring, incoming-call screen, mute/speaker. Voice goes directly phone-to-phone (not via relay).
+- **Simpler UI**: 3 tabs (Chats / People / Profile), status chip shows `online / N nearby / connecting…`.
+- **Gifts**: coin wallet (50 welcome coins), **Wheel of Fortune** (one free spin / 24 h: 5 / 10 / 15 / 20 / 30 / 50 / 100 / 250 coins, EV ≈ 18), buy for yourself or send, price shown on each card.
+
 ## Verified here (JVM tests + headless UI renders)
-`./gradlew :app:testDebugUnitTest` — crypto, envelopes, framer, multi-hop store-and-forward, loop safety, DHT+UDP link under 25% packet loss (300 KB payload), LAN TCP, live-room protocol with a relayed listener, gift forgery detection, plus screenshot renders of all main screens.
+`./gradlew :app:testDebugUnitTest` (34 tests, incl. end-to-end: two full app engines exchange first message, delivery receipt, reply, read mark and a purchased gift through the relay) — crypto, envelopes, framer, multi-hop store-and-forward, loop safety, DHT+UDP link under 25% packet loss (300 KB payload), LAN TCP, live-room protocol with a relayed listener, gift forgery detection, plus screenshot renders of all main screens.
 
 ## NOT verified (no hardware in the build sandbox)
 Nearby/Bluetooth radio behaviour, microphone/AAC audio pipeline, real NAT traversal on mobile networks, battery behaviour, notifications on real devices. Test these on two phones.

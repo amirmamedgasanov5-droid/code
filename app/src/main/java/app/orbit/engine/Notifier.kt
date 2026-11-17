@@ -24,7 +24,7 @@ class Notifier(private val ctx: Context) {
             val sys = ctx.getSystemService(NotificationManager::class.java)
             sys.createNotificationChannel(NotificationChannel(CH_MSG, "Messages", NotificationManager.IMPORTANCE_HIGH).apply { description = "New messages"; enableVibration(true) })
             sys.createNotificationChannel(NotificationChannel(CH_MESH, "Mesh network", NotificationManager.IMPORTANCE_LOW).apply { description = "Keeps the peer-to-peer mesh alive in the background" })
-            sys.createNotificationChannel(NotificationChannel(CH_LIVE, "Live broadcasts", NotificationManager.IMPORTANCE_DEFAULT))
+            sys.createNotificationChannel(NotificationChannel(CH_LIVE, "Live broadcasts", NotificationManager.IMPORTANCE_HIGH))
         }
     }
 
@@ -38,6 +38,13 @@ class Notifier(private val ctx: Context) {
         val n = NotificationCompat.Builder(ctx, CH_MSG).setSmallIcon(android.R.drawable.stat_notify_chat).setContentTitle(chat.title).setContentText(lines.last())
             .setStyle(style).setContentIntent(pi).setAutoCancel(true).setCategory(NotificationCompat.CATEGORY_MESSAGE).setPriority(NotificationCompat.PRIORITY_HIGH).setGroup("msgs").build()
         try { nm.notify(chat.id.hashCode(), n) } catch (_: SecurityException) {}
+    }
+    fun onCall(name: String) {
+        if (Build.VERSION.SDK_INT >= 33 && ctx.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
+        val pi = PendingIntent.getActivity(ctx, 7, Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val n = NotificationCompat.Builder(ctx, CH_LIVE).setSmallIcon(android.R.drawable.sym_action_call).setContentTitle("Incoming call").setContentText(name).setContentIntent(pi)
+            .setCategory(NotificationCompat.CATEGORY_CALL).setPriority(NotificationCompat.PRIORITY_MAX).setOngoing(true).setTimeoutAfter(45_000).build()
+        try { nm.notify("call".hashCode(), n) } catch (_: SecurityException) {}
     }
     fun cancel(chatId: String) { nm.cancel(chatId.hashCode()); history.remove(chatId) }
 }

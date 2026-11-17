@@ -29,6 +29,8 @@ class LiveCore(
     title: String,
     private val myCard: () -> JSONObject,
     private val sub: Int,
+    /** 1:1 calls: whoever joins is allowed to talk immediately. */
+    private val autoSpeaker: Boolean = false,
 ) {
     val isHost = hostId == me.id
     private val _state = MutableStateFlow(RoomState(title, false, if (isHost) listOf(selfParticipant(Role.HOST)) else emptyList(), if (isHost) now() else 0))
@@ -36,7 +38,8 @@ class LiveCore(
     /** Frames may arrive slightly out of order (parallel links); the audio sink reorders by seq. */
     var onAudio: (speakerId: String, seq: Long, frame: ByteArray) -> Unit = { _, _, _ -> }
     private val seenCtl = LinkedHashSet<Long>()
-    private val seenAudio = HashMap<String, Long>()  // speaker prefix -> highest seq
+    private class SeqWindow { var high = -1L; val seen = HashSet<Long>() }
+    private val seenAudio = HashMap<String, SeqWindow>()  // speaker prefix -> recent sequence numbers
     private val roster = LinkedHashMap<String, Participant>().also { if (isHost) it[me.id] = selfParticipant(Role.HOST) }
     private val speakingUntil = HashMap<String, Long>()
     private var stateSeq = 0L; @Volatile private var lastAppliedSeq = -1L
@@ -116,7 +119,12 @@ class LiveCore(
         when (op) {
             Op.AUDIO -> {
                 val r = ByteReader(body); val sp = r.raw(8).hex(); val seq = r.u32(); val frame = r.rest()
-                synchronized(seenAudio) { val last = seenAudio[sp] ?: -1; if (seq <= last && last - seq < 1000) return; seenAudio[sp] = seq }
+                synchronized(seenAudio) {
+                    val w = seenAudio.getOrPut(sp) { SeqWindow() }
+                    if (w.high >= 0 && seq < w.high - 256 && w.high - seq < 5000) return      // far too old
+                    if (!w.seen.add(seq)) return                                              // duplicate
+                    if (seq > w.high) { w.high = seq; if (w.seen.size > 600) w.seen.removeAll { it < w.high - 300 }.let { } }
+                }
                 flood(rawRebuild(rawFrame), from?.id)   // relay first: far-away listeners depend on it
                 val speaker = _state.value.participants.firstOrNull { it.id.startsWith(sp) && it.role != Role.LISTENER && !it.muted } ?: return
                 val wasSpeaking = speakingUntil[speaker.id]?.let { it > now() } == true
@@ -139,7 +147,7 @@ class LiveCore(
                 val id = Peer.idOf(signer)
                 if (isHost) {
                     when (op) {
-                        Op.JOIN -> { val c = JSONObject(body.str()).optJSONObject("card") ?: JSONObject(); val prev = roster[id]; roster[id] = Participant(id, c.optString("n"), c.optString("e"), c.optInt("c"), prev?.role ?: Role.LISTENER, prev?.hand ?: false, prev?.muted ?: false) }
+                        Op.JOIN -> { val c = JSONObject(body.str()).optJSONObject("card") ?: JSONObject(); val prev = roster[id]; roster[id] = Participant(id, c.optString("n"), c.optString("e"), c.optInt("c"), prev?.role ?: (if (autoSpeaker) Role.SPEAKER else Role.LISTENER), prev?.hand ?: false, prev?.muted ?: false) }
                         Op.HAND -> roster[id]?.let { roster[id] = it.copy(hand = body.firstOrNull()?.toInt() == 1) }
                         Op.LEAVE -> roster.remove(id)
                     }

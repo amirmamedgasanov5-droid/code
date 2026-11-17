@@ -94,3 +94,66 @@ class NetTest {
         la.stop(); lb.stop(); scope.cancel()
     }
 }
+
+/** Minimal ntfy-compatible server (publish + streaming JSON subscribe) on loopback, raw sockets. */
+class FakeNtfy : AutoCloseable {
+    private val server = ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"))
+    private val log = java.util.concurrent.CopyOnWriteArrayList<Triple<String, Long, String>>()
+    @Volatile private var running = true
+    val port get() = server.localPort
+    init {
+        Thread { while (running) { val s = try { server.accept() } catch (e: Exception) { break }; Thread { handle(s) }.also { it.isDaemon = true }.start() } }.also { it.isDaemon = true }.start()
+    }
+    private fun handle(s: Socket) {
+        try {
+            val inp = s.getInputStream().buffered(); val out = s.getOutputStream()
+            fun line(): String { val sb = StringBuilder(); while (true) { val c = inp.read(); if (c < 0 || c == '\n'.code) break; if (c != '\r'.code) sb.append(c.toChar()) }; return sb.toString() }
+            val req = line().split(" "); var len = 0
+            while (true) { val h = line(); if (h.isEmpty()) break; if (h.lowercase().startsWith("content-length:")) len = h.substringAfter(":").trim().toInt() }
+            val path = req[1].substringBefore("?").trim('/')
+            if (req[0] == "POST") {
+                val body = ByteArray(len); var n = 0; while (n < len) { val r = inp.read(body, n, len - n); if (r < 0) break; n += r }
+                log.add(Triple(path, System.currentTimeMillis() / 1000, String(body)))
+                out.write("HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\n{}".toByteArray()); out.flush(); s.close()
+            } else {
+                val topics = path.removeSuffix("/json").split(",").toSet()
+                out.write("HTTP/1.1 200 OK\r\nContent-Type: application/x-ndjson\r\nConnection: close\r\n\r\n{\"event\":\"open\"}\n".toByteArray()); out.flush()
+                var sent = 0
+                while (running) {
+                    while (sent < log.size) { val (t, ts, m) = log[sent++]; if (t in topics) { out.write((org.json.JSONObject().put("event", "message").put("topic", t).put("time", ts).put("message", m).toString() + "\n").toByteArray()); out.flush() } }
+                    Thread.sleep(30)
+                }
+            }
+        } catch (e: Exception) { try { s.close() } catch (_: Exception) {} }
+    }
+    override fun close() { running = false; try { server.close() } catch (_: Exception) {} }
+}
+
+class RelayTest {
+    @Test fun messageCrossesPhonesThatNeverConnectDirectly() = runBlocking {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        FakeNtfy().use { srv ->
+            val a = Identity.generate(); val b = Identity.generate()
+            val na = MeshNode(a, MemoryStore(), scope); val nb = MeshNode(b, MemoryStore(), scope)
+            val ra = Recorder(a, listOf(Tags.user(a.signPub))); val rb = Recorder(b, listOf(Tags.user(b.signPub))); na.handler = ra; nb.handler = rb
+            val base = "http://127.0.0.1:${srv.port}"
+            val relA = CloudRelay(scope, base, { listOf(Tags.user(a.signPub)) }, { na.ingestExternal(it) })
+            val relB = CloudRelay(scope, base, { listOf(Tags.user(b.signPub)) }, { nb.ingestExternal(it) })
+            na.onLocalSubmit = { relA.publish(it) }; nb.onLocalSubmit = { relB.publish(it) }
+            relA.start()                       // B is OFFLINE (relay not started yet): store-and-forward on the relay
+            val photo = Rand.bytes(60_000)     // chunked across many relay messages
+            na.submit(Envelope.direct(a, Peer(b.signPub, b.boxPub), photo))
+            na.submit(Envelope.direct(a, Peer(b.signPub, b.boxPub), "short".utf8()))
+            delay(800)
+            relB.start()                       // B comes online later and catches up
+            val t = System.currentTimeMillis()
+            while (rb.got.size < 2 && System.currentTimeMillis() - t < 15000) delay(20)
+            assertEquals(2, rb.got.size)
+            assertTrue(rb.got.any { it.contentEquals(photo) }); assertTrue(rb.got.any { it.str() == "short" })
+            // delivery receipt comes back the same way
+            nb.submit(Envelope.ack(b, Peer(a.signPub, a.boxPub), Rand.bytes(16)))
+            delay(500)
+            relA.stop(); relB.stop(); scope.cancel()
+        }
+    }
+}

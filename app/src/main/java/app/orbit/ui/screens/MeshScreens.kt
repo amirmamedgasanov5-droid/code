@@ -34,13 +34,16 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable
-fun MeshTab() {
+fun MeshScreen() { val nav = LocalNav.current; MeshTab(onBack = { nav.pop() }) }
+
+@Composable
+fun MeshTab(onBack: (() -> Unit)? = null) {
     val engine = LocalEngine.current; val tm = LocalTransports.current; val nav = LocalNav.current; val p = OrbitTheme.p
     val ctx = LocalContext.current; val perms = LocalRequestPerms.current
     val peers by engine.mesh.peers.collectAsState(); val stored by engine.mesh.stored.collectAsState(); val counters by engine.mesh.counters.collectAsState()
-    val states by tm.states.collectAsState(); val contacts by engine.contacts.collectAsState()
+    val states by tm.states.collectAsState(); val contacts by engine.contacts.collectAsState(); val relayOn by engine.relayOnline.collectAsState()
     Column(Modifier.fillMaxSize()) {
-        TopBar("Mesh network", null)
+        TopBar("Connection", onBack)
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
             item { Radar(peers.map { it.peerId }, contacts.mapValues { it.value.displayName }) }
             item {
@@ -53,6 +56,8 @@ fun MeshTab() {
             item { SectionLabel("Connections") }
             item {
                 Card {
+                    TransportRow("Cloud relay (fallback)", "Delivers when phones can't reach each other directly. Sees only encrypted data.", Icons.Rounded.Cloud, if (engine.relayEnabled()) (if (relayOn) TransportState.ON else TransportState.STARTING) else TransportState.OFF, engine.relayEnabled(), perms) { tm.setPref("relay", it) }
+                    Divider(60.dp)
                     TransportRow("Bluetooth · Wi-Fi Direct", "Phone to phone, no internet needed", Icons.Rounded.Bluetooth, states["nearby"], tm.prefs().nearby, perms) { tm.setPref("nearby", it) }
                     Divider(60.dp)
                     TransportRow("Local Wi-Fi / hotspot", "Everyone on the same network", Icons.Rounded.Wifi, states["lan"], tm.prefs().lan, perms) { tm.setPref("lan", it) }

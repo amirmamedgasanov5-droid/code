@@ -59,6 +59,8 @@ class MeshNode(
     private val maxHops: Int = 64,
 ) : LinkListener {
     var handler: MeshHandler? = null
+    /** Called for every envelope created on this device (used by the optional cloud relay). */
+    var onLocalSubmit: ((Envelope) -> Unit)? = null
 
     private class LS(val link: Link) {
         @Volatile var peer: Peer? = null
@@ -105,7 +107,18 @@ class MeshNode(
         if (target != null) { target.enqueue(frameEnv(e)); target.has.add(e.idKey) }
         for (ls in links.values) if (ls !== target && ls.peer != null && ls.has.add(e.idKey)) ls.enqueue(frameEnv(e))
         publishCounters()
+        try { onLocalSubmit?.invoke(e) } catch (_: Exception) {}
     }
+
+    private val externalLink = object : Link {
+        override val linkId = "relay"; override val medium = "Cloud relay"; override val label = "relay"
+        override suspend fun send(frame: ByteArray) = false
+        override fun close() {}
+    }
+    private val externalState by lazy { LS(externalLink) }
+
+    /** Envelope that arrived through a non-link path (cloud relay). Same pipeline as a neighbour's. */
+    suspend fun ingestExternal(e: Envelope) { received.incrementAndGet(); ingest(e, externalState) }
 
     fun isConnected(peerId: String) = links.values.any { it.peer?.id == peerId }
     fun linksTo(peerId: String): List<Link> = links.values.filter { it.peer?.id == peerId }.map { it.link }
