@@ -373,7 +373,12 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
     }
 
     private suspend fun retryPending() {
-        val backoff = longArrayOf(2 * 60_000, 10 * 60_000, 60 * 60_000, 6 * 3600_000, 24 * 3600_000, 48 * 3600_000)
+        // The relay already keeps a published message for ~12 h, so re-publishing every few minutes only burns the
+        // public server's rate limit. Re-send quickly ONLY when the relay is not healthy (or off), slowly otherwise.
+        val relayOk = relay?.healthy == true
+        val fast = longArrayOf(2 * 60_000, 10 * 60_000, 60 * 60_000, 6 * 3600_000, 24 * 3600_000, 48 * 3600_000)
+        val slow = longArrayOf(5 * 3600_000, 11 * 3600_000, 24 * 3600_000, 48 * 3600_000)
+        val backoff = if (relayOk) slow else fast
         for ((m, tries, last) in db.pendingOutgoing()) {
             val chat = chatMap[m.chatId] ?: continue
             if (chat.type != ChatType.DIRECT) continue

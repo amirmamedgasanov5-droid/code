@@ -100,6 +100,7 @@ class FakeNtfy : AutoCloseable {
     private val server = ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"))
     private val log = java.util.concurrent.CopyOnWriteArrayList<Triple<String, Long, String>>()
     @Volatile private var running = true
+    @Volatile var rejectPosts = false
     val port get() = server.localPort
     init {
         Thread { while (running) { val s = try { server.accept() } catch (e: Exception) { break }; Thread { handle(s) }.also { it.isDaemon = true }.start() } }.also { it.isDaemon = true }.start()
@@ -111,6 +112,7 @@ class FakeNtfy : AutoCloseable {
             val req = line().split(" "); var len = 0
             while (true) { val h = line(); if (h.isEmpty()) break; if (h.lowercase().startsWith("content-length:")) len = h.substringAfter(":").trim().toInt() }
             val path = req[1].substringBefore("?").trim('/')
+            if (req[0] == "POST" && rejectPosts) { out.write("HTTP/1.1 429 Too Many Requests\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".toByteArray()); out.flush(); s.close(); return }
             if (req[0] == "POST") {
                 val body = ByteArray(len); var n = 0; while (n < len) { val r = inp.read(body, n, len - n); if (r < 0) break; n += r }
                 log.add(Triple(path, System.currentTimeMillis() / 1000, String(body)))
@@ -127,6 +129,26 @@ class FakeNtfy : AutoCloseable {
         } catch (e: Exception) { try { s.close() } catch (_: Exception) {} }
     }
     override fun close() { running = false; try { server.close() } catch (_: Exception) {} }
+}
+
+class RelayLimitTest {
+    @Test fun rateLimitIsReportedAndPublishingPauses() = runBlocking {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        FakeNtfy().use { srv ->
+            srv.rejectPosts = true
+            val a = Identity.generate(); val b = Identity.generate()
+            val rel = CloudRelay(scope, "http://127.0.0.1:${srv.port}", { listOf(Tags.user(a.signPub)) }, { })
+            rel.publish(Envelope.direct(a, Peer(b.signPub, b.boxPub), "x".utf8()))
+            val t = System.currentTimeMillis()
+            while (!rel.lastError.contains("429") && System.currentTimeMillis() - t < 10000) delay(20)
+            assertTrue(rel.lastError, rel.lastError.contains("429"))
+            assertFalse(rel.healthy)
+            val posts = rel.published
+            rel.publish(Envelope.direct(a, Peer(b.signPub, b.boxPub), "y".utf8())); delay(300)   // paused: must not retry/post
+            assertEquals(posts, rel.published)
+            scope.cancel()
+        }
+    }
 }
 
 class RelayTest {

@@ -33,6 +33,9 @@ class CloudRelay(
     private val _online = MutableStateFlow(false); val online: StateFlow<Boolean> = _online
     @Volatile var published = 0; @Volatile var received = 0
     @Volatile var lastError = ""; @Volatile var lastOk = 0L; @Volatile var topicsCount = 0
+    @Volatile private var pausedUntil = 0L
+    /** true while publishing works (used to avoid pointless re-sends) */
+    val healthy: Boolean get() = _online.value && lastError.isEmpty() && System.currentTimeMillis() > pausedUntil
     @Volatile private var since = (System.currentTimeMillis() / 1000) - 12 * 3600
 
     fun topic(tag: ByteArray) = "orbit1" + tag.hex()
@@ -89,6 +92,7 @@ class CloudRelay(
         if (bytes.size > maxEnvelope) return
         val t = topic(e.tag)
         scope.launch(Dispatchers.IO) {
+            if (System.currentTimeMillis() < pausedUntil) return@launch      // server told us to stop: do not hammer it
             for (part in Framer.split(bytes, chunk)) {
                 var ok = false; var wait = 1000L
                 repeat(5) {
@@ -99,7 +103,7 @@ class CloudRelay(
                 }
                 if (!ok) return@launch
             }
-            published++; lastOk = System.currentTimeMillis()
+            published++; lastOk = System.currentTimeMillis(); if (lastError.startsWith("HTTP") || lastError.startsWith("send:")) lastError = ""
         }
     }
 
@@ -109,7 +113,10 @@ class CloudRelay(
             c.requestMethod = "POST"; c.doOutput = true; c.connectTimeout = 8000; c.readTimeout = 8000
             c.setRequestProperty("Content-Type", "text/plain")
             c.outputStream.use { it.write(body.toByteArray()) }
-            c.responseCode in 200..299
+            val code = c.responseCode
+            if (code == 429) { pausedUntil = System.currentTimeMillis() + 10 * 60_000; lastError = "HTTP 429: the relay server's rate/daily limit is reached. Paused for 10 min; messages stay queued on this phone." }
+            else if (code !in 200..299) lastError = "HTTP $code from relay server"
+            code in 200..299
         } finally { c.disconnect() }
     }
 }

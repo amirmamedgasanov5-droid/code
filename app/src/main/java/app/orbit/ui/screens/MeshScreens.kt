@@ -65,6 +65,15 @@ fun MeshTab(onBack: (() -> Unit)? = null) {
                     TransportRow("Internet (peer-to-peer)", "Worldwide through the public DHT · ${tm.dhtNodes()} nodes known", Icons.Rounded.Public, states["internet"], tm.prefs().internet, perms) { tm.setPref("inet", it) }
                 }
             }
+            item {
+                var dlg by remember { mutableStateOf(false) }
+                Card(Modifier.padding(top = 10.dp)) { SettingsRow("Relay server", engine.relayUrl(), Icons.Rounded.Dns, Color(0xFF9B5CFF), onClick = { dlg = true }) }
+                if (dlg) { var url by remember { mutableStateOf(engine.relayUrl()) }
+                    AlertDialog({ dlg = false }, containerColor = p.surfaceHigh, title = { Text("Relay server") },
+                        text = { Column { OutlinedTextField(url, { url = it.trim() }, singleLine = true, label = { Text("https://…") }, shape = RoundedCornerShape(14.dp)); Text("Any ntfy-compatible server works, including your own. Both you and your contact must use the same one.", Modifier.padding(top = 8.dp), fontSize = 12.sp, color = p.textDim) } },
+                        confirmButton = { TextButton({ if (url.startsWith("https://")) { engine.setRelay(true, url); dlg = false } }, enabled = url.startsWith("https://")) { Text("Save") } },
+                        dismissButton = { TextButton({ engine.setRelay(true, "https://ntfy.sh"); dlg = false }) { Text("Reset") } }) }
+            }
             item { SectionLabel("Connected now") }
             if (peers.isEmpty()) item { Text("Nobody in range. Messages you send are stored and will hop on automatically when any phone running Orbit comes within reach.", Modifier.padding(horizontal = 20.dp, vertical = 4.dp), style = MaterialTheme.typography.bodyMedium, color = p.textDim) }
             items(peers, key = { it.peerId }) { pi ->
