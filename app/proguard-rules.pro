@@ -4,3 +4,6 @@
 -dontwarn com.google.api.client.**
 -dontwarn org.joda.time.**
 -keep class app.orbit.** { *; }
+
+-keep class org.webrtc.** { *; }
+-dontwarn org.webrtc.**

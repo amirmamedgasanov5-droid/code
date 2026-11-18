@@ -15,6 +15,7 @@ android {
         versionCode = 20
         versionName = "1.0.0"
         vectorDrawables.useSupportLibrary = true
+        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
     }
 
     flavorDimensions += "edition"
@@ -73,6 +74,10 @@ dependencies {
     implementation("com.google.android.gms:play-services-nearby:19.3.0")
     implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
     implementation("com.google.zxing:core:3.5.3")
+    // WebRTC (direct peer-to-peer data + audio) and Firebase Firestore (signalling only)
+    implementation("io.getstream:stream-webrtc-android:1.3.10")
+    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation("com.google.firebase:firebase-firestore")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20231013")

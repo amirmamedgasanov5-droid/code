@@ -56,6 +56,8 @@ fun MeshTab(onBack: (() -> Unit)? = null) {
             item { SectionLabel("Connections") }
             item {
                 Card {
+                    TransportRow("Direct (WebRTC + Firebase)", if (engine.fbConfig().valid) "Phone to phone, also on mobile data. Firestore only introduces the phones." else "Not set up yet — tap the Firebase row below", Icons.Rounded.SettingsEthernet, states["webrtc"], tm.prefs().webrtc && engine.fbConfig().valid, perms) { tm.setPref("webrtc", it) }
+                    Divider(60.dp)
                     TransportRow("Cloud relay (fallback)", "Delivers when phones can't reach each other directly. Sees only encrypted data.", Icons.Rounded.Cloud, if (engine.relayEnabled()) (if (relayOn) TransportState.ON else TransportState.STARTING) else TransportState.OFF, engine.relayEnabled(), perms) { tm.setPref("relay", it) }
                     Divider(60.dp)
                     TransportRow("Bluetooth · Wi-Fi Direct", "Phone to phone, no internet needed", Icons.Rounded.Bluetooth, states["nearby"], tm.prefs().nearby, perms) { tm.setPref("nearby", it) }
@@ -74,6 +76,24 @@ fun MeshTab(onBack: (() -> Unit)? = null) {
                             Text("The default list has public MQTT brokers (HiveMQ, EMQX, Mosquitto) and ntfy servers; some may be blocked in your country or need an account and will show an error — remove them if you like. Each listed server sees your IP and the encrypted data. Messages are sent through ALL listed servers at once and received from all of them, so one blocked server does not stop delivery. Any ntfy-compatible server works, including your own. Your contact only needs one server in common with you.", Modifier.padding(top = 8.dp), fontSize = 12.sp, color = p.textDim) } },
                         confirmButton = { TextButton({ engine.setRelay(true, urls); dlg = false }) { Text("Save") } },
                         dismissButton = { TextButton({ engine.setRelay(true, engine.defaultRelays.joinToString("\n")); dlg = false }) { Text("Reset to default") } }) }
+            }
+            item {
+                var wd by remember { mutableStateOf(false) }
+                val ctx3 = LocalContext.current
+                Card(Modifier.padding(top = 10.dp)) { SettingsRow("Direct connection · Firebase signalling", if (engine.fbConfig().valid) "Project: ${engine.fbConfig().projectId}" else "Set up (2 minutes, free)", Icons.Rounded.Bolt, Color(0xFFFFB020), onClick = { wd = true }) }
+                if (wd) { var pj by remember { mutableStateOf(engine.fbConfig().projectId) }; var ap by remember { mutableStateOf(engine.fbConfig().appId) }; var ky by remember { mutableStateOf(engine.fbConfig().apiKey) }
+                    AlertDialog({ wd = false }, containerColor = p.surfaceHigh, title = { Text("WebRTC + Firebase") },
+                        text = { Column(Modifier.verticalScroll(rememberScrollState())) {
+                            OutlinedTextField(pj, { pj = it.trim() }, singleLine = true, label = { Text("Project ID") }, shape = RoundedCornerShape(14.dp))
+                            OutlinedTextField(ap, { ap = it.trim() }, singleLine = true, label = { Text("App ID (1:123…:android:abc…)") }, shape = RoundedCornerShape(14.dp), modifier = Modifier.padding(top = 6.dp))
+                            OutlinedTextField(ky, { ky = it.trim() }, singleLine = true, label = { Text("API key") }, shape = RoundedCornerShape(14.dp), modifier = Modifier.padding(top = 6.dp))
+                            Text("1. console.firebase.google.com → your project\n2. Build → Firestore Database → Create database\n3. Rules tab → paste the rules below → Publish\n4. Project settings (gear) → General → add an Android app (package app.orbit.messenger) → copy App ID; Project ID and Web API key are on the same page\n5. Enter the SAME three values on every phone", Modifier.padding(top = 10.dp), fontSize = 12.sp, color = p.textDim)
+                            Text(app.orbit.core.net.webrtc.FirestoreSignaling.RULES, Modifier.padding(top = 8.dp).clip(RoundedCornerShape(10.dp)).background(p.surface).padding(10.dp), fontSize = 10.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+                            TextButton({ copyText(ctx3, "rules", app.orbit.core.net.webrtc.FirestoreSignaling.RULES) }) { Text("Copy rules") }
+                            Text("Firestore only holds short-lived introductions (addresses needed to connect). Messages and calls go directly between phones, encrypted. Behind strict carrier NAT a direct link can still fail — the relays remain as a fallback.", fontSize = 11.5.sp, color = p.textDim)
+                        } },
+                        confirmButton = { TextButton({ engine.setFbConfig(pj, ap, ky); tm.restart(); wd = false }) { Text("Save") } },
+                        dismissButton = { TextButton({ engine.setFbConfig("", "", ""); tm.restart(); wd = false }) { Text("Remove") } }) }
             }
             item {
                 var fb by remember { mutableStateOf(false) }

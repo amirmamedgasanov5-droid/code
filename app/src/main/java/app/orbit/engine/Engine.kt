@@ -116,8 +116,16 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
         val r = relay
         if (!relayEnabled()) return "Cloud relay: OFF (turn it on in Profile → Connection)"
         if (r == null) return "Cloud relay: not started"
-        return "Cloud relay: ${if (_relayOnline.value) "connected" else "NOT connected"}   Sent: ${r.published}  Received: ${r.received}\n" + r.diag()
+        return webrtcDiag().let { if (it.isEmpty()) "" else it + "\n\n" } + "Cloud relay: ${if (_relayOnline.value) "connected" else "NOT connected"}   Sent: ${r.published}  Received: ${r.received}\n" + r.diag()
     }
+    // ---- direct WebRTC connections (Firestore = signalling only)
+    var directRequest: (String) -> Unit = {}
+    var webrtcDiag: () -> String = { "" }
+    private val lastDirectAsk = ConcurrentHashMap<String, Long>()
+    fun requestDirect(peerId: String) { if (now() - (lastDirectAsk[peerId] ?: 0) < 20_000) return; lastDirectAsk[peerId] = now(); try { directRequest(peerId) } catch (_: Exception) {} }
+    fun fbConfig() = app.orbit.core.net.webrtc.FbConfig(db.getKv("fb.project") ?: "", db.getKv("fb.app") ?: "", db.getKv("fb.key") ?: "")
+    fun setFbConfig(project: String, appId: String, key: String) { db.setKv("fb.project", project.trim()); db.setKv("fb.app", appId.trim()); db.setKv("fb.key", key.trim()) }
+
     fun relayKick() { relay?.kick() }
     private var netCb: android.net.ConnectivityManager.NetworkCallback? = null
     private fun watchNetwork() {
@@ -412,6 +420,7 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
             if (chat.type != ChatType.DIRECT) continue
             if (tries >= backoff.size) continue
             val connected = mesh.isConnected(chat.id)
+            if (!connected && m.status == Status.CARRIED) requestDirect(chat.id)
             if (now() - last > backoff[tries] || (connected && m.status == Status.CARRIED)) submitMessage(m, null, tries + 1)
         }
     }

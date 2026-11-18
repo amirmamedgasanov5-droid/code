@@ -46,6 +46,7 @@ class LiveManager(private val ctx: Context, private val engine: Engine) {
         attach(core, LiveInfo(callRid, key.hex(), me.id, "call", peerId))
         setSpeaker(false)
         _call.value = CallState(peerId, true, CallStatus.RINGING, now())
+        engine.requestDirect(peerId)
         engine.sendCallSignal(peerId, JSONObject().put("t", "call").put("rid", callRid).put("key", key.hex()).put("host", me.id))
         setMic(true)
         watchCall(peerId, true)
@@ -54,6 +55,7 @@ class LiveManager(private val ctx: Context, private val engine: Engine) {
     fun acceptCall(inc: Engine.IncomingCall) {
         engine.dismissIncomingCall()
         leave(); callRid = inc.rid; autoMic = true
+        engine.requestDirect(inc.from)
         join(inc.rid, inc.key, inc.from, "call", inc.from)
         setSpeaker(false)
         _call.value = CallState(inc.from, false, CallStatus.CONNECTING, now())
