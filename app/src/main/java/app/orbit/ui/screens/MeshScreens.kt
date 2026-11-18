@@ -56,7 +56,7 @@ fun MeshTab(onBack: (() -> Unit)? = null) {
             item { SectionLabel("Connections") }
             item {
                 Card {
-                    TransportRow("Direct (WebRTC + Firebase)", if (engine.fbConfig().valid) "Phone to phone, also on mobile data. Firestore only introduces the phones." else "Not set up yet — tap the Firebase row below", Icons.Rounded.SettingsEthernet, states["webrtc"], tm.prefs().webrtc && engine.fbConfig().valid, perms) { tm.setPref("webrtc", it) }
+                    TransportRow("Direct (WebRTC + Firebase)", if (engine.fbConfig().valid) "Phone to phone, also on mobile data. Firestore only introduces the phones." else "Not set up — tap the Direct connection row below", Icons.Rounded.SettingsEthernet, states["webrtc"], tm.prefs().webrtc && engine.fbConfig().valid, perms) { tm.setPref("webrtc", it) }
                     Divider(60.dp)
                     TransportRow("Cloud relay (fallback)", "Delivers when phones can't reach each other directly. Sees only encrypted data.", Icons.Rounded.Cloud, if (engine.relayEnabled()) (if (relayOn) TransportState.ON else TransportState.STARTING) else TransportState.OFF, engine.relayEnabled(), perms) { tm.setPref("relay", it) }
                     Divider(60.dp)

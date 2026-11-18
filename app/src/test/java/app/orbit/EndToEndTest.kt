@@ -192,6 +192,13 @@ class EndToEndTest {
         }
     }
 
+    @Test fun builtInFirebaseProjectIsUsedUnlessOverridden() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val e = Engine(app, "fbcfg.db"); e.db.setKv("t.relay", "0"); e.attachIdentityForTest(Identity.generate(), Profile("F", "", "🙂", 0, ""))
+        assertTrue(e.fbConfig().valid); assertEquals("orbit-962ee", e.fbConfig().projectId)
+        e.setFbConfig("", "", ""); assertFalse("explicit empty = disabled", e.fbConfig().valid)
+    }
+
     @Test fun wheelPaysOutOncePerDay() {
         val app = ApplicationProvider.getApplicationContext<Application>()
         val e = Engine(app, "w.db"); e.db.setKv("t.relay", "0")

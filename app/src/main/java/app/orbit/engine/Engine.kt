@@ -123,7 +123,8 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
     var webrtcDiag: () -> String = { "" }
     private val lastDirectAsk = ConcurrentHashMap<String, Long>()
     fun requestDirect(peerId: String) { if (now() - (lastDirectAsk[peerId] ?: 0) < 20_000) return; lastDirectAsk[peerId] = now(); try { directRequest(peerId) } catch (_: Exception) {} }
-    fun fbConfig() = app.orbit.core.net.webrtc.FbConfig(db.getKv("fb.project") ?: "", db.getKv("fb.app") ?: "", db.getKv("fb.key") ?: "")
+    /** Built-in project shared by everyone running this build, so nobody has to enter anything. An explicit (even empty) user value overrides it. */
+    fun fbConfig() = app.orbit.core.net.webrtc.FbConfig(db.getKv("fb.project") ?: DEFAULT_FB_PROJECT, db.getKv("fb.app") ?: DEFAULT_FB_APP, db.getKv("fb.key") ?: DEFAULT_FB_KEY)
     fun setFbConfig(project: String, appId: String, key: String) { db.setKv("fb.project", project.trim()); db.setKv("fb.app", appId.trim()); db.setKv("fb.key", key.trim()) }
 
     fun relayKick() { relay?.kick() }
@@ -165,7 +166,13 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
         scope.launch { r.online.collect { _relayOnline.value = it } }
     }
     private val _meshReady = MutableStateFlow(false); val meshReady: StateFlow<Boolean> = _meshReady
-    companion object { const val WELCOME_COINS = 50 }
+    companion object {
+        const val WELCOME_COINS = 50
+        // Firebase client configuration (public by design; access is controlled by the Firestore rules, not by hiding this key)
+        const val DEFAULT_FB_PROJECT = "orbit-962ee"
+        const val DEFAULT_FB_APP = "1:602180841154:android:ee0650b4a72d8c1009955b"
+        const val DEFAULT_FB_KEY = "AIzaSyAdxeQRpM7AZQYKvB5OcHchMahkF4pbviU"
+    }
 
     fun createIdentity(p: Profile, recoveryKey: String? = null): Boolean {
         val id = try { if (recoveryKey.isNullOrBlank()) Identity.generate() else Identity.fromRecoveryKey(recoveryKey) } catch (e: Exception) { return false }
