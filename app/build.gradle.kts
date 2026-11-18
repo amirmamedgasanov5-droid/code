@@ -12,7 +12,7 @@ android {
         applicationId = "app.orbit.messenger"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
+        versionCode = 20
         versionName = "1.0.0"
         vectorDrawables.useSupportLibrary = true
     }
@@ -20,8 +20,8 @@ android {
     flavorDimensions += "edition"
     productFlavors {
         create("regular") { dimension = "edition"; buildConfigField("boolean", "ADMIN_BUILD", "false"); resValue("string", "app_name", "Orbit") }
-        // Admin edition: admin mode is on from the first launch (no token), installs next to the normal app.
-        create("admin") { dimension = "edition"; applicationIdSuffix = ".admin"; versionNameSuffix = "-admin"; buildConfigField("boolean", "ADMIN_BUILD", "true"); resValue("string", "app_name", "Orbit Admin") }
+        // Admin edition: SAME application id as the normal app, so it installs over it and keeps the account, contacts and gifts. Admin mode is on from first launch.
+        create("admin") { dimension = "edition"; versionNameSuffix = "-admin"; buildConfigField("boolean", "ADMIN_BUILD", "true"); resValue("string", "app_name", "Orbit") }
     }
 
     signingConfigs {
