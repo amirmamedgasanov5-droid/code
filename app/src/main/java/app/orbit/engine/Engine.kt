@@ -84,6 +84,7 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
         _directory.value = db.directory(); _gifts.value = db.gifts()
         _coins.value = db.getKv("coins")?.toIntOrNull() ?: WELCOME_COINS.also { db.setKv("coins", it.toString()) }
         _lastSpin.value = db.getKv("lastSpin")?.toLongOrNull() ?: 0L
+        if (app.orbit.BuildConfig.ADMIN_BUILD) db.setKv("admin", "1")
         _admin.value = db.getKv("admin") == "1"
     }
 

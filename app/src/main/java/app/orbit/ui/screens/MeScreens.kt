@@ -64,7 +64,7 @@ fun MeTab() {
             Icon(Icons.Rounded.ChevronRight, null, tint = Color.White)
         }
         val admin by engine.isAdmin.collectAsState()
-        if (admin) { Row(Modifier.padding(horizontal = 12.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Brush.linearGradient(listOf(Color(0xFF7C5CFF), Color(0xFF2F8CFF)))).pressable({ nav.push(Route.Admin) }).padding(16.dp), verticalAlignment = Alignment.CenterVertically) { Text("👑", fontSize = 30.sp); Spacer(Modifier.width(12.dp)); Column(Modifier.weight(1f)) { Text("Admin", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp); Text("Mint any number of gifts for free", color = Color.White.copy(alpha = 0.9f), fontSize = 13.sp) }; Icon(Icons.Rounded.ChevronRight, null, tint = Color.White) }; Spacer(Modifier.height(14.dp)) }
+        if (admin) { Row(Modifier.padding(horizontal = 12.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Brush.linearGradient(listOf(Color(0xFF7C5CFF), Color(0xFF2F8CFF)))).pressable({ nav.push(Route.Admin) }).padding(16.dp), verticalAlignment = Alignment.CenterVertically) { Text("👑", fontSize = 30.sp); Spacer(Modifier.width(12.dp)); Column(Modifier.weight(1f)) { Text(if (app.orbit.BuildConfig.ADMIN_BUILD) "Admin edition" else "Admin", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp); Text("Mint any number of gifts for free", color = Color.White.copy(alpha = 0.9f), fontSize = 13.sp) }; Icon(Icons.Rounded.ChevronRight, null, tint = Color.White) }; Spacer(Modifier.height(14.dp)) }
         Card {
             SettingsRow("Saved messages", "Notes to self, synced nowhere", Icons.Rounded.Bookmark, Color(0xFF2F8CFF), onClick = { nav.push(Route.Chat("saved")) })
             Divider(60.dp)
