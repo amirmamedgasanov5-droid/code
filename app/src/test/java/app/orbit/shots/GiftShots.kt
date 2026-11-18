@@ -22,13 +22,14 @@ import org.robolectric.annotation.GraphicsMode
 class GiftShots {
     @get:Rule val rule = createComposeRule()
 
-    @Test fun premiumModels() {
+    private fun row(path: String, models: List<Int>) {
         val id = Identity.fromSeed(ByteArray(32) { (it + 7).toByte() })
-        rule.setContent {
-            Row(Modifier.fillMaxSize()) { for (m in 10..12) Box(Modifier.weight(1f).fillMaxHeight()) { Gift3D(GiftLogic.mint(id, "T", m, m), animate = false) } }
-        }
-        rule.onRoot().captureRoboImage("/tmp/shots/gifts_premium.png")
+        rule.setContent { Column(Modifier.fillMaxSize()) { for ((idx, m) in models.withIndex()) Box(Modifier.weight(1f).fillMaxWidth()) { Gift3D(GiftLogic.mint(Identity.fromSeed(ByteArray(32) { (it + 7 + idx * 37).toByte() }), "T", m, m + idx), animate = false, modelScale = 0.82f) } } }
+        rule.onRoot().captureRoboImage(path)
     }
+    @Test fun diamondVariants() = row("/tmp/shots/variants_diamond.png", listOf(13, 14, 15))
+    @Test fun plush() = row("/tmp/shots/variants_plush.png", listOf(19, 19, 19))
+    @Test fun luxuryVariants() = row("/tmp/shots/variants_luxury.png", listOf(16, 17, 18))
 
     @Test fun allModels() {
         val id = Identity.fromSeed(ByteArray(32) { it.toByte() })

@@ -19,6 +19,10 @@ object GiftCatalog {
         Model("Chalice", "🏆", 16), Model("Bell", "🔔", 9),
         // premium: very expensive, always drawn from the rarest materials
         Model("Royal Crown", "👑", 50_000), Model("Rocket", "🚀", 150_000), Model("Mega Diamond", "💠", 500_000),
+        // --- candidates for review (will be reduced to the chosen ones) ---
+        Model("Diamond A · Brilliant", "💎", 500_000), Model("Diamond B · Emerald cut", "💎", 500_000), Model("Diamond C · Rough crystal", "💎", 500_000),
+        Model("Luxury A · Orbit Genesis", "🪐", 2_000_000_000), Model("Luxury B · Imperial Crown", "👑", 2_000_000_000), Model("Luxury C · Faberge Egg", "🥚", 2_000_000_000),
+        Model("Plush Teddy", "🧸", 5_000),
     )
     const val PREMIUM_FROM = 10
     val materials = listOf(

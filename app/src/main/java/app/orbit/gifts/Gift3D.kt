@@ -76,7 +76,7 @@ fun Gift3D(
 
         // shadow & glow
         drawOval(Color.Black.copy(alpha = 0.22f), Offset(cx - scale * 0.9f, cy + scale * 1.55f + bob * 0.2f), Size(scale * 1.8f, scale * 0.28f))
-        drawCircle(Brush.radialGradient(listOf(Color(mat.glint).copy(alpha = 0.22f), Color.Transparent), Offset(cx, cy), scale * 1.9f), scale * 1.9f, Offset(cx, cy))
+        drawCircle(Brush.radialGradient(listOf(Color(mat.glint).copy(alpha = 0.12f), Color.Transparent), Offset(cx, cy), scale * 1.9f), scale * 1.9f, Offset(cx, cy))
 
         val v = mesh.v
         for (i in 0 until v.size / 3) {
@@ -113,22 +113,48 @@ fun Gift3D(
             val hx = lx; val hy = ly; val hz = lz - 1f; val hl = sqrt(hx * hx + hy * hy + hz * hz)
             val spec = ((nx * hx + ny * hy + nz * hz) / hl).coerceAtLeast(0f).pow(14f + mat.shine * 30f) * mat.shine
             val rim = (1f + nz).coerceIn(0f, 1f).pow(3f) * 0.25f
+            var gemEdge = false
             val pc = parts[mesh.part[f].coerceAtMost(parts.size - 1)]
             var col = if (lam < 0.5f) lerp(pc.shade, pc.base, lam / 0.5f) else lerp(pc.base, pc.glint, ((lam - 0.5f) / 0.5f) * 0.55f)
             if (pc.iridescent) { val hue = ((nx * 0.5f + ny * 0.35f + t * 0.12f + traits.model * 0.07f) % 1f + 1f) % 1f * 360f; col = lerp(col, Color.hsv(hue, 0.55f, 1f), 0.55f) }
             // sky-ground environment tint on shiny stuff
             // chrome-like environment reflection: sky above, dark ground, bright horizon line
             val ry = (-2f * nz * ny).coerceIn(-1f, 1f)
-            val env = if (ry > 0f) lerp(Color(0xFFBFD9FF).copy(alpha = 1f), pc.glint, (1f - ry)) else lerp(pc.shade, Color(0xFF0B0F1A), (-ry).coerceIn(0f, 1f) * 0.8f)
+            val sky = lerp(pc.base, Color.White, 0.30f); val env = if (ry > 0f) lerp(sky, pc.base, (1f - ry)) else lerp(pc.shade, Color.Black, (0.35f + (-ry).coerceIn(0f, 1f) * 0.45f))
             val horizon = (1f - abs(ry * 3f)).coerceIn(0f, 1f)
-            col = lerp(col, lerp(env, Color.White, horizon * 0.8f), 0.38f * mat.shine)
+            col = lerp(col, lerp(env, Color.White, horizon * 0.55f), 0.34f * mat.shine)
+            if (mesh.part[f] == 3) {
+                // glass gem: every facet mirrors the environment differently -> deep sapphire shadows, icy / white / lavender lights
+                val ry3 = -2f * nz * ny; val rx3 = -2f * nz * nx
+                val hsh = (((f * 2654435761L) ushr 8) and 0xff) / 255f
+                val band = (sin(ry3 * 7f + rx3 * 5f + hsh * 6.283f + t * 0.7f) * 0.5f + 0.5f)
+                val br = ((0.10f + 0.90f * band.pow(1.8f)) * (0.55f + 0.45f * lam)).coerceIn(0f, 1f)
+                val tint = GemTints[(hsh * 5.99f).toInt().coerceIn(0, 5)]
+                var gc = lerp(Color(0xFF2B3F9E), tint, br)
+                gc = lerp(gc, Color.White, (spec * 1.2f + (if (hsh > 0.86f && band > 0.62f) 0.5f else 0f)).coerceIn(0f, 0.97f))
+                col = gc
+                gemEdge = true
+            } else if (mesh.part[f] == 4 || mesh.part[f] == 5 || mesh.part[f] == 7) {
+                // plush: soft wrap lighting, no specular, a little fuzz per patch and a warm rim
+                val fuzz = ((((f * 2246822519L) ushr 9) and 0xff) / 255f - 0.5f) * 0.10f
+                val w = (diff * 0.5f + 0.5f).coerceIn(0f, 1f)
+                var pcCol = lerp(pc.shade, pc.base, (0.30f + 0.70f * w.pow(0.85f) + fuzz).coerceIn(0f, 1f))
+                pcCol = lerp(pcCol, pc.glint, (rim * 0.9f + (w - 0.7f).coerceAtLeast(0f) * 0.35f).coerceIn(0f, 0.5f))
+                col = pcCol
+            } else if (mesh.part[f] == 2) {
+                // polished gold: bright and dark reflection bands like a real mirror finish
+                val ry2 = -2f * nz * ny; val rx2 = -2f * nz * nx
+                val m = sin(ry2 * 4.5f + rx2 * 2.2f + 0.6f) * 0.5f + 0.5f
+                var gc = lerp(Color(0xFF7A4A06), Color(0xFFFFF0B0), ((0.10f + 0.90f * m.pow(1.15f)) * (0.55f + 0.45f * lam)).coerceIn(0f, 1f))
+                gc = lerp(gc, Color(0xFFF2B61F), 0.30f)
+                col = lerp(gc, Color.White, (spec * 0.8f).coerceIn(0f, 0.8f))            } else
             col = lerp(col, Color.White, (spec * 0.85f + rim * 0.35f).coerceIn(0f, 0.9f))
             path.reset()
             path.moveTo(sx[fi[0]], sy[fi[0]])
             for (k in 1 until fi.size) path.lineTo(sx[fi[k]], sy[fi[k]])
             path.close()
             drawPath(path, col)
-            drawPath(path, col, style = Stroke(width = 0.9f))
+            drawPath(path, if (gemEdge) Color.White.copy(alpha = 0.40f) else col, style = Stroke(width = if (gemEdge) 1.1f else 0.9f))
         }
         // sparkles
         for (s in sparkles) {
@@ -140,6 +166,8 @@ fun Gift3D(
     }
 }
 
+private val GemTints = arrayOf(Color(0xFF9FD8FF), Color(0xFFEAF6FF), Color(0xFFBFA8FF), Color(0xFF7FE8FF), Color(0xFFFFFFFF), Color(0xFFD7C6FF))
+
 private class PartColors(val base: Color, val shade: Color, val glint: Color, val iridescent: Boolean)
 
 private fun partColors(t: Traits): List<PartColors> {
@@ -150,7 +178,13 @@ private fun partColors(t: Traits): List<PartColors> {
     val a1 = PartColors(Color(alt.base), Color(alt.shade), Color(alt.glint), alt.iridescent)
     val gold = GiftCatalog.materials[0]
     val a2 = PartColors(Color(gold.base), Color(gold.shade), Color(gold.glint), false)
-    return listOf(main, a1, a2)
+    val diamond = PartColors(Color(0xFFBFE4FF), Color(0xFF0E1B45), Color(0xFFFFFFFF), true)   // icy glass with spectral fire
+    // plush: fur colour chosen by the seed; light fur, glossy dark and a contrasting ribbon
+    val furs = listOf(0xFFD9A066, 0xFFFFE3C4, 0xFFFFA9C4, 0xFFC7B2F2, 0xFF9FE0C0, 0xFF9CCBFF)
+    val fur = furs[(t.backdrop + t.pattern) % furs.size]
+    fun soft(c: Long) = PartColors(Color(c), Color(c).let { lerp(it, Color(0xFF3B2412), 0.5f) }, Color(c).let { lerp(it, Color.White, 0.45f) }, false)
+    val ribbons = listOf(0xFFE5384F, 0xFF3B7BFF, 0xFFFFC21F, 0xFF2BBE7E, 0xFFA855F7)
+    return listOf(main, a1, a2, diamond, soft(fur), soft(0xFFFFF3E2), PartColors(Color(0xFF2A1A1A), Color(0xFF0A0505), Color(0xFFB9A0A0), false), soft(ribbons[(t.material + t.symbol) % ribbons.size]))
 }
 
 fun DrawScope.drawSparkle(c: Offset, r: Float, color: Color) {
