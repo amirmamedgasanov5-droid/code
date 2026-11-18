@@ -43,7 +43,9 @@ fun MeTab() {
     val engine = LocalEngine.current; val nav = LocalNav.current; val p = OrbitTheme.p
     val prof by engine.profile.collectAsState(); val gifts by engine.gifts.collectAsState()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
+        val worn by engine.worn.collectAsState()
         Box(Modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(p.accent.copy(alpha = 0.28f), p.bg)))) {
+            worn?.let { w -> Box(Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(12.dp).size(132.dp).clip(RoundedCornerShape(26.dp)).pressable({ nav.push(Route.GiftDetail(w.id)) })) { app.orbit.gifts.Gift3D(w, modelScale = 1.05f) } }
             Column(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 24.dp, bottom = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Avatar(prof.name, prof.emoji, prof.color, 96.dp)
                 Spacer(Modifier.height(12.dp))

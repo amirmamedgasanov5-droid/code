@@ -190,6 +190,9 @@ fun InfoScreen(id: String) {
     Column(Modifier.fillMaxSize()) {
         TopBar(when (chat.type) { ChatType.DIRECT -> "Contact"; ChatType.GROUP -> "Group"; else -> "Channel" }, { nav.pop() })
         Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
+            val wt by engine.wornTick.collectAsState(); val cw = remember(wt, id) { engine.contactWorn(id) }
+            Box(Modifier.fillMaxWidth()) {
+            cw?.let { w -> Box(Modifier.align(Alignment.TopEnd).padding(12.dp).size(124.dp).clip(RoundedCornerShape(24.dp)).clickable { }) { app.orbit.gifts.Gift3D(w, modelScale = 1.05f) } }
             Column(Modifier.fillMaxWidth().padding(vertical = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Avatar(chat.title, chat.emoji, chat.color, 96.dp, online = id in online)
                 Spacer(Modifier.height(10.dp))
@@ -203,6 +206,7 @@ fun InfoScreen(id: String) {
                     if (chat.type == ChatType.DIRECT) TonalButton("Gift", { nav.pop(); nav.push(Route.GiftShop(id)) }, icon = Icons.Rounded.CardGiftcard)
                     TonalButton(if (chat.muted) "Unmute" else "Mute", { engine.setMuted(id, !chat.muted) }, icon = if (chat.muted) Icons.Rounded.NotificationsActive else Icons.Rounded.NotificationsOff)
                 }
+            }
             }
             if (chat.type == ChatType.DIRECT && contact != null) {
                 Card {

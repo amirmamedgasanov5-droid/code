@@ -197,6 +197,7 @@ fun GiftDetailScreen(id: String) {
     val t = remember(g.id) { GiftLogic.traits(g) }
     val valid = remember(g) { GiftLogic.verify(g) }
     var sendTo by remember { mutableStateOf(false) }; var msg by remember { mutableStateOf("") }
+    val wornNow by engine.worn.collectAsState(); val isWorn = wornNow?.id == g.id
     var sellDlg by remember { mutableStateOf(false) }; val tick by engine.listingsTick.collectAsState(); val listed = remember(tick, g.id) { engine.listedPrice(g.id) }
     val chain = remember(g) { listOf(g.issuer to g.mintedAt) + g.transfers.map { it.toId to it.ts } }
     fun nameOf(i: String) = if (i == engine.myId) "You" else contacts[i]?.displayName ?: "User ${i.take(6)}"
@@ -237,7 +238,8 @@ fun GiftDetailScreen(id: String) {
             }
             Text("There is no blockchain: ownership is a chain of signatures. If someone secretly hands the same gift to two people, both copies will carry a different signed branch and devices that see both flag it. Treat gifts as collectibles among people you trust.", Modifier.padding(20.dp, 10.dp), fontSize = 12.sp, color = p.textDim)
             if (isMine) Column(Modifier.padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                GradientButton("Send to a friend", { sendTo = true }, Modifier.fillMaxWidth(), icon = Icons.Rounded.CardGiftcard)
+                GradientButton(if (isWorn) "Remove from my profile" else "Wear on my profile", { engine.wearGift(if (isWorn) null else g.id) }, Modifier.fillMaxWidth(), icon = Icons.Rounded.Face)
+                TonalButton("Send to a friend", { sendTo = true }, Modifier.fillMaxWidth(), icon = Icons.Rounded.CardGiftcard)
                 if (listed == null) TonalButton("Sell on the market", { sellDlg = true }, Modifier.fillMaxWidth(), icon = Icons.Rounded.Sell)
                 else TonalButton("Listed for ${coinsFmt(listed)} 💰 · remove", { engine.unlistGift(g.id) }, Modifier.fillMaxWidth(), icon = Icons.Rounded.Close, danger = true)
             }

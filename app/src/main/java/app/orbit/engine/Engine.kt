@@ -84,6 +84,7 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
         _directory.value = db.directory(); _gifts.value = db.gifts()
         _coins.value = db.getKv("coins")?.toIntOrNull() ?: WELCOME_COINS.also { db.setKv("coins", it.toString()) }
         _lastSpin.value = db.getKv("lastSpin")?.toLongOrNull() ?: 0L
+        _worn.value = currentWorn()
         if (app.orbit.BuildConfig.ADMIN_BUILD) db.setKv("admin", "1")
         _admin.value = db.getKv("admin") == "1"
     }
@@ -248,6 +249,7 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
     private suspend fun sendHello(c: Contact) {
         val id = identity ?: return
         val j = JSONObject().put("t", "hi").put("p", myCard())
+        currentWorn()?.let { j.put("wg", it.toJson()) }
         mesh.submit(Envelope.direct(id, Peer.fromId(c.id, c.boxPub), Pay.enc(j), ttlMs = 7L * 86400_000))
     }
 
@@ -520,7 +522,10 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
         when (type) {
             "hi" -> {
                 val old = _contacts.value[sender.id]
-                addContactInternal(sender, "", stranger = old == null, p = j.optJSONObject("p"))
+                addContactInternal(sender, "", stranger = true, p = j.optJSONObject("p")) // a hello never upgrades trust: only I can accept a stranger
+                val wg = j.optJSONObject("wg")?.let { try { Gift.fromJson(it) } catch (e: Exception) { null } }
+                db.setKv("worn.${sender.id}", if (wg != null && GiftLogic.verify(wg) && wg.owner == sender.id) wg.toJson().toString() else "")
+                _wornTick.value++
             }
             "m", "gift" -> {
                 val c = _contacts.value[sender.id]?.let { if (j.has("from")) addContactInternal(sender, "", it.stranger, j.getJSONObject("from")) else it }
@@ -839,6 +844,18 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
     )
     /** authority key that signs admin tokens (overridable in tests only) */
     var adminPub: ByteArray = "6456ec1aabb97746db1471d363fe1f7061bf0e6605c8319d37de9756dc1439b8".unhex()
+    private val _worn = MutableStateFlow<Gift?>(null); val worn: StateFlow<Gift?> = _worn
+    private val _wornTick = MutableStateFlow(0); val wornTick: StateFlow<Int> = _wornTick
+    private fun currentWorn(): Gift? { val id = db.getKv("worn")?.takeIf { it.isNotEmpty() } ?: return null; val e = db.gift(id) ?: return null; return e.first.takeIf { e.second && it.owner == myId } }
+    /** Show one of my gifts on my profile; contacts get it (with its signature chain) and verify it themselves. */
+    fun wearGift(gid: String?) {
+        scope.launch(single) {
+            if (gid == null) db.setKv("worn", "") else { val e = db.gift(gid); if (e == null || !e.second || e.first.owner != myId) return@launch; db.setKv("worn", gid) }
+            _worn.value = currentWorn(); _wornTick.value++
+            for (c in _contacts.value.values) if (!c.blocked && !c.stranger) try { sendHello(c) } catch (_: Exception) {}
+        }
+    }
+    fun contactWorn(id: String): Gift? = db.getKv("worn.$id")?.takeIf { it.isNotEmpty() }?.let { try { Gift.fromJson(JSONObject(it)).takeIf { g -> GiftLogic.verify(g) && g.owner == id } } catch (e: Exception) { null } }
     private val _admin = MutableStateFlow(false); val isAdmin: StateFlow<Boolean> = _admin
 
     /** One entry for everything typed into the promo field: coin codes (once per device) or a long admin token. */

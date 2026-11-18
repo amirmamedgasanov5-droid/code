@@ -169,6 +169,29 @@ class EndToEndTest {
         }
     }
 
+    @Test fun wornGiftShowsOnProfileForContactsAndCannotBeFaked() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        FakeNtfy().use { srv ->
+            val url = "http://127.0.0.1:${srv.port}"
+            val a = Engine(app, "wa.db"); val b = Engine(app, "wb.db"); a.db.setKv("t.relay", "0"); b.db.setKv("t.relay", "0")
+            val ia = Identity.generate(); val ib = Identity.generate()
+            a.attachIdentityForTest(ia, Profile("Alice", "", "🦊", 1, "")); b.attachIdentityForTest(ib, Profile("Bob", "", "🐼", 2, ""))
+            a.setRelay(true, url); b.setRelay(true, url)
+            val chat = runBlocking { a.openLink(b.myLink()) }!!
+            wait(what = "bob knows alice") { b.contacts.value.containsKey(ia.id) }
+            var g: Gift? = null; a.buyGift(3, "", null) { g = it }; wait(what = "bought") { g != null }
+            assertNull(b.contactWorn(ia.id))
+            b.acceptStranger(ia.id); a.acceptStranger(chat)
+            a.wearGift(g!!.id)
+            wait(what = "bob sees alice's worn gift") { b.contactWorn(ia.id)?.id == g!!.id }
+            assertEquals(g!!.id, a.worn.value?.id)
+            // a gift Alice does not own cannot be worn
+            a.wearGift("00".repeat(16)); Thread.sleep(200); assertEquals(g!!.id, a.worn.value?.id)
+            a.wearGift(null); wait(what = "bob sees it removed") { b.contactWorn(ia.id) == null }
+            a.shutdown(); b.shutdown()
+        }
+    }
+
     @Test fun wheelPaysOutOncePerDay() {
         val app = ApplicationProvider.getApplicationContext<Application>()
         val e = Engine(app, "w.db"); e.db.setKv("t.relay", "0")
