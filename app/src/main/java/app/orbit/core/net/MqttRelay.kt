@@ -48,18 +48,24 @@ class MqttRelay(
     fun start() {
         if (jobs.isNotEmpty()) return
         for (s in servers) jobs += scope.launch(Dispatchers.IO) {
-            var backoff = 500L
+            var backoff = 2_000L
+            delay((servers.indexOf(s) * 700L))                                    // do not open every connection in the same instant
             while (isActive) {
-                try { session(s); backoff = 500L }
+                val began = System.currentTimeMillis()
+                try { session(s); backoff = 2_000L }
                 catch (e: CancellationException) { throw e }
                 catch (e: Exception) {
                     s.online = false; s.out = null; refresh(); s.lastError = (e.javaClass.simpleName + ": " + (e.message ?: "")).take(110)
+                    val m = e.message ?: ""
+                    // Brokers ban clients that reconnect too fast ("flapping"): connect refused (code 5) = banned/not authorized.
                     val wait = when {
+                        m.contains("connect refused") -> 10 * 60_000L
                         e is java.net.UnknownHostException || e is javax.net.ssl.SSLException -> 10 * 60_000L
-                        e is java.net.SocketTimeoutException || e is java.net.ConnectException -> maxOf(backoff, 20_000L)
+                        e is java.net.SocketTimeoutException || e is java.net.ConnectException -> maxOf(backoff, 30_000L)
+                        System.currentTimeMillis() - began > 60_000 -> 3_000L           // it was fine for a while: quick comeback
                         else -> backoff
                     }
-                    delay(wait); backoff = (backoff * 2).coerceAtMost(5_000)
+                    delay(wait + (Math.random() * 1000).toLong()); backoff = (backoff * 2).coerceAtMost(60_000)
                 }
             }
         }
@@ -92,7 +98,7 @@ class MqttRelay(
             s.out = out; s.subscribed.clear()
             sock.soTimeout = 75_000
             // CONNECT: MQTT 3.1.1, persistent session (clean=0), keepalive 30 s
-            write(s, packet(0x10, str("MQTT") + byteArrayOf(4, 0) + u16(30) + str(clientId)))
+            write(s, packet(0x10, str("MQTT") + byteArrayOf(4, 0) + u16(30) + str(clientId + "-" + Integer.toHexString(s.url.hashCode()))))
             val (t, b) = readPacket(inp)
             if (t shr 4 != 2 || b.size < 2 || b[1].toInt() != 0) throw IOException("connect refused (code ${b.getOrNull(1)})")
             s.online = true; s.lastError = ""; refresh()

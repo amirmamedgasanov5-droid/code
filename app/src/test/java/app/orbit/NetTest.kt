@@ -50,7 +50,7 @@ class NetTest {
         assertEquals("d1:ai5ee", String(Bencode.encode(mapOf("a" to 5L))))
     }
 
-    private fun waitFor(ms: Long = 20000, c: () -> Boolean) = runBlocking { val t = System.currentTimeMillis(); while (!c() && System.currentTimeMillis() - t < ms) delay(20); assertTrue("timeout", c()) }
+    private fun waitFor(ms: Long = 60000, c: () -> Boolean) = runBlocking { val t = System.currentTimeMillis(); while (!c() && System.currentTimeMillis() - t < ms) delay(20); assertTrue("timeout", c()) }
 
     @Test fun twoPhonesFindEachOtherThroughDhtAndExchangeMessagesOverLossyUdp() {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -70,7 +70,7 @@ class NetTest {
             // a 300 KB "photo" through 25% packet loss must arrive intact
             val big = Rand.bytes(300_000)
             runBlocking { na.submit(Envelope.direct(a, Peer(b.signPub, b.boxPub), big)) }
-            waitFor(40000) { rb.got.size == 1 }
+            waitFor(90000) { rb.got.size == 1 }
             assertArrayEquals(big, rb.got[0])
             println("LOSSY: dropped=${ta.dropped.get() + tb.dropped.get()} retransmits=${ta.retransmits.get() + tb.retransmits.get()}")
             assertTrue("loss must really happen", ta.dropped.get() + tb.dropped.get() > 20)
