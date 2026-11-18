@@ -141,11 +141,18 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
     fun relayUrls(): List<String> = (db.getKv("relay.urls") ?: db.getKv("relay.url") ?: defaultRelays.joinToString("\n")).lines().map { it.trim().trimEnd('/') }.filter { Regex("^(https?|tcp|tls|ws|wss)://.+").matches(it) }.ifEmpty { listOf("https://ntfy.sh") }
     fun relayUrl() = relayUrls().size.let { if (it == 1) relayUrls()[0].substringAfter("://") else "$it servers" }
     fun setRelay(on: Boolean, urls: String? = null) { db.setKv("t.relay", if (on) "1" else "0"); if (urls != null) db.setKv("relay.urls", urls.lines().map { it.trim().trimEnd('/') }.filter { it.isNotEmpty() }.joinToString("\n")); configureRelay() }
+    /** Put (or remove) the user's own Firebase Realtime Database URL at the top of the relay list. */
+    fun setFirebase(url: String?) {
+        val rest = relayUrls().filter { !app.orbit.core.net.FirebaseRelay.isFirebase(it) }
+        val line = url?.trim()?.trimEnd('/')?.takeIf { it.isNotEmpty() }?.let { if (it.startsWith("http")) it else "https://$it" }
+        setRelay(true, (listOfNotNull(line) + rest).joinToString("\n"))
+    }
+    fun firebaseUrl(): String = relayUrls().firstOrNull { app.orbit.core.net.FirebaseRelay.isFirebase(it) } ?: ""
     fun relayUrlsText() = relayUrls().joinToString("\n")
     fun configureRelay() {
         relay?.stop(); relay = null; _relayOnline.value = false
         if (!relayEnabled() || identity == null) return
-        val r = app.orbit.core.net.RelayHub(scope, relayUrls(), { tagIndex.keys.map { it.unhex() } }, { env -> mesh.ingestExternal(env) }, "orbit-" + identity!!.signPub.let { Tags.user(it).hex() })
+        val r = app.orbit.core.net.RelayHub(scope, relayUrls(), { tagIndex.keys.map { it.unhex() } }, { env -> mesh.ingestExternal(env) }, "orbit-" + identity!!.signPub.let { Tags.user(it).hex() }, Tags.user(identity!!.signPub))
         relay = r; r.start()
         scope.launch { r.online.collect { _relayOnline.value = it } }
     }

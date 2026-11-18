@@ -75,6 +75,22 @@ fun MeshTab(onBack: (() -> Unit)? = null) {
                         confirmButton = { TextButton({ engine.setRelay(true, urls); dlg = false }) { Text("Save") } },
                         dismissButton = { TextButton({ engine.setRelay(true, engine.defaultRelays.joinToString("\n")); dlg = false }) { Text("Reset to default") } }) }
             }
+            item {
+                var fb by remember { mutableStateOf(false) }
+                val ctx2 = LocalContext.current
+                Card(Modifier.padding(top = 10.dp)) { SettingsRow("Firebase database (your own)", engine.firebaseUrl().ifBlank { "Not set — the most stable option, see setup" }.removePrefix("https://"), Icons.Rounded.LocalFireDepartment, Color(0xFFFF8A5B), onClick = { fb = true }) }
+                if (fb) { var url by remember { mutableStateOf(engine.firebaseUrl()) }
+                    AlertDialog({ fb = false }, containerColor = p.surfaceHigh, title = { Text("Firebase Realtime Database") },
+                        text = { Column(Modifier.verticalScroll(rememberScrollState())) {
+                            OutlinedTextField(url, { url = it.trim() }, singleLine = true, label = { Text("https://….firebaseio.com") }, shape = RoundedCornerShape(14.dp))
+                            Text("Setup (2 minutes, free, no card):\n1. console.firebase.google.com → Add project\n2. Build → Realtime Database → Create database (any region, locked mode)\n3. Open the Rules tab, paste the rules below, Publish\n4. Copy the database URL from the Data tab and paste it above\n5. Do the same URL on every phone that should use it", Modifier.padding(top = 10.dp), fontSize = 12.sp, color = p.textDim)
+                            Text(FIREBASE_RULES, Modifier.padding(top = 8.dp).clip(RoundedCornerShape(10.dp)).background(p.surface).padding(10.dp), fontSize = 10.5.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+                            TextButton({ copyText(ctx2, "rules", FIREBASE_RULES) }) { Text("Copy rules") }
+                            Text("Messages in the database are end-to-end encrypted. Google sees IP addresses and timing. The rules let anyone who knows a topic read it, but nobody can list all topics.", fontSize = 11.5.sp, color = p.textDim)
+                        } },
+                        confirmButton = { TextButton({ engine.setFirebase(url); fb = false }) { Text("Save") } },
+                        dismissButton = { TextButton({ engine.setFirebase(null); fb = false }) { Text("Remove") } }) }
+            }
             item { SectionLabel("Connected now") }
             if (peers.isEmpty()) item { Text("Nobody in range. Messages you send are stored and will hop on automatically when any phone running Orbit comes within reach.", Modifier.padding(horizontal = 20.dp, vertical = 4.dp), style = MaterialTheme.typography.bodyMedium, color = p.textDim) }
             items(peers, key = { it.peerId }) { pi ->
@@ -201,3 +217,17 @@ fun NetworkScreen() {
         }
     }
 }
+
+private const val FIREBASE_RULES = """{
+  "rules": {
+    "orbit": {
+      "${'$'}topic": {
+        ".read": true,
+        "${'$'}id": {
+          ".write": true,
+          ".validate": "newData.hasChildren(['t','d']) && newData.child('d').isString() && newData.child('d').val().length < 400000"
+        }
+      }
+    }
+  }
+}"""

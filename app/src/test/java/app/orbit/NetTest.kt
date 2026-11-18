@@ -299,3 +299,73 @@ class MqttRelayTest {
     @Test fun webSocketBrokerWorksToo() = run("ws", "ws")
     @Test fun mixedTransportsInterop() = run("tcp", "ws")
 }
+
+
+/** Fake Firebase Realtime Database: POST push, DELETE child, GET with Accept: text/event-stream (SSE put events). */
+class FakeRtdb : AutoCloseable {
+    private val server = ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"))
+    val port get() = server.localPort
+    @Volatile private var running = true
+    val store = ConcurrentHashMap<String, ConcurrentHashMap<String, String>>()   // topic -> id -> json
+    private val n = java.util.concurrent.atomic.AtomicInteger()
+    init { Thread { while (running) { val s = try { server.accept() } catch (e: Exception) { break }; Thread { handle(s) }.also { it.isDaemon = true }.start() } }.also { it.isDaemon = true }.start() }
+    private fun handle(sock: Socket) {
+        try {
+            val inp = sock.getInputStream().buffered(); val out = sock.getOutputStream()
+            fun line(): String { val sb = StringBuilder(); while (true) { val c = inp.read(); if (c < 0 || c == '\n'.code) break; if (c != '\r'.code) sb.append(c.toChar()) }; return sb.toString() }
+            val req = line().split(" "); var len = 0
+            while (true) { val h = line(); if (h.isEmpty()) break; if (h.lowercase().startsWith("content-length:")) len = h.substringAfter(":").trim().toInt() }
+            val parts = req[1].substringBefore("?").trim('/').removeSuffix(".json").split("/")   // orbit/<topic>[/<id>]
+            val topic = parts[1]
+            when (req[0]) {
+                "POST" -> { val body = ByteArray(len); var k = 0; while (k < len) { val r = inp.read(body, k, len - k); if (r < 0) break; k += r }
+                    val id = "-N" + n.incrementAndGet(); store.getOrPut(topic) { ConcurrentHashMap() }[id] = String(body)
+                    val resp = "{\"name\":\"$id\"}"; out.write("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ${resp.length}\r\nConnection: close\r\n\r\n$resp".toByteArray()); out.flush(); sock.close() }
+                "DELETE" -> { if (parts.size > 2) store[topic]?.remove(parts[2]); out.write("HTTP/1.1 200 OK\r\nContent-Length: 4\r\nConnection: close\r\n\r\nnull".toByteArray()); out.flush(); sock.close() }
+                else -> {
+                    out.write("HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nConnection: close\r\n\r\n".toByteArray())
+                    val snap = store[topic]?.toMap() ?: emptyMap()
+                    val data = if (snap.isEmpty()) "null" else snap.entries.joinToString(",", "{", "}") { "\"${it.key}\":${it.value}" }
+                    out.write("event: put\ndata: {\"path\":\"/\",\"data\":$data}\n\n".toByteArray()); out.flush()
+                    val seen = HashSet(snap.keys)
+                    while (running) {
+                        store[topic]?.forEach { (id, json) -> if (seen.add(id)) { out.write("event: put\ndata: {\"path\":\"/$id\",\"data\":$json}\n\n".toByteArray()); out.flush() } }
+                        Thread.sleep(30)
+                    }
+                }
+            }
+        } catch (e: Exception) { try { sock.close() } catch (_: Exception) {} }
+    }
+    override fun close() { running = false; try { server.close() } catch (_: Exception) {} }
+}
+
+class FirebaseRelayTest {
+    @Test fun photoReachesOfflineRecipientThroughRealtimeDatabaseAndIsCleanedUp() = runBlocking {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        FakeRtdb().use { db ->
+            val a = Identity.generate(); val b = Identity.generate()
+            val na = MeshNode(a, MemoryStore(), scope); val nb = MeshNode(b, MemoryStore(), scope)
+            val rb = Recorder(b, listOf(Tags.user(b.signPub))); nb.handler = rb; na.handler = Recorder(a, emptyList())
+            val base = "http://127.0.0.1:${db.port}"
+            val fa = FirebaseRelay(scope, listOf(base), { listOf(Tags.user(a.signPub)) }, Tags.user(a.signPub), { na.ingestExternal(it) })
+            val fb = FirebaseRelay(scope, listOf(base), { listOf(Tags.user(b.signPub)) }, Tags.user(b.signPub), { nb.ingestExternal(it) })
+            na.onLocalSubmit = { fa.publish(it) }
+            fa.start()
+            val photo = Rand.bytes(150_000)
+            na.submit(Envelope.direct(a, Peer(b.signPub, b.boxPub), photo))
+            delay(500)
+            assertEquals("stored for the offline recipient", 1, db.store[Tags.user(b.signPub).hex()]?.size)
+            fb.start()                                                       // B comes online later and catches up
+            val t = System.currentTimeMillis(); while (rb.got.isEmpty() && System.currentTimeMillis() - t < 15000) delay(20)
+            assertEquals(1, rb.got.size); assertArrayEquals(photo, rb.got[0])
+            val t2 = System.currentTimeMillis(); while ((db.store[Tags.user(b.signPub).hex()]?.size ?: 0) > 0 && System.currentTimeMillis() - t2 < 5000) delay(20)
+            assertEquals("taken messages are deleted", 0, db.store[Tags.user(b.signPub).hex()]?.size ?: 0)
+            fa.stop(); fb.stop(); scope.cancel()
+        }
+    }
+    @Test fun firebaseLinesAreRecognised() {
+        assertTrue(FirebaseRelay.isFirebase("https://my-app-default-rtdb.firebaseio.com"))
+        assertTrue(FirebaseRelay.isFirebase("https://my-app-default-rtdb.europe-west1.firebasedatabase.app"))
+        assertFalse(FirebaseRelay.isFirebase("https://ntfy.sh"))
+    }
+}
