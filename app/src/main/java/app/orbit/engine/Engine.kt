@@ -121,8 +121,10 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
     }
     fun relayEnabled() = db.getKv("t.relay") != "0"
     /** one server URL per line; all are used at the same time */
-    fun relayUrls(): List<String> = (db.getKv("relay.urls") ?: db.getKv("relay.url") ?: "https://ntfy.sh").lines().map { it.trim().trimEnd('/') }.filter { it.startsWith("http") }.ifEmpty { listOf("https://ntfy.sh") }
-    fun relayUrl() = relayUrls().joinToString(", ") { it.removePrefix("https://") }
+    /** ntfy.sh (official) + community servers listed in the ntfy docs. Availability and anonymous access are not guaranteed. */
+    val defaultRelays = listOf("https://ntfy.sh", "https://ntfy.envs.net", "https://ntfy.adminforge.de", "https://ntfy.tedomum.fr", "https://ntfy.jae.fi", "https://ntfy.mzte.de", "https://ntfy.hostux.net", "https://ntfy.fossman.de", "https://notify.utilibre.org")
+    fun relayUrls(): List<String> = (db.getKv("relay.urls") ?: db.getKv("relay.url") ?: defaultRelays.joinToString("\n")).lines().map { it.trim().trimEnd('/') }.filter { it.startsWith("http") }.ifEmpty { listOf("https://ntfy.sh") }
+    fun relayUrl() = relayUrls().size.let { if (it == 1) relayUrls()[0].removePrefix("https://") else "$it servers" }
     fun setRelay(on: Boolean, urls: String? = null) { db.setKv("t.relay", if (on) "1" else "0"); if (urls != null) db.setKv("relay.urls", urls.lines().map { it.trim().trimEnd('/') }.filter { it.isNotEmpty() }.joinToString("\n")); configureRelay() }
     fun relayUrlsText() = relayUrls().joinToString("\n")
     fun configureRelay() {

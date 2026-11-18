@@ -60,7 +60,12 @@ class CloudRelay(
                 if (topics.isEmpty()) { delay(3000); continue }
                 try { topicsCount = topics.size; listen(s, topics); backoff = 2000L }
                 catch (e: CancellationException) { throw e }
-                catch (e: Exception) { s.online = false; refreshOnline(); s.lastError = (e.javaClass.simpleName + ": " + (e.message ?: "")).take(110); delay(backoff); backoff = (backoff * 2).coerceAtMost(60_000) }
+                catch (e: Exception) {
+                    s.online = false; refreshOnline(); s.lastError = (e.javaClass.simpleName + ": " + (e.message ?: "")).take(110)
+                    // 401/403/404: the server wants an account or does not offer the service: stop knocking for half an hour
+                    val hard = e.message?.let { it.contains("http 401") || it.contains("http 403") || it.contains("http 404") } == true
+                    delay(if (hard) 30 * 60_000L else backoff); backoff = (backoff * 2).coerceAtMost(60_000)
+                }
             }
         }
     }
@@ -133,6 +138,7 @@ class CloudRelay(
             c.outputStream.use { it.write(body.toByteArray()) }
             val code = c.responseCode
             if (code == 429) { s.pausedUntil = System.currentTimeMillis() + 10 * 60_000; s.lastError = "HTTP 429: rate/daily limit reached, paused 10 min" }
+            else if (code == 401 || code == 403 || code == 404) { s.pausedUntil = System.currentTimeMillis() + 30 * 60_000; s.lastError = "HTTP $code: server refuses anonymous use" }
             else if (code !in 200..299) s.lastError = "HTTP $code"
             code in 200..299
         } finally { c.disconnect() }

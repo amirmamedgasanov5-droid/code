@@ -71,9 +71,9 @@ fun MeshTab(onBack: (() -> Unit)? = null) {
                 if (dlg) { var urls by remember { mutableStateOf(engine.relayUrlsText()) }
                     AlertDialog({ dlg = false }, containerColor = p.surfaceHigh, title = { Text("Relay servers") },
                         text = { Column { OutlinedTextField(urls, { urls = it }, minLines = 3, label = { Text("One https:// address per line") }, shape = RoundedCornerShape(14.dp))
-                            Text("Messages are sent through ALL listed servers at once and received from all of them, so one blocked server does not stop delivery. Any ntfy-compatible server works, including your own. Your contact only needs one server in common with you.", Modifier.padding(top = 8.dp), fontSize = 12.sp, color = p.textDim) } },
+                            Text("The default list is ntfy.sh plus community servers from the ntfy docs; some may require an account and will show an error — remove them if you like. Each listed server sees your IP and the encrypted data. Messages are sent through ALL listed servers at once and received from all of them, so one blocked server does not stop delivery. Any ntfy-compatible server works, including your own. Your contact only needs one server in common with you.", Modifier.padding(top = 8.dp), fontSize = 12.sp, color = p.textDim) } },
                         confirmButton = { TextButton({ engine.setRelay(true, urls); dlg = false }) { Text("Save") } },
-                        dismissButton = { TextButton({ engine.setRelay(true, "https://ntfy.sh"); dlg = false }) { Text("Reset") } }) }
+                        dismissButton = { TextButton({ engine.setRelay(true, engine.defaultRelays.joinToString("\n")); dlg = false }) { Text("Reset to default") } }) }
             }
             item { SectionLabel("Connected now") }
             if (peers.isEmpty()) item { Text("Nobody in range. Messages you send are stored and will hop on automatically when any phone running Orbit comes within reach.", Modifier.padding(horizontal = 20.dp, vertical = 4.dp), style = MaterialTheme.typography.bodyMedium, color = p.textDim) }
