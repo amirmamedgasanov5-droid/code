@@ -28,10 +28,10 @@ object RichText {
                 g[5].isNotEmpty() -> if (revealSpoilers) withStyle(SpanStyle(background = codeBg)) { append(g[5]) } else withStyle(SpanStyle(color = Color.Transparent, background = base.copy(alpha = 0.35f))) { append(g[5]) }
                 g[6].isNotEmpty() -> {
                     val url = g[6].trimEnd('.', ',', ')', '!', '?')
-                    withLink(LinkAnnotation.Clickable(url, TextLinkStyles(SpanStyle(color = link, textDecoration = TextDecoration.Underline))) { onLink(url) }) { append(url) }
+                    pushStringAnnotation("link", url); withStyle(SpanStyle(color = link, textDecoration = TextDecoration.Underline)) { append(url) }; pop()
                     append(g[6].substring(url.length))
                 }
-                g[7].isNotEmpty() -> withStyle(SpanStyle(color = link, fontWeight = FontWeight.Medium)) { append(g[7]) }
+                g[7].isNotEmpty() -> { pushStringAnnotation("link", g[7]); withStyle(SpanStyle(color = link, fontWeight = FontWeight.Medium, textDecoration = TextDecoration.Underline)) { append(g[7]) }; pop() }
             }
             last = m.range.last + 1
         }

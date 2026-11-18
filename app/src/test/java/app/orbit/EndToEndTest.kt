@@ -61,6 +61,35 @@ class EndToEndTest {
         }
     }
 
+    @Test fun usernameIsFoundOverRelayAndContactCardCanBeShared() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        FakeNtfy().use { srv ->
+            val url = "http://127.0.0.1:${srv.port}"
+            val a = Engine(app, "ua.db"); val b = Engine(app, "ub.db"); val c = Engine(app, "uc.db")
+            listOf(a, b, c).forEach { it.db.setKv("t.relay", "0") }
+            val ia = Identity.generate(); val ib = Identity.generate(); val ic = Identity.generate()
+            a.attachIdentityForTest(ia, Profile("Alice", "", "🦊", 1, "")); b.attachIdentityForTest(ib, Profile("Bob", "", "🐼", 2, "")); c.attachIdentityForTest(ic, Profile("Carol", "", "🦉", 3, ""))
+            listOf(a, b, c).forEach { it.setRelay(true, url) }
+            // Alice claims @alice_x; no direct link anywhere, the announcement travels through the relay
+            a.updateProfile(Profile("Alice", "", "🦊", 1, "alice_x"))
+            wait(what = "bob sees @alice_x in the directory") { b.directory.value.any { it.username == "alice_x" } }
+            val id = runBlocking { b.openUsername("@alice_x") }
+            assertEquals(ia.id, id)
+            assertNull(runBlocking { b.openUsername("@nobody_here") })
+
+            // Alice knows Carol and shares her card with Bob; Bob can open it
+            val carolId = runBlocking { a.openLink(c.myLink()) }!!
+            val bobChat = runBlocking { a.openLink(b.myLink()) }!!
+            a.sendContact(bobChat, carolId)
+            wait(what = "bob receives the contact card") { b.messages(ia.id).value.any { it.kind == MsgKind.CONTACT } }
+            val card = b.messages(ia.id).value.first { it.kind == MsgKind.CONTACT }
+            assertEquals("Carol", card.extra.optString("name"))
+            val opened = runBlocking { b.openLink("orbit://u/" + card.extra.optString("addr")) }
+            assertEquals(ic.id, opened)
+            a.shutdown(); b.shutdown(); c.shutdown()
+        }
+    }
+
     @Test fun wheelPaysOutOncePerDay() {
         val app = ApplicationProvider.getApplicationContext<Application>()
         val e = Engine(app, "w.db"); e.db.setKv("t.relay", "0")

@@ -184,12 +184,6 @@ fun IncomingCallOverlay() {
     val i = inc ?: return
     val c = contacts[i.from]
     val perm = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { live.acceptCall(i); nav.push(Route.Call(i.from)) }
-    DisposableEffect(i.rid) {
-        val tone = try { engine.notifier?.callUri()?.let { u -> RingtoneManager.getRingtone(ctx, u).also { r -> if (Build.VERSION.SDK_INT >= 28) r.isLooping = true; r.play() } } } catch (e: Exception) { null }
-        val vib = ctx.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
-        if (engine.notifier?.vibrate() != false) try { if (Build.VERSION.SDK_INT >= 26) vib?.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 700, 600), 0)) else @Suppress("DEPRECATION") vib?.vibrate(longArrayOf(0, 700, 600), 0) } catch (_: Exception) {}
-        onDispose { try { tone?.stop() } catch (_: Exception) {}; try { vib?.cancel() } catch (_: Exception) {} }
-    }
     LaunchedEffect(i.rid) { delay(45_000); if (engine.incomingCall.value?.rid == i.rid) engine.dismissIncomingCall() }
     Column(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF1C2B5A), Color(0xFF0B1020)))).clickable(enabled = false) {}.systemBarsPadding(), horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(Modifier.height(80.dp))

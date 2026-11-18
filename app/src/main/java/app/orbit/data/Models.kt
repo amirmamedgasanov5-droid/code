@@ -18,7 +18,7 @@ object Status {
 
 object MsgKind {
     const val TEXT = 0; const val IMAGE = 1; const val VOICE = 2; const val GIFT = 3
-    const val SYSTEM = 4; const val LIVE = 5; const val POLL = 6; const val FILE = 7
+    const val SYSTEM = 4; const val LIVE = 5; const val POLL = 6; const val FILE = 7; const val CONTACT = 8
 }
 
 data class Contact(

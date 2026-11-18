@@ -80,6 +80,7 @@ fun ChatScreen(chatId: String) {
     var editing by remember { mutableStateOf<Message?>(null) }
     var menuFor by remember { mutableStateOf<Message?>(null) }
     var showAttach by remember { mutableStateOf(false) }
+    var pickContact by remember { mutableStateOf(false) }
     var showMore by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf<Message?>(null) }
     val listState = rememberLazyListState()
@@ -261,11 +262,20 @@ fun ChatScreen(chatId: String) {
     if (showAttach) ModalBottomSheet({ showAttach = false }, containerColor = p.surface, contentColor = p.text) {
         Column(Modifier.padding(bottom = 24.dp)) {
             SheetItem(Icons.Rounded.Image, "Photo", "Compressed automatically for mesh delivery") { showAttach = false; photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
+            SheetItem(Icons.Rounded.Person, "Contact", "Send a contact card (or your own)") { showAttach = false; pickContact = true }
             if (chat.type == ChatType.DIRECT) SheetItem(Icons.Rounded.CardGiftcard, "Gift", "Animated 3D collectible") { showAttach = false; nav.push(Route.GiftShop(chatId)) }
             if (chat.type == ChatType.DIRECT || chat.type == ChatType.GROUP) SheetItem(Icons.Rounded.FormatBold, "Formatting help", "**bold**  __italic__  `code`  ~~strike~~  ||spoiler||") { showAttach = false; text += "**bold** __italic__ `code` ||spoiler||" }
         }
     }
 
+    if (pickContact) ModalBottomSheet({ pickContact = false }, containerColor = p.surface, contentColor = p.text) {
+        LazyColumn(Modifier.padding(bottom = 24.dp)) {
+            item { SettingsRow("My contact", "Share yourself", Icons.Rounded.Person, onClick = { engine.sendContact(chatId, "me"); pickContact = false }) }
+            items(contacts.values.filter { !it.blocked && it.id != chatId }.sortedBy { it.displayName }.toList()) { c ->
+                Row(Modifier.fillMaxWidth().clickable { engine.sendContact(chatId, c.id); pickContact = false }.padding(horizontal = 16.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) { Avatar(c.displayName, c.emoji, c.color, 40.dp); Spacer(Modifier.width(12.dp)); Text(c.displayName) }
+            }
+        }
+    }
     menuFor?.let { m ->
         MessageMenu(m, chat, onDismiss = { menuFor = null }, onReact = { e -> engine.react(chatId, m.id, e); menuFor = null },
             onReply = { replyTo = m; editing = null; menuFor = null },
@@ -285,6 +295,7 @@ fun ChatScreen(chatId: String) {
 }
 
 fun previewText(m: Message) = when {
+    m.kind == MsgKind.CONTACT -> "👤 Contact: " + m.text
     m.deleted -> "Deleted message"; m.kind == MsgKind.IMAGE -> "🖼 " + m.text.ifBlank { "Photo" }; m.kind == MsgKind.VOICE -> "🎤 Voice message"; m.kind == MsgKind.GIFT -> "🎁 Gift"; else -> m.text
 }
 
@@ -320,14 +331,14 @@ private fun MessageRow(m: Message, chat: Chat, first: Boolean, last: Boolean, en
             val bubbleBg: Modifier = if (m.kind == MsgKind.GIFT) Modifier.background(if (mine) p.outBrush else Brush.linearGradient(listOf(p.bubbleIn, p.bubbleIn)))
             else if (mine) Modifier.background(p.outBrush) else Modifier.background(p.bubbleIn)
             Column(Modifier.widthIn(max = maxW).clip(shape).then(bubbleBg).combinedClickable(onClick = { }, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onMenu() })) {
-                MessageContent(m, chat, mine, first && group && !mine, engine, contacts, all, onJump)
+                MessageContent(m, chat, mine, first && group && !mine, engine, contacts, all, onJump, onMenu)
             }
         }
     }
 }
 
 @Composable
-private fun MessageContent(m: Message, chat: Chat, mine: Boolean, showName: Boolean, engine: app.orbit.engine.Engine, contacts: Map<String, Contact>, all: List<Message>, onJump: (String) -> Unit) {
+private fun MessageContent(m: Message, chat: Chat, mine: Boolean, showName: Boolean, engine: app.orbit.engine.Engine, contacts: Map<String, Contact>, all: List<Message>, onJump: (String) -> Unit, onMenu: () -> Unit) {
     val p = OrbitTheme.p; val prefs = LocalPrefs.current; val nav = LocalNav.current; val ctx = LocalContext.current
     val fg = if (mine) p.onOut else p.text
     val dim = if (mine) p.onOut.copy(alpha = 0.72f) else p.textDim
@@ -353,15 +364,32 @@ private fun MessageContent(m: Message, chat: Chat, mine: Boolean, showName: Bool
             m.kind == MsgKind.VOICE -> VoiceBubble(m, engine, mine)
             m.kind == MsgKind.GIFT -> GiftBubble(m, engine, mine) { nav.push(Route.GiftDetail(it)) }
             m.kind == MsgKind.LIVE -> LiveBubble(m.text, m.extra, m.chatId, mine)
+            m.kind == MsgKind.CONTACT -> ContactBubble(m, mine, engine)
             else -> {}
         }
-        if (m.text.isNotEmpty() && !m.deleted && m.kind != MsgKind.VOICE && m.kind != MsgKind.GIFT && m.kind != MsgKind.LIVE || (m.kind == MsgKind.GIFT && m.text.isNotEmpty())) {
+        if (m.text.isNotEmpty() && !m.deleted && m.kind != MsgKind.VOICE && m.kind != MsgKind.GIFT && m.kind != MsgKind.LIVE && m.kind != MsgKind.CONTACT || (m.kind == MsgKind.GIFT && m.text.isNotEmpty())) {
             val linkColor = if (mine) Color.White else p.accent
-            val annotated = remember(m.text, reveal, mine, p) { RichText.build(m.text, fg, linkColor, fg.copy(alpha = 0.14f), reveal) { url -> if (url.startsWith("orbit://")) { nav.push(Route.AddContact) } else try { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (_: Exception) {} } }
-            val pad = " ".repeat(if (mine) 14 else 9)
-            Box(if (RichText.hasSpoiler(m.text)) Modifier.clickable { reveal = !reveal } else Modifier) {
-                Text(androidx.compose.ui.text.buildAnnotatedString { append(annotated); append(pad) }, color = fg, fontSize = (16 * prefs.textScale).sp, lineHeight = (21 * prefs.textScale).sp)
+            val scope = rememberCoroutineScope(); val toast = { t: String -> android.widget.Toast.makeText(ctx, t, android.widget.Toast.LENGTH_SHORT).show() }
+            val onLink = { url: String ->
+                when {
+                    url.startsWith("orbit://") -> scope.launch { val id = engine.openLink(url); if (id != null) nav.push(Route.Chat(id)) else toast("Invalid Orbit link") }
+                    url.startsWith("@") -> scope.launch { val id = engine.openUsername(url); if (id != null) nav.push(Route.Chat(id)) else toast("$url not found yet — usernames spread through the network, or ask for their link") }
+                    else -> try { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (_: Exception) { toast("No app can open this link") }
+                }
             }
+            val annotated = remember(m.text, reveal, mine, p) { RichText.build(m.text, fg, linkColor, fg.copy(alpha = 0.14f), reveal) { } }
+            val pad = "\u00A0".repeat(if (mine) 14 else 9)
+            var layout by remember { mutableStateOf<androidx.compose.ui.text.TextLayoutResult?>(null) }
+            val full = remember(annotated, pad) { androidx.compose.ui.text.buildAnnotatedString { append(annotated); append(pad) } }
+            Text(full, color = fg, fontSize = (16 * prefs.textScale).sp, lineHeight = (21 * prefs.textScale).sp, onTextLayout = { layout = it },
+                modifier = Modifier.pointerInput(full) {
+                    detectTapGestures(onLongPress = { onMenu() }, onTap = { pos ->
+                        val l = layout ?: return@detectTapGestures
+                        val off = l.getOffsetForPosition(pos)
+                        val hit = full.getStringAnnotations("link", off, off).firstOrNull()
+                        if (hit != null) onLink(hit.item) else if (RichText.hasSpoiler(m.text)) reveal = !reveal
+                    })
+                })
         } else Spacer(Modifier.height(2.dp))
         // meta line
         Row(Modifier.align(Alignment.End).offset(y = if (m.text.isNotEmpty() && m.kind != MsgKind.IMAGE) (-16).dp else 0.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -502,4 +530,21 @@ fun ForwardScreen(msg: Message) {
             }
         }
     }
+}
+
+@Composable
+private fun ContactBubble(m: Message, mine: Boolean, engine: app.orbit.engine.Engine) {
+    val p = OrbitTheme.p; val nav = LocalNav.current; val scope = rememberCoroutineScope()
+    val addr = m.extra.optString("addr"); val name = m.extra.optString("name").ifBlank { m.text }
+    val fg = if (mine) Color.White else p.text
+    Row(Modifier.width(240.dp).padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Avatar(name, m.extra.optString("e"), m.extra.optInt("c"), 46.dp); Spacer(Modifier.width(10.dp))
+        Column(Modifier.weight(1f)) {
+            Text(name, color = fg, fontWeight = FontWeight.Bold, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(m.extra.optString("u").takeIf { it.isNotBlank() }?.let { "@$it" } ?: "Orbit contact", color = if (mine) Color.White.copy(alpha = 0.8f) else p.textDim, fontSize = 12.5.sp)
+        }
+    }
+    Box(Modifier.width(240.dp).height(38.dp).padding(bottom = 2.dp).clip(RoundedCornerShape(10.dp)).background(if (mine) Color.White.copy(alpha = 0.22f) else p.accent).pressable({
+        scope.launch { val id = engine.openLink("orbit://u/$addr"); if (id != null) nav.push(Route.Chat(id)) }
+    }), contentAlignment = Alignment.Center) { Text("Message", color = Color.White, fontWeight = FontWeight.Bold) }
 }

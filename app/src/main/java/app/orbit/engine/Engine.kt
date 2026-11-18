@@ -94,8 +94,12 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
             while (isActive) { delay(30_000); try { retryPending(); expireTyping() } catch (_: Exception) {} }
         }
         scope.launch {
-            delay(5_000)
-            while (isActive) { if (mesh.linkCount.value > 0) announceAll(); delay(6 * 3600_000L) }
+            // publish username / public channels whenever ANY path exists (nearby links or the cloud relay), refresh every 3 h
+            var last = 0L
+            while (isActive) {
+                delay(8_000)
+                if ((mesh.linkCount.value > 0 || _relayOnline.value) && now() - last > 3 * 3600_000L) { try { withContext(single) { announceAll() }; last = now() } catch (_: Exception) {} }
+            }
         }
         mesh.onLocalSubmit = { e -> relay?.publish(e) }
         configureRelay()
@@ -210,6 +214,25 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
         return chat
     }
 
+    /** Shareable card of a contact (or of me): address + profile, sent as a normal message. */
+    fun contactCard(id: String): JSONObject? {
+        val me = identity ?: return null
+        if (id == "me" || id == me.id) return JSONObject().put("addr", Base32.encode(me.address)).put("name", _profile.value.name).put("e", _profile.value.emoji).put("c", _profile.value.color).put("u", _profile.value.username)
+        val c = _contacts.value[id] ?: return null
+        return JSONObject().put("addr", Base32.encode(c.id.unhex() + c.boxPub)).put("name", c.displayName).put("e", c.emoji).put("c", c.color).put("u", c.username)
+    }
+    fun sendContact(chatId: String, contactId: String) { contactCard(contactId)?.let { send(chatId, MsgKind.CONTACT, it.optString("name"), extra = it) } }
+
+    /** @username -> contact id to open (own contacts first, then the gossiped directory). */
+    suspend fun openUsername(name: String): String? = withContext(single) {
+        val n = name.trimStart('@').lowercase()
+        _contacts.value.values.firstOrNull { it.username.equals(n, true) }?.let { return@withContext it.id }
+        val e = _directory.value.firstOrNull { it.kind == "user" && it.username.equals(n, true) && it.id != myId } ?: return@withContext null
+        val peer = Peer.fromId(e.id, e.boxPub.unhex())
+        val c = addContactInternal(peer, e.name, false, JSONObject().put("n", e.name).put("u", e.username).put("e", e.emoji).put("c", e.color).put("b", e.desc))
+        sendHello(c); c.id
+    }
+
     fun contactName(id: String): String = if (id == "me" || id == myId) "You" else _contacts.value[id]?.displayName ?: "User ${id.take(6)}"
 
     fun setBlocked(id: String, b: Boolean) { scope.launch(single) { _contacts.value[id]?.let { val c = it.copy(blocked = b, stranger = if (b) it.stranger else false); db.upsertContact(c); _contacts.value = _contacts.value + (id to c) } } }
@@ -257,6 +280,7 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
         m.kind == MsgKind.VOICE -> "🎤 Voice message"
         m.kind == MsgKind.GIFT -> "🎁 Gift"
         m.kind == MsgKind.LIVE -> "🔴 Live broadcast"
+        m.kind == MsgKind.CONTACT -> "👤 Contact: " + m.text
         m.kind == MsgKind.FILE -> "📎 " + m.text
         else -> m.text
     }
