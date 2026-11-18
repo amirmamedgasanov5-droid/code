@@ -218,13 +218,14 @@ fun PromoDialog(onDismiss: () -> Unit) {
     AlertDialog(onDismissRequest = onDismiss, containerColor = p.surfaceHigh,
         title = { Text(if (ok) "🎉 Promo applied" else "Promo code") },
         text = { Column {
-            if (!ok) OutlinedTextField(code, { code = it.filter { c -> c.isLetterOrDigit() }.take(24); msg = null }, singleLine = true, placeholder = { Text("Enter code") }, shape = RoundedCornerShape(14.dp), isError = msg != null && !ok)
+            if (!ok) OutlinedTextField(code, { code = it.filter { c -> c.isLetterOrDigit() }.take(200); msg = null }, singleLine = true, placeholder = { Text("Promo code or admin token") }, shape = RoundedCornerShape(14.dp), isError = msg != null && !ok)
             if (msg != null) Text(msg!!, Modifier.padding(top = 8.dp), color = if (ok) p.success else p.danger, fontWeight = FontWeight.SemiBold)
         } },
         confirmButton = { if (ok) TextButton(onDismiss) { Text("Great") } else TextButton({
-            val (r, n) = engine.redeemPromo(code)
+            val (r, n) = engine.redeemCode(code)
             when (r) { app.orbit.engine.Engine.PromoResult.OK -> { ok = true; msg = "+${coinsFmt(n)} coins added to your balance" }
-                app.orbit.engine.Engine.PromoResult.USED -> msg = "This code was already used on this phone"
+                app.orbit.engine.Engine.PromoResult.ADMIN -> { ok = true; msg = "You are now an admin. Open Profile → Admin to mint gifts." }
+                app.orbit.engine.Engine.PromoResult.USED -> msg = "This code or token was already used"
                 app.orbit.engine.Engine.PromoResult.INVALID -> msg = "Invalid code" }
         }, enabled = code.isNotBlank()) { Text("Redeem") } },
         dismissButton = { if (!ok) TextButton(onDismiss) { Text("Cancel") } })

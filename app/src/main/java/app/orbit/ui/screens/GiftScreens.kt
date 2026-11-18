@@ -63,6 +63,7 @@ fun GiftShopScreen(chatId: String?) {
         Column(Modifier.fillMaxSize()) {
             TopBar("Gift shop", { nav.pop() }, actions = {
                 Row(Modifier.padding(end = 8.dp).clip(RoundedCornerShape(16.dp)).background(Color(0xFFFFB020).copy(alpha = 0.2f)).clickable { nav.push(Route.Wheel) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) { Text("💰", fontSize = 16.sp); Spacer(Modifier.width(5.dp)); Text(coinsFmt(coins), fontWeight = FontWeight.ExtraBold, color = Color(0xFFFFB020)); Text("  +", color = Color(0xFFFFB020), fontWeight = FontWeight.Bold) }
+                IconButton({ nav.push(Route.Market) }) { Icon(Icons.Rounded.Sell, null, tint = p.accent) }
                 IconButton({ nav.push(Route.Inventory) }) { Icon(Icons.Rounded.CardGiftcard, null, tint = p.accent) }
             })
             LazyVerticalGrid(GridCells.Fixed(2), contentPadding = PaddingValues(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -196,6 +197,7 @@ fun GiftDetailScreen(id: String) {
     val t = remember(g.id) { GiftLogic.traits(g) }
     val valid = remember(g) { GiftLogic.verify(g) }
     var sendTo by remember { mutableStateOf(false) }; var msg by remember { mutableStateOf("") }
+    var sellDlg by remember { mutableStateOf(false) }; val tick by engine.listingsTick.collectAsState(); val listed = remember(tick, g.id) { engine.listedPrice(g.id) }
     val chain = remember(g) { listOf(g.issuer to g.mintedAt) + g.transfers.map { it.toId to it.ts } }
     fun nameOf(i: String) = if (i == engine.myId) "You" else contacts[i]?.displayName ?: "User ${i.take(6)}"
     Column(Modifier.fillMaxSize()) {
@@ -234,9 +236,17 @@ fun GiftDetailScreen(id: String) {
                 }
             }
             Text("There is no blockchain: ownership is a chain of signatures. If someone secretly hands the same gift to two people, both copies will carry a different signed branch and devices that see both flag it. Treat gifts as collectibles among people you trust.", Modifier.padding(20.dp, 10.dp), fontSize = 12.sp, color = p.textDim)
-            if (isMine) Box(Modifier.padding(horizontal = 12.dp)) { GradientButton("Send to a friend", { sendTo = true }, Modifier.fillMaxWidth(), icon = Icons.Rounded.CardGiftcard) }
+            if (isMine) Column(Modifier.padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                GradientButton("Send to a friend", { sendTo = true }, Modifier.fillMaxWidth(), icon = Icons.Rounded.CardGiftcard)
+                if (listed == null) TonalButton("Sell on the market", { sellDlg = true }, Modifier.fillMaxWidth(), icon = Icons.Rounded.Sell)
+                else TonalButton("Listed for ${coinsFmt(listed)} 💰 · remove", { engine.unlistGift(g.id) }, Modifier.fillMaxWidth(), icon = Icons.Rounded.Close, danger = true)
+            }
         }
     }
+    if (sellDlg) { var price by remember { mutableStateOf(GiftLogic.estimate(g).toString()) }
+        AlertDialog({ sellDlg = false }, containerColor = p.surfaceHigh, title = { Text("Sell for…") },
+            text = { Column { OutlinedTextField(price, { price = it.filter(Char::isDigit).take(9) }, singleLine = true, label = { Text("Price in coins") }, shape = RoundedCornerShape(14.dp)); Text("Collector estimate: ${coinsFmt(GiftLogic.estimate(g))}. Set any price you like. Your phone must be online to hand the gift over when someone buys.", Modifier.padding(top = 8.dp), fontSize = 12.sp, color = p.textDim) } },
+            confirmButton = { TextButton({ price.toIntOrNull()?.let { engine.listGift(g.id, it) }; sellDlg = false }, enabled = (price.toIntOrNull() ?: 0) > 0) { Text("List") } }, dismissButton = { TextButton({ sellDlg = false }) { Text("Cancel") } }) }
     if (sendTo) ModalBottomSheet({ sendTo = false }, containerColor = p.surface, contentColor = p.text) {
         Column(Modifier.padding(bottom = 24.dp)) {
             OutlinedTextField(msg, { msg = it.take(120) }, Modifier.fillMaxWidth().padding(horizontal = 16.dp), placeholder = { Text("Message (optional)") }, singleLine = true, shape = RoundedCornerShape(14.dp))

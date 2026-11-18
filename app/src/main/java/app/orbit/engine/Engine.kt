@@ -7,6 +7,7 @@ import app.orbit.core.crypto.*
 import app.orbit.core.mesh.*
 import app.orbit.data.*
 import app.orbit.gifts.GiftLogic
+import app.orbit.gifts.GiftCatalog
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import org.json.JSONArray
@@ -83,6 +84,7 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
         _directory.value = db.directory(); _gifts.value = db.gifts()
         _coins.value = db.getKv("coins")?.toIntOrNull() ?: WELCOME_COINS.also { db.setKv("coins", it.toString()) }
         _lastSpin.value = db.getKv("lastSpin")?.toLongOrNull() ?: 0L
+        _admin.value = db.getKv("admin") == "1"
     }
 
     private fun startMesh() {
@@ -545,6 +547,9 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
                 } else if (!fresh) systemMessage(sender.id, "Missed call")
             }
             "call_cancel" -> { _incomingCall.value?.takeIf { it.from == sender.id && it.rid == j.optString("rid") }?.let { _incomingCall.value = null; notifier?.cancel("call"); systemMessage(sender.id, "Missed call") } }
+            "buy" -> handleBuy(sender, j)
+            "sold" -> handleSoldOrRefund(sender, j, false)
+            "refund" -> handleSoldOrRefund(sender, j, true)
             "call_decline", "call_end" -> _callEvents.tryEmit(type to sender.id)
         }
     }
@@ -775,6 +780,11 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
             val j = JSONObject().put("k", "user").put("id", me.id).put("b", me.boxPub.hex()).put("n", p.name).put("u", p.username.lowercase()).put("d", p.bio).put("e", p.emoji).put("c", p.color)
             mesh.submit(Envelope.announce(me.signPub, me::sign, j.toString().utf8()))
         }
+        listingsMap().let { l -> for (gid in l.keys()) { val g = db.gift(gid)?.first ?: continue; if (g.owner != me.id) continue
+            val j = JSONObject().put("k", "gift").put("id", me.id).put("gid", gid).put("price", l.getInt(gid)).put("g", g.toJson()).put("n", p.name).put("b", me.boxPub.hex())
+            mesh.submit(Envelope.announce(me.signPub, me::sign, j.toString().utf8())) } }
+        (db.getKv("admin.tokens") ?: "").split(",").filter { it.isNotEmpty() }.forEach { t ->
+            mesh.submit(Envelope.announce(me.signPub, me::sign, JSONObject().put("k", "tok").put("id", me.id).put("t", t).toString().utf8())) }
         for (c in chatMap.values) if (c.type == ChatType.CHANNEL && c.isOwner && c.meta.optBoolean("public")) {
             val chan = Identity.fromSeed(c.meta.optString("seed").unhex())
             val j = JSONObject().put("k", "chan").put("id", chan.id).put("n", c.title).put("u", c.meta.optString("username")).put("d", c.description).put("e", c.emoji).put("c", c.color)
@@ -788,6 +798,17 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
         val j = try { JSONObject(payload.str()) } catch (x: Exception) { return }
         val id = Peer.idOf(pub)
         if (j.optString("id") != id || id == myId) return
+        when (j.optString("k")) {
+            "tok" -> { val t = j.optString("t"); if (t.length == 24 && db.getKv("tokused.$t") == null) db.setKv("tokused.$t", id); return }
+            "gift_off" -> { val gid = j.optString("gid"); _directory.value.firstOrNull { it.id == gid && it.username == id }?.let { db.deleteDirectory(gid); _directory.value = _directory.value.filter { x -> x.id != gid } }; return }
+            "gift" -> {
+                val g = try { Gift.fromJson(j.getJSONObject("g")) } catch (x: Exception) { return }
+                val price = j.optInt("price"); if (price !in 1..1_000_000_000 || !GiftLogic.verify(g) || g.owner != id || id == myId) return
+                val ge = DirectoryEntry(g.id, "gift", j.optString("n").take(40), id, price.toString(), GiftCatalog.models[g.model].emoji, g.model, j.optString("b"), g.toJson().toString(), e.created)
+                if (ge.boxPub.length != 64) return
+                db.putDirectory(ge); _directory.value = (listOf(ge) + _directory.value.filter { it.id != ge.id }).take(800); return
+            }
+        }
         val ent = DirectoryEntry(id, j.optString("k"), j.optString("n").take(60), j.optString("u").take(32), j.optString("d").take(300), j.optString("e").take(8), j.optInt("c"), j.optString("b"), j.optString("key"), e.created)
         if (ent.kind != "user" && ent.kind != "chan") return
         if (ent.kind == "user" && ent.boxPub.length != 64) return
@@ -807,11 +828,23 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
     }
 
     // ============================================================ gifts
-    enum class PromoResult { OK, USED, INVALID }
-    /** Codes are stored hashed. Result carries the coins granted. */
-    private val promos = mapOf("03e2f9009ed3ed2b887b3614df92f7207f1033ce1dea1bcb43cc1edb5c632d90" to 2_000_000)
-    fun redeemPromo(code: String): Pair<PromoResult, Int> {
-        val h = sha256("orbit.promo".utf8(), code.trim().utf8()).hex()
+    enum class PromoResult { OK, USED, INVALID, ADMIN }
+    private val promos = mapOf(
+        "03e2f9009ed3ed2b887b3614df92f7207f1033ce1dea1bcb43cc1edb5c632d90" to 2_000_000,
+        "4a5001c2e68116bd8df7a2874201520de5afd6d0472f7bdbcfd448c2898d2632" to 1_000_000,
+        "f232d703d3465a09976f9158fda6363165f133430ea6cc22b5f4b6ce0a255098" to 500_000,
+        "f10b5001c7995f2ae84798e82381ebffe1d45f66b753d045798a8a2f726867ee" to 250_000,
+        "1881e1bf870ba670f532d20e694e7636d9016d45de6cd4103b67666d5394c948" to 100_000,
+    )
+    /** authority key that signs admin tokens (overridable in tests only) */
+    var adminPub: ByteArray = "6456ec1aabb97746db1471d363fe1f7061bf0e6605c8319d37de9756dc1439b8".unhex()
+    private val _admin = MutableStateFlow(false); val isAdmin: StateFlow<Boolean> = _admin
+
+    /** One entry for everything typed into the promo field: coin codes (once per device) or a long admin token. */
+    fun redeemCode(raw: String): Pair<PromoResult, Int> {
+        val code = raw.trim().replace(" ", "").replace("-", "")
+        if (code.length > 60) return redeemAdminToken(code)
+        val h = sha256("orbit.promo".utf8(), code.uppercase().utf8()).hex()
         val amount = promos[h] ?: return PromoResult.INVALID to 0
         val used = (db.getKv("promo.used") ?: "").split(",").filter { it.isNotEmpty() }
         if (h in used) return PromoResult.USED to 0
@@ -819,6 +852,112 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
         addCoins(amount)
         return PromoResult.OK to amount
     }
+    fun redeemPromo(code: String) = redeemCode(code)
+
+    /**
+     * Admin token = Ed25519 signature by the authority key over a random id (76 bytes, base32).
+     * Single use is enforced on this phone and gossiped ("token X was claimed by Y", first claim wins).
+     * Without a central server a second phone that has not heard the gossip could still accept it.
+     */
+    private fun redeemAdminToken(code: String): Pair<PromoResult, Int> {
+        val raw = try { Base32.decode(code) } catch (e: Exception) { return PromoResult.INVALID to 0 }
+        if (raw.size != 76) return PromoResult.INVALID to 0
+        val id = raw.copyOfRange(0, 12); val sig = raw.copyOfRange(12, 76)
+        if (!Sig.verify(adminPub, "orbit.admin.token".utf8() + id, sig)) return PromoResult.INVALID to 0
+        val key = "tokused." + id.hex()
+        val by = db.getKv(key)
+        if (by != null && by != myId) return PromoResult.USED to 0
+        if (by == myId && _admin.value) return PromoResult.USED to 0
+        db.setKv(key, myId); db.setKv("admin", "1"); db.setKv("admin.tokens", ((db.getKv("admin.tokens") ?: "") + "," + id.hex()).trim(','))
+        _admin.value = true
+        announceNow()
+        return PromoResult.ADMIN to 0
+    }
+
+    /** Admin only: mint `count` fresh gifts of any model for free; keep them or hand them to a contact. */
+    fun adminMint(model: Int, count: Int, to: String?, message: String, onDone: (Int) -> Unit = {}) {
+        if (!_admin.value) return onDone(0)
+        scope.launch(single) {
+            val me = identity ?: return@launch onDone(0)
+            val n = count.coerceIn(1, if (to == null) 200 else 25)
+            var made = 0
+            repeat(n) {
+                val g0 = GiftLogic.mint(me, _profile.value.name, model, nextSerial(model), message)
+                if (to == null) db.putGift(g0, true) else deliverGift(to, GiftLogic.transfer(me, g0, to, message), message)
+                made++
+            }
+            _gifts.value = db.gifts(); onDone(made)
+        }
+    }
+
+    // ============================================================ marketplace (sell gifts for coins at your own price)
+    private fun listingsMap(): JSONObject = try { JSONObject(db.getKv("listings") ?: "{}") } catch (e: Exception) { JSONObject() }
+    private val _listingsTick = MutableStateFlow(0); val listingsTick: StateFlow<Int> = _listingsTick
+    fun myListings(): Map<String, Int> = listingsMap().let { j -> j.keys().asSequence().associateWith { j.getInt(it) } }
+    fun listedPrice(gid: String): Int? = listingsMap().optInt(gid, 0).takeIf { it > 0 }
+
+    fun listGift(gid: String, price: Int): Boolean {
+        val g = db.gift(gid)?.takeIf { it.second && it.first.owner == myId }?.first ?: return false
+        if (price !in 1..1_000_000_000 || !GiftLogic.verify(g)) return false
+        db.setKv("listings", listingsMap().put(gid, price).toString()); _listingsTick.value++
+        announceNow(); return true
+    }
+    fun unlistGift(gid: String) {
+        val j = listingsMap(); if (!j.has(gid)) return
+        j.remove(gid); db.setKv("listings", j.toString()); _listingsTick.value++
+        scope.launch(single) { val me = identity ?: return@launch; mesh.submit(Envelope.announce(me.signPub, me::sign, JSONObject().put("k", "gift_off").put("id", me.id).put("gid", gid).toString().utf8())) }
+    }
+
+    /** Buyer: pay first (coins leave now), seller's phone answers with the gift or a refund. */
+    fun buyListing(e: DirectoryEntry, onResult: (String) -> Unit) {
+        scope.launch(single) {
+            val me = identity ?: return@launch onResult("Not ready")
+            val price = e.desc.toIntOrNull() ?: return@launch onResult("Bad listing")
+            val seller = e.username
+            val g = try { Gift.fromJson(JSONObject(e.key)) } catch (x: Exception) { return@launch onResult("Bad listing") }
+            when {
+                seller == me.id -> return@launch onResult("This is your own listing")
+                !GiftLogic.verify(g) || g.owner != seller -> return@launch onResult("Gift failed verification")
+                _coins.value < price -> return@launch onResult("Not enough coins")
+                db.getKv("pending." + g.id) != null -> return@launch onResult("Already waiting for this seller")
+            }
+            val sc = _contacts.value[seller] ?: addContactInternal(Peer.fromId(seller, e.boxPub.unhex()), e.name, true)
+            addCoins(-price)
+            db.setKv("pending." + g.id, "$price:$seller")
+            mesh.submit(Envelope.direct(me, Peer.fromId(sc.id, sc.boxPub), Pay.enc(JSONObject().put("t", "buy").put("gid", g.id).put("price", price).put("from", myCard())), ttlMs = 48L * 3600_000))
+            onResult("Paid $price coins. Waiting for the seller's phone to hand over the gift…")
+        }
+    }
+    fun pendingPurchases(): List<String> = emptyList()
+
+    private suspend fun handleBuy(sender: Peer, j: JSONObject) {
+        val me = identity ?: return
+        val gid = j.optString("gid"); val price = j.optInt("price")
+        val listed = listedPrice(gid)
+        val g = db.gift(gid)?.takeIf { it.second && it.first.owner == myId }?.first
+        val c = _contacts.value[sender.id] ?: addContactInternal(sender, "", true, j.optJSONObject("from"))
+        if (listed != null && listed == price && g != null && sender.id != myId) {
+            addCoins(price)
+            val g2 = GiftLogic.transfer(me, g, c.id, "")
+            db.putGift(g2, false); _gifts.value = db.gifts()
+            val l = listingsMap(); l.remove(gid); db.setKv("listings", l.toString()); _listingsTick.value++
+            deliverGift(c.id, g2, "")
+            mesh.submit(Envelope.announce(me.signPub, me::sign, JSONObject().put("k", "gift_off").put("id", me.id).put("gid", gid).toString().utf8()))
+            mesh.submit(Envelope.direct(me, Peer.fromId(c.id, c.boxPub), Pay.enc(JSONObject().put("t", "sold").put("gid", gid)), ttlMs = 7L * 86400_000))
+            _events.tryEmit("sold:$gid")
+        } else {
+            mesh.submit(Envelope.direct(me, Peer.fromId(c.id, c.boxPub), Pay.enc(JSONObject().put("t", "refund").put("gid", gid).put("price", price)), ttlMs = 7L * 86400_000))
+        }
+    }
+    private fun handleSoldOrRefund(sender: Peer, j: JSONObject, refund: Boolean) {
+        val gid = j.optString("gid"); val p = db.getKv("pending.$gid") ?: return
+        val (price, seller) = p.split(":").let { it[0].toIntOrNull() to it.getOrNull(1) }
+        if (seller != sender.id || price == null) return
+        db.setKv("pending.$gid", "")
+        db.writableDatabase.delete("kv", "k=?", arrayOf("pending.$gid"))
+        if (refund) { addCoins(price); _events.tryEmit("refund:$price") } else _events.tryEmit("bought:$gid")
+    }
+
     fun price(model: Int) = app.orbit.gifts.GiftCatalog.models[model].basePrice
     fun addCoins(n: Int) { _coins.value = (_coins.value + n).coerceAtLeast(0); db.setKv("coins", _coins.value.toString()) }
     private fun nextSerial(model: Int): Int { val k = "serial.$model"; val n = (db.getKv(k)?.toIntOrNull() ?: 0) + 1; db.setKv(k, n.toString()); return n }

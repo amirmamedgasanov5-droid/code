@@ -23,6 +23,8 @@ sealed interface Route {
     data object Privacy : Route
     data object Walkie : Route
     data class Forward(val msg: Message) : Route
+    data object Market : Route
+    data object Admin : Route
     data object Sounds : Route
     data object Reliable : Route
     data object Mesh : Route

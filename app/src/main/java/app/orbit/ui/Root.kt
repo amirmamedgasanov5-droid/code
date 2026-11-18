@@ -108,6 +108,8 @@ private fun AppNav(pendingOpen: MutableState<String?>, app0: OrbitApp) {
                     Route.Mesh -> MeshScreen()
                     Route.Reliable -> ReliableScreen()
                     Route.Sounds -> SoundsScreen()
+                    Route.Market -> MarketScreen()
+                    Route.Admin -> AdminScreen()
                     Route.Wheel -> WheelScreen()
                     is Route.Call -> CallScreen(r.peerId)
                 }

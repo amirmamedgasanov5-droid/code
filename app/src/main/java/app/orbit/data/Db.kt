@@ -93,6 +93,7 @@ class Db(ctx: Context, name: String = "orbit.db") : SQLiteOpenHelper(ctx, name, 
         val j = JSONObject().put("id", e.id).put("k", e.kind).put("n", e.name).put("u", e.username).put("d", e.desc).put("e", e.emoji).put("c", e.color).put("b", e.boxPub).put("key", e.key).put("ts", e.ts).put("m", e.members)
         writableDatabase.execSQL("INSERT OR REPLACE INTO directory VALUES(?,?,?)", arrayOf(e.id, j.toString(), e.ts))
     }
+    fun deleteDirectory(id: String) { writableDatabase.delete("directory", "id=?", arrayOf(id)) }
     fun directory(): List<DirectoryEntry> = readableDatabase.rawQuery("SELECT json FROM directory ORDER BY ts DESC LIMIT 800", null).use { c ->
         buildList { while (c.moveToNext()) { val j = JSONObject(c.getString(0)); add(DirectoryEntry(j.getString("id"), j.getString("k"), j.getString("n"), j.optString("u"), j.optString("d"), j.optString("e"), j.optInt("c"), j.optString("b"), j.optString("key"), j.getLong("ts"), j.optInt("m"))) } }
     }

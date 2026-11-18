@@ -287,7 +287,7 @@ fun ExploreTab() {
     val engine = LocalEngine.current; val nav = LocalNav.current; val p = OrbitTheme.p
     val dir by engine.directory.collectAsState(); val contacts by engine.contacts.collectAsState(); val chats by engine.chats.collectAsState()
     var q by remember { mutableStateOf("") }
-    val results = remember(dir, q, contacts, chats) { dir.filter { e -> e.id != engine.myId && (q.isBlank() || e.name.contains(q, true) || e.username.contains(q.trimStart('@'), true) || e.desc.contains(q, true)) } }
+    val results = remember(dir, q, contacts, chats) { dir.filter { e -> (e.kind == "user" || e.kind == "chan") && e.id != engine.myId && (q.isBlank() || e.name.contains(q, true) || e.username.contains(q.trimStart('@'), true) || e.desc.contains(q, true)) } }
     Column(Modifier.fillMaxSize()) {
         Column(Modifier.background(p.surface).padding(horizontal = 16.dp, vertical = 6.dp)) {
             Row(Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(22.dp)).background(p.surfaceHigh).padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically) {

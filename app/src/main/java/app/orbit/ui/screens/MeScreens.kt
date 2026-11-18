@@ -63,11 +63,14 @@ fun MeTab() {
             Column(Modifier.weight(1f)) { Text("${coinsFmt(coins)} coins", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp); Text(if (engine.canSpin()) "Free spin ready — tap to win up to 250" else "Wheel of fortune · one free spin a day", color = Color.White.copy(alpha = 0.92f), fontSize = 13.sp) }
             Icon(Icons.Rounded.ChevronRight, null, tint = Color.White)
         }
-        Spacer(Modifier.height(14.dp))
+        val admin by engine.isAdmin.collectAsState()
+        if (admin) { Row(Modifier.padding(horizontal = 12.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Brush.linearGradient(listOf(Color(0xFF7C5CFF), Color(0xFF2F8CFF)))).pressable({ nav.push(Route.Admin) }).padding(16.dp), verticalAlignment = Alignment.CenterVertically) { Text("👑", fontSize = 30.sp); Spacer(Modifier.width(12.dp)); Column(Modifier.weight(1f)) { Text("Admin", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp); Text("Mint any number of gifts for free", color = Color.White.copy(alpha = 0.9f), fontSize = 13.sp) }; Icon(Icons.Rounded.ChevronRight, null, tint = Color.White) }; Spacer(Modifier.height(14.dp)) }
         Card {
             SettingsRow("Saved messages", "Notes to self, synced nowhere", Icons.Rounded.Bookmark, Color(0xFF2F8CFF), onClick = { nav.push(Route.Chat("saved")) })
             Divider(60.dp)
             SettingsRow("My gifts", "${gifts.count { it.second && it.first.owner == engine.myId }} collectibles", Icons.Rounded.CardGiftcard, Color(0xFFFF4D8D), onClick = { nav.push(Route.Inventory) })
+            Divider(60.dp)
+            SettingsRow("Market", "Buy and sell gifts for coins", Icons.Rounded.Sell, Color(0xFF12B981), onClick = { nav.push(Route.Market) })
             Divider(60.dp)
             SettingsRow("Gift shop", "Buy gifts with coins", Icons.Rounded.Storefront, Color(0xFFF5A524), onClick = { nav.push(Route.GiftShop(null)) })
         }

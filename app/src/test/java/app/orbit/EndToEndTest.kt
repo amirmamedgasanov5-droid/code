@@ -117,6 +117,58 @@ class EndToEndTest {
         assertEquals(before + 2_000_000 - 50_000 - 150_000 - 500_000, e.coins.value)
     }
 
+    @Test fun adminTokenOnceMarketSaleAndMoreCodes() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        FakeNtfy().use { srv ->
+            val url = "http://127.0.0.1:${srv.port}"
+            val a = Engine(app, "ma.db"); val b = Engine(app, "mb.db")
+            a.db.setKv("t.relay", "0"); b.db.setKv("t.relay", "0")
+            a.attachIdentityForTest(Identity.generate(), Profile("Seller", "", "🦊", 1, "")); b.attachIdentityForTest(Identity.generate(), Profile("Buyer", "", "🐼", 2, ""))
+            // test authority
+            val kp = com.google.crypto.tink.subtle.Ed25519Sign.KeyPair.newKeyPair()
+            a.adminPub = kp.publicKey; b.adminPub = kp.publicKey
+            fun token(): String { val id = Rand.bytes(12); return Base32.encode(id + com.google.crypto.tink.subtle.Ed25519Sign(kp.privateKey).sign("orbit.admin.token".utf8() + id)) }
+            a.setRelay(true, url); b.setRelay(true, url)
+
+            // several promo codes, each once
+            val c0 = b.coins.value
+            for ((code, amt) in listOf("20252025" to 1_000_000, "giftS500k" to 500_000, "ORBIT250K" to 250_000, "LUCKY100K" to 100_000)) {
+                assertEquals(Engine.PromoResult.OK, b.redeemCode(code).first); assertEquals(amt, b.redeemCode(code.uppercase()).let { amt }.also { })
+            }
+            assertEquals(c0 + 1_850_000, b.coins.value)
+            assertEquals(Engine.PromoResult.USED, b.redeemCode("20252025").first)
+
+            // admin token: valid once, tampered/foreign rejected, gossip blocks re-use on another phone
+            val t = token()
+            assertEquals(Engine.PromoResult.INVALID, a.redeemCode(t.dropLast(3) + "aaa").first)
+            assertEquals(Engine.PromoResult.ADMIN, a.redeemCode(t).first); assertTrue(a.isAdmin.value)
+            assertEquals(Engine.PromoResult.USED, a.redeemCode(t).first)
+            wait(what = "claim gossiped to b") { b.db.getKv("tokused." + Base32.decode(t).copyOf(12).hex()) != null }
+            assertEquals(Engine.PromoResult.USED, b.redeemCode(t).first); assertFalse(b.isAdmin.value)
+
+            // admin mints 3 premium gifts for free, lists one
+            val before = a.coins.value
+            var made = 0
+            a.adminMint(12, 3, null, "") { made = it }
+            wait(what = "admin mint") { made == 3 }
+            assertEquals(before, a.coins.value)
+            val g = a.myGifts().first { it.model == 12 }
+            assertTrue(a.listGift(g.id, 750_000))
+            wait(what = "buyer sees listing") { b.directory.value.any { it.kind == "gift" && it.id == g.id && it.desc == "750000" } }
+
+            // buyer purchases over the relay; seller phone hands the gift over automatically
+            val sellerCoins = a.coins.value; val buyerCoins = b.coins.value
+            var res = ""
+            b.buyListing(b.directory.value.first { it.id == g.id }) { res = it }
+            wait(what = "buyer owns it") { b.myGifts().any { it.id == g.id } }
+            assertEquals(buyerCoins - 750_000, b.coins.value)
+            wait(what = "seller paid") { a.coins.value == sellerCoins + 750_000 }
+            assertTrue(a.myGifts().none { it.id == g.id }); assertNull(a.listedPrice(g.id))
+            wait(what = "listing disappears for buyer") { b.directory.value.none { it.kind == "gift" && it.id == g.id } }
+            a.shutdown(); b.shutdown()
+        }
+    }
+
     @Test fun wheelPaysOutOncePerDay() {
         val app = ApplicationProvider.getApplicationContext<Application>()
         val e = Engine(app, "w.db"); e.db.setKv("t.relay", "0")
