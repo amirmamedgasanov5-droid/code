@@ -30,7 +30,7 @@ class CloudRelay(
     private val tags: () -> List<ByteArray>,
     private val onEnvelope: suspend (Envelope) -> Unit,
     private val maxEnvelope: Int = 120_000,
-    private val chunk: Int = 2300,
+    private val chunk: Int = 2800,
 ) {
     constructor(scope: CoroutineScope, base: String, tags: () -> List<ByteArray>, onEnvelope: suspend (Envelope) -> Unit) : this(scope, listOf(base), tags, onEnvelope)
 
@@ -54,26 +54,34 @@ class CloudRelay(
     fun start() {
         if (jobs.isNotEmpty()) return
         for (s in servers) jobs += scope.launch(Dispatchers.IO) {
-            var backoff = 2000L
+            var backoff = 400L
             while (isActive) {
                 val topics = tags().map { topic(it) }.distinct().take(25)
-                if (topics.isEmpty()) { delay(3000); continue }
-                try { topicsCount = topics.size; listen(s, topics); backoff = 2000L }
+                if (topics.isEmpty()) { delay(1000); continue }
+                try { topicsCount = topics.size; listen(s, topics); backoff = 400L }
                 catch (e: CancellationException) { throw e }
                 catch (e: Exception) {
                     s.online = false; refreshOnline(); s.lastError = (e.javaClass.simpleName + ": " + (e.message ?: "")).take(110)
-                    // 401/403/404: the server wants an account or does not offer the service: stop knocking for half an hour
-                    val hard = e.message?.let { it.contains("http 401") || it.contains("http 403") || it.contains("http 404") } == true
-                    delay(if (hard) 30 * 60_000L else backoff); backoff = (backoff * 2).coerceAtMost(60_000)
+                    val m = e.message ?: ""
+                    val wait = when {
+                        m.contains("http 401") || m.contains("http 403") || m.contains("http 404") -> 30 * 60_000L       // wants an account / no such service
+                        e is java.net.UnknownHostException || e is javax.net.ssl.SSLException -> 10 * 60_000L              // dead or broken host: do not hammer
+                        e is java.net.SocketTimeoutException || e is java.net.ConnectException -> maxOf(backoff, 20_000L)   // probably blocked: cheap polling
+                        else -> backoff                                                                                      // normal network blip: come back fast
+                    }
+                    delay(wait); backoff = (backoff * 2).coerceAtMost(5_000)
                 }
             }
         }
     }
 
+    /** Reconnect everything right now (network changed, app opened). */
+    fun kick() { stop(); servers.forEach { it.pausedUntil = 0L }; start() }
+
     fun stop() { jobs.forEach { it.cancel() }; jobs.clear(); servers.forEach { it.online = false }; refreshOnline() }
 
     private suspend fun listen(s: Srv, topics: List<String>) = withContext(Dispatchers.IO) {
-        val c = URL("${s.base}/${topics.joinToString(",")}/json?since=${s.since}").openConnection() as HttpURLConnection
+        val c = URL("${s.base}/${topics.joinToString(",")}/json?since=${s.since - 10}").openConnection() as HttpURLConnection
         c.connectTimeout = 10_000; c.readTimeout = 90_000
         try {
             if (c.responseCode != 200) throw RuntimeException("http ${c.responseCode}")
@@ -116,10 +124,15 @@ class CloudRelay(
     private suspend fun publishTo(s: Srv, topic: String, parts: List<String>): Boolean {
         if (System.currentTimeMillis() < s.pausedUntil) return false          // server told us to stop: do not hammer it
         for (part in parts) {
-            var ok = false; var wait = 1000L
-            repeat(4) {
+            var ok = false; var wait = 300L
+            repeat(2) {
                 if (!ok) {
-                    ok = try { post(s, topic, part) } catch (ex: Exception) { s.lastError = ("send: " + ex.javaClass.simpleName + " " + (ex.message ?: "")).take(110); false }
+                    ok = try { post(s, topic, part) } catch (ex: Exception) {
+                        s.lastError = ("send: " + ex.javaClass.simpleName + " " + (ex.message ?: "")).take(110)
+                        // circuit breaker: a host we cannot reach costs one attempt per minute, not one per message
+                        s.pausedUntil = System.currentTimeMillis() + if (ex is java.net.UnknownHostException || ex is javax.net.ssl.SSLException) 10 * 60_000L else 60_000L
+                        return false
+                    }
                     if (!ok) { if (System.currentTimeMillis() < s.pausedUntil) return false; delay(wait); wait *= 2 }
                 }
             }

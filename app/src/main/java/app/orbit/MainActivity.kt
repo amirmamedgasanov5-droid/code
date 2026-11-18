@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
         handleIntent(intent)
         lifecycle.addObserver(LifecycleEventObserver { _, e ->
             when (e) {
-                Lifecycle.Event.ON_START -> { app.engine.inForeground = true; if (app.engine.hasIdentity.value && Perms.allGranted(this)) MeshService.start(this) }
+                Lifecycle.Event.ON_START -> { app.engine.inForeground = true; if (app.engine.hasIdentity.value) app.engine.relayKick(); if (app.engine.hasIdentity.value && Perms.allGranted(this)) MeshService.start(this) }
                 Lifecycle.Event.ON_STOP -> app.engine.inForeground = false
                 else -> {}
             }

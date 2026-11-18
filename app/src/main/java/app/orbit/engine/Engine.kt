@@ -106,7 +106,7 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
             }
         }
         mesh.onLocalSubmit = { e -> relay?.publish(e) }
-        configureRelay()
+        configureRelay(); watchNetwork()
         _meshReady.value = true
     }
 
@@ -118,6 +118,18 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
         if (r == null) return "Cloud relay: not started"
         return "Cloud relay: ${if (_relayOnline.value) "connected" else "NOT connected"}   Sent: ${r.published}  Received: ${r.received}\n" +
             r.servers.joinToString("\n") { "• ${it.name}: " + (if (it.online) "ok" else "unreachable") + (if (it.lastError.isNotEmpty()) " — ${it.lastError}" else "") }
+    }
+    fun relayKick() { relay?.kick() }
+    private var netCb: android.net.ConnectivityManager.NetworkCallback? = null
+    private fun watchNetwork() {
+        if (netCb != null) return
+        try {
+            val cm = ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+            val cb = object : android.net.ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(n: android.net.Network) { relay?.kick(); scope.launch(single) { try { retryPending() } catch (_: Exception) {} } }
+            }
+            cm.registerDefaultNetworkCallback(cb); netCb = cb
+        } catch (_: Exception) {}
     }
     fun relayEnabled() = db.getKv("t.relay") != "0"
     /** one server URL per line; all are used at the same time */
