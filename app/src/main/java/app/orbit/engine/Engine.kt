@@ -114,17 +114,21 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
     /** Plain-text status for the "why is it not delivered?" dialog. */
     fun relayDiag(): String {
         val r = relay
-        return if (!relayEnabled()) "Cloud relay: OFF (turn it on in Profile → Connection)"
-        else if (r == null) "Cloud relay: not started"
-        else "Cloud relay: ${if (_relayOnline.value) "connected" else "NOT connected"}\nServer: ${relayUrl()}\nSent: ${r.published}  Received: ${r.received}  Topics: ${r.topicsCount}" + (if (r.lastError.isNotEmpty()) "\nLast error: ${r.lastError}" else "")
+        if (!relayEnabled()) return "Cloud relay: OFF (turn it on in Profile → Connection)"
+        if (r == null) return "Cloud relay: not started"
+        return "Cloud relay: ${if (_relayOnline.value) "connected" else "NOT connected"}   Sent: ${r.published}  Received: ${r.received}\n" +
+            r.servers.joinToString("\n") { "• ${it.name}: " + (if (it.online) "ok" else "unreachable") + (if (it.lastError.isNotEmpty()) " — ${it.lastError}" else "") }
     }
     fun relayEnabled() = db.getKv("t.relay") != "0"
-    fun relayUrl() = db.getKv("relay.url") ?: "https://ntfy.sh"
-    fun setRelay(on: Boolean, url: String? = null) { db.setKv("t.relay", if (on) "1" else "0"); if (url != null) db.setKv("relay.url", url.trim().trimEnd('/')); configureRelay() }
+    /** one server URL per line; all are used at the same time */
+    fun relayUrls(): List<String> = (db.getKv("relay.urls") ?: db.getKv("relay.url") ?: "https://ntfy.sh").lines().map { it.trim().trimEnd('/') }.filter { it.startsWith("http") }.ifEmpty { listOf("https://ntfy.sh") }
+    fun relayUrl() = relayUrls().joinToString(", ") { it.removePrefix("https://") }
+    fun setRelay(on: Boolean, urls: String? = null) { db.setKv("t.relay", if (on) "1" else "0"); if (urls != null) db.setKv("relay.urls", urls.lines().map { it.trim().trimEnd('/') }.filter { it.isNotEmpty() }.joinToString("\n")); configureRelay() }
+    fun relayUrlsText() = relayUrls().joinToString("\n")
     fun configureRelay() {
         relay?.stop(); relay = null; _relayOnline.value = false
         if (!relayEnabled() || identity == null) return
-        val r = app.orbit.core.net.CloudRelay(scope, relayUrl(), { tagIndex.keys.map { it.unhex() } }, { env -> mesh.ingestExternal(env) })
+        val r = app.orbit.core.net.CloudRelay(scope, relayUrls(), { tagIndex.keys.map { it.unhex() } }, { env -> mesh.ingestExternal(env) })
         relay = r; r.start()
         scope.launch { r.online.collect { _relayOnline.value = it } }
     }

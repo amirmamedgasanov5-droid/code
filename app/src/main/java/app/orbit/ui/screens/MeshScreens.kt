@@ -67,11 +67,12 @@ fun MeshTab(onBack: (() -> Unit)? = null) {
             }
             item {
                 var dlg by remember { mutableStateOf(false) }
-                Card(Modifier.padding(top = 10.dp)) { SettingsRow("Relay server", engine.relayUrl(), Icons.Rounded.Dns, Color(0xFF9B5CFF), onClick = { dlg = true }) }
-                if (dlg) { var url by remember { mutableStateOf(engine.relayUrl()) }
-                    AlertDialog({ dlg = false }, containerColor = p.surfaceHigh, title = { Text("Relay server") },
-                        text = { Column { OutlinedTextField(url, { url = it.trim() }, singleLine = true, label = { Text("https://…") }, shape = RoundedCornerShape(14.dp)); Text("Any ntfy-compatible server works, including your own. Both you and your contact must use the same one.", Modifier.padding(top = 8.dp), fontSize = 12.sp, color = p.textDim) } },
-                        confirmButton = { TextButton({ if (url.startsWith("https://")) { engine.setRelay(true, url); dlg = false } }, enabled = url.startsWith("https://")) { Text("Save") } },
+                Card(Modifier.padding(top = 10.dp)) { SettingsRow("Relay servers", engine.relayUrl(), Icons.Rounded.Dns, Color(0xFF9B5CFF), onClick = { dlg = true }) }
+                if (dlg) { var urls by remember { mutableStateOf(engine.relayUrlsText()) }
+                    AlertDialog({ dlg = false }, containerColor = p.surfaceHigh, title = { Text("Relay servers") },
+                        text = { Column { OutlinedTextField(urls, { urls = it }, minLines = 3, label = { Text("One https:// address per line") }, shape = RoundedCornerShape(14.dp))
+                            Text("Messages are sent through ALL listed servers at once and received from all of them, so one blocked server does not stop delivery. Any ntfy-compatible server works, including your own. Your contact only needs one server in common with you.", Modifier.padding(top = 8.dp), fontSize = 12.sp, color = p.textDim) } },
+                        confirmButton = { TextButton({ engine.setRelay(true, urls); dlg = false }) { Text("Save") } },
                         dismissButton = { TextButton({ engine.setRelay(true, "https://ntfy.sh"); dlg = false }) { Text("Reset") } }) }
             }
             item { SectionLabel("Connected now") }

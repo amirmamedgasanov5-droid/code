@@ -131,6 +131,31 @@ class FakeNtfy : AutoCloseable {
     override fun close() { running = false; try { server.close() } catch (_: Exception) {} }
 }
 
+class RelayFailoverTest {
+    @Test fun oneBlockedServerDoesNotStopDelivery() = runBlocking {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        FakeNtfy().use { good ->
+            val dead = java.net.ServerSocket(0).use { it.localPort }          // nothing listens here: connection refused
+            val a = Identity.generate(); val b = Identity.generate()
+            val na = MeshNode(a, MemoryStore(), scope); val nb = MeshNode(b, MemoryStore(), scope)
+            val rb = Recorder(b, listOf(Tags.user(b.signPub))); nb.handler = rb; na.handler = Recorder(a, emptyList())
+            val servers = listOf("http://127.0.0.1:$dead", "http://127.0.0.1:${good.port}")
+            val relA = CloudRelay(scope, servers, { listOf(Tags.user(a.signPub)) }, { na.ingestExternal(it) })
+            val relB = CloudRelay(scope, servers, { listOf(Tags.user(b.signPub)) }, { nb.ingestExternal(it) })
+            na.onLocalSubmit = { relA.publish(it) }
+            relA.start(); relB.start()
+            na.submit(Envelope.direct(a, Peer(b.signPub, b.boxPub), "through the good server".utf8()))
+            val t = System.currentTimeMillis()
+            while (rb.got.isEmpty() && System.currentTimeMillis() - t < 20000) delay(20)
+            assertEquals("through the good server", rb.got.single().str())
+            assertTrue(relB.online.value)
+            assertTrue("the dead server is reported", relA.lastError.contains("127.0.0.1"))
+            assertTrue(relA.healthy)
+            relA.stop(); relB.stop(); scope.cancel()
+        }
+    }
+}
+
 class RelayLimitTest {
     @Test fun rateLimitIsReportedAndPublishingPauses() = runBlocking {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
