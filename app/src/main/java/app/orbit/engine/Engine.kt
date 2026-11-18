@@ -110,6 +110,14 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
         _meshReady.value = true
     }
 
+    fun shortId(id: String) = id.take(16).chunked(4).joinToString("-")
+    /** Plain-text status for the "why is it not delivered?" dialog. */
+    fun relayDiag(): String {
+        val r = relay
+        return if (!relayEnabled()) "Cloud relay: OFF (turn it on in Profile → Connection)"
+        else if (r == null) "Cloud relay: not started"
+        else "Cloud relay: ${if (_relayOnline.value) "connected" else "NOT connected"}\nServer: ${relayUrl()}\nSent: ${r.published}  Received: ${r.received}  Topics: ${r.topicsCount}" + (if (r.lastError.isNotEmpty()) "\nLast error: ${r.lastError}" else "")
+    }
     fun relayEnabled() = db.getKv("t.relay") != "0"
     fun relayUrl() = db.getKv("relay.url") ?: "https://ntfy.sh"
     fun setRelay(on: Boolean, url: String? = null) { db.setKv("t.relay", if (on) "1" else "0"); if (url != null) db.setKv("relay.url", url.trim().trimEnd('/')); configureRelay() }

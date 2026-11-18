@@ -119,6 +119,8 @@ fun MyQrScreen() {
                 }
             }
             Spacer(Modifier.height(20.dp))
+            Text("ID: ${engine.shortId(engine.myId)}", fontFamily = FontFamily.Monospace, fontSize = 16.sp, color = p.accent, fontWeight = FontWeight.Bold)
+            Text("Your contact compares this with the ID they see in their chat with you", fontSize = 12.sp, color = p.textDim, modifier = Modifier.padding(bottom = 8.dp))
             Text(link, Modifier.clip(RoundedCornerShape(12.dp)).background(p.surface).padding(12.dp), fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = p.textDim, maxLines = 4)
             Spacer(Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {

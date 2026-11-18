@@ -32,6 +32,7 @@ class CloudRelay(
     private val reasm = Reassembler(maxPending = 32, maxFrame = 400_000)
     private val _online = MutableStateFlow(false); val online: StateFlow<Boolean> = _online
     @Volatile var published = 0; @Volatile var received = 0
+    @Volatile var lastError = ""; @Volatile var lastOk = 0L; @Volatile var topicsCount = 0
     @Volatile private var since = (System.currentTimeMillis() / 1000) - 12 * 3600
 
     fun topic(tag: ByteArray) = "orbit1" + tag.hex()
@@ -44,9 +45,10 @@ class CloudRelay(
                 val topics = tags().map { topic(it) }.distinct().take(25)
                 if (topics.isEmpty()) { delay(3000); continue }
                 try {
+                    topicsCount = topics.size
                     listen(topics)
                     backoff = 2000L
-                } catch (e: CancellationException) { throw e } catch (e: Exception) { _online.value = false; delay(backoff); backoff = (backoff * 2).coerceAtMost(60_000) }
+                } catch (e: CancellationException) { throw e } catch (e: Exception) { _online.value = false; lastError = (e.javaClass.simpleName + ": " + (e.message ?: "")).take(120); delay(backoff); backoff = (backoff * 2).coerceAtMost(60_000) }
             }
         }
     }
@@ -65,7 +67,7 @@ class CloudRelay(
                 val line = r.readLine() ?: break
                 val j = try { JSONObject(line) } catch (e: Exception) { continue }
                 when (j.optString("event")) {
-                    "open" -> _online.value = true
+                    "open" -> { _online.value = true; lastOk = System.currentTimeMillis(); lastError = "" }
                     "message" -> {
                         val t = j.optLong("time", 0); if (t > since) since = t
                         val frame = try { Base64.getDecoder().decode(j.optString("message").trim()) } catch (e: Exception) { continue }
@@ -91,13 +93,13 @@ class CloudRelay(
                 var ok = false; var wait = 1000L
                 repeat(5) {
                     if (!ok) {
-                        ok = try { post(t, Base64.getEncoder().encodeToString(part)) } catch (ex: Exception) { false }
+                        ok = try { post(t, Base64.getEncoder().encodeToString(part)) } catch (ex: Exception) { lastError = ("send: " + ex.javaClass.simpleName + " " + (ex.message ?: "")).take(120); false }
                         if (!ok) { delay(wait); wait *= 2 }
                     }
                 }
                 if (!ok) return@launch
             }
-            published++
+            published++; lastOk = System.currentTimeMillis()
         }
     }
 

@@ -81,6 +81,7 @@ fun ChatScreen(chatId: String) {
     var menuFor by remember { mutableStateOf<Message?>(null) }
     var showAttach by remember { mutableStateOf(false) }
     var pickContact by remember { mutableStateOf(false) }
+    var diag by remember { mutableStateOf(false) }
     var showMore by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf<Message?>(null) }
     val listState = rememberLazyListState()
@@ -195,9 +196,9 @@ fun ChatScreen(chatId: String) {
         // offline hint
         val lastMine = msgs.lastOrNull { it.mine }
         AnimatedVisibility(chat.type == ChatType.DIRECT && !isOnline && lastMine?.status == Status.CARRIED) {
-            Row(Modifier.fillMaxWidth().background(p.surface).padding(horizontal = 14.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().background(p.surface).clickable { diag = true }.padding(horizontal = 14.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Rounded.Sync, null, tint = p.accent, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(8.dp))
-                Text("${chat.title} is out of reach. Your message is sealed and will hop through nearby phones until it arrives.", fontSize = 12.sp, color = p.textDim)
+                Text("${chat.title} has not confirmed delivery yet. Tap to find out why.", fontSize = 12.sp, color = p.textDim)
             }
         }
         // ---------------- composer
@@ -268,6 +269,17 @@ fun ChatScreen(chatId: String) {
         }
     }
 
+    if (diag) AlertDialog({ diag = false }, containerColor = p.surfaceHigh, title = { Text("Why is it not delivered?") },
+        text = { Column(Modifier.verticalScroll(rememberScrollState())) {
+            Text(engine.relayDiag(), fontSize = 13.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+            Spacer(Modifier.height(10.dp))
+            Text("${chat.title}'s ID as you have it:", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+            Text(engine.shortId(chatId), fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = p.accent, fontSize = 15.sp)
+            Text("Ask ${chat.title} to open Profile → My QR and compare the \"ID\" line. If it differs, they reinstalled or created a new account: delete this contact and add them again with their new QR or link.", fontSize = 12.5.sp, color = p.textDim, modifier = Modifier.padding(vertical = 8.dp))
+            Text("Also check on their phone:", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+            Text("• Orbit is updated to the latest version (older versions have no cloud relay)\n• Profile → Connection shows Cloud relay \"active\"\n• Orbit is allowed to run in the background and use mobile data\n• Messages stay on the relay for about 12 hours; if it was longer, resend.", fontSize = 12.5.sp, color = p.textDim)
+        } },
+        confirmButton = { TextButton({ diag = false }) { Text("Close") } })
     if (pickContact) ModalBottomSheet({ pickContact = false }, containerColor = p.surface, contentColor = p.text) {
         LazyColumn(Modifier.padding(bottom = 24.dp)) {
             item { SettingsRow("My contact", "Share yourself", Icons.Rounded.Person, onClick = { engine.sendContact(chatId, "me"); pickContact = false }) }
