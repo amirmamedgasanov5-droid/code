@@ -3,7 +3,9 @@ package app.orbit.gifts
 import kotlin.math.*
 
 /** Tiny indexed polygon mesh. `part` lets one model mix materials (ribbon vs box, gem vs ring). */
-class Mesh3D(val v: FloatArray, val faces: List<IntArray>, val part: IntArray, val smooth: Boolean, private val cvn: FloatArray? = null) {
+class Mesh3D(val v: FloatArray, val faces: List<IntArray>, val part: IntArray, val smooth: Boolean, private val cvn: FloatArray? = null,
+             /** notebooks: vertices that swing with the front cover, the hinge x, and the vertex ids of the two page rectangles (TL, TR, BL) */
+             val hinged: BooleanArray? = null, val hingeX: Float = 0f, val leftPage: IntArray? = null, val rightPage: IntArray? = null) {
     val faceCount get() = faces.size
     /** Per-vertex normals (object space, outward) used for smooth-shaded models. */
     val vn: FloatArray by lazy {
@@ -30,6 +32,7 @@ class Mesh3D(val v: FloatArray, val faces: List<IntArray>, val part: IntArray, v
 
 class MeshBuilder {
     val verts = ArrayList<Float>(); val faces = ArrayList<IntArray>(); val parts = ArrayList<Int>(); val norms = ArrayList<Float>(); var customNormals = false
+    var hingeX = 0f; var leftPage: IntArray? = null; var rightPage: IntArray? = null; val extraHinged = ArrayList<Int>(); var notebook = false
     fun vert(x: Float, y: Float, z: Float): Int { verts.add(x); verts.add(y); verts.add(z); norms.add(0f); norms.add(0f); norms.add(0f); return verts.size / 3 - 1 }
     /** vertex with an analytic normal (for smooth organic shapes) */
     fun vertN(x: Float, y: Float, z: Float, nx: Float, ny: Float, nz: Float): Int { val i = vert(x, y, z); customNormals = true; norms[i * 3] = nx; norms[i * 3 + 1] = ny; norms[i * 3 + 2] = nz; return i }
@@ -47,7 +50,17 @@ class MeshBuilder {
     }
     fun face(part: Int, vararg i: Int) { faces.add(i); parts.add(part) }
     fun faceL(part: Int, i: List<Int>) { faces.add(i.toIntArray()); parts.add(part) }
-    fun build(smooth: Boolean = false) = Mesh3D(verts.toFloatArray(), faces, parts.toIntArray(), smooth, if (customNormals) norms.toFloatArray() else null)
+    fun build(smooth: Boolean = false): Mesh3D {
+        var hinged: BooleanArray? = null
+        if (notebook) {
+            val h = BooleanArray(verts.size / 3)
+            for ((i, f) in faces.withIndex()) if (parts[i] in HINGED_PARTS) for (k in f) h[k] = true
+            for (k in extraHinged) h[k] = true
+            hinged = h
+        }
+        return Mesh3D(verts.toFloatArray(), faces, parts.toIntArray(), smooth, if (customNormals) norms.toFloatArray() else null, hinged, hingeX, leftPage, rightPage)
+    }
+    companion object { /** front cover (8), its inner paper (9), gold (12) and accent (13) decorations on the cover */ val HINGED_PARTS = setOf(8, 9, 12, 13) }
 
     /** Surface of revolution from a (radius, y) profile. */
     fun lathe(profile: List<Pair<Float, Float>>, seg: Int, part: Int = 0, ox: Float = 0f, oy: Float = 0f, scale: Float = 1f, capTop: Boolean = true, capBottom: Boolean = true) {
@@ -80,7 +93,8 @@ object Models {
             5 -> nova(); 6 -> heart(); 7 -> elixir(); 8 -> chalice(); 9 -> bell()
             10 -> crown(); 11 -> rocket(); 12 -> megaDiamond()
             13 -> diamondBrilliant(); 14 -> diamondEmerald(); 15 -> diamondRough()
-            16 -> genesis(); 17 -> imperialCrown(); 18 -> faberge(); else -> teddy()
+            16 -> genesis(); 17 -> imperialCrown(); 18 -> faberge(); 19 -> teddy()
+            else -> notebook(model - 20)
         }
     }.build(smooth = model in setOf(3, 6, 7, 8, 9, 11, 19))
 
@@ -371,6 +385,64 @@ object Models {
         ellipsoid(-0.3f, 0.2f, 0.52f, 0.26f, 0.17f, 0.12f, 7, 12, 8); ellipsoid(0.3f, 0.2f, 0.52f, 0.26f, 0.17f, 0.12f, 7, 12, 8)        // bow wings
         ellipsoid(0f, 0.2f, 0.58f, 0.1f, 0.1f, 0.1f, 7, 10, 8)                       // bow knot
     }
+
+    /**
+     * Notebooks (kind 0..4). Parts: 4 cover, 5 paper block, 7 accent, 2 gold, 11 darker paper (page edges);
+     * hinged with the front cover: 8 cover, 9 inner paper, 12 gold, 13 accent. Spine is at x = -W.
+     * Page rectangles are exported so the renderer can write on them.
+     */
+    private fun MeshBuilder.notebook(kind: Int) {
+        notebook = true
+        val W = 0.95f; val H = 1.25f; val D = 0.22f; val T = 0.04f
+        hingeX = -W
+        box(0f, 0f, D + T, W, H, T, 4)                                                   // back cover
+        box(-W - T * 0.5f, 0f, 0f, T, H, D + 2 * T, 4)                                   // spine
+        box(0.01f, 0f, 0f, W - 0.03f, H - 0.04f, D, 5)                                   // page block
+        var z = -D + 0.04f; var alt = false
+        while (z < D) { box(W - 0.026f, 0f, z, 0.006f, H - 0.05f, 0.011f, if (alt) 11 else 5); alt = !alt; z += 0.045f }   // page edges
+        box(0f, 0f, -(D + T), W, H, T, 8)                                                // front cover (hinged)
+        box(0.01f, 0f, -D + 0.004f, W - 0.04f, H - 0.05f, 0.004f, 9)                     // inner paper, just inside the page block when closed; once the cover flips it lies in front of the cover's inner face (hinged)
+        // page rectangles for writing: right = first page of the block, left = inside of the opened cover (mirrored when opened)
+        val top = H - 0.2f; val bot = -H + 0.2f; val zr = -D - 0.012f
+        val r0 = vert(-W + 0.14f, top, zr); val r1 = vert(W - 0.1f, top, zr); val r2 = vert(-W + 0.14f, bot, zr)
+        rightPage = intArrayOf(r0, r1, r2)
+        val zl = -D + 0.012f                                                              // writing plane just above the inner paper
+        val l0 = vert(W - 0.1f, top, zl); val l1 = vert(-W + 0.14f, top, zl); val l2 = vert(W - 0.1f, bot, zl)
+        for (i in intArrayOf(l0, l1, l2)) extraHinged.add(i)
+        leftPage = intArrayOf(l0, l1, l2)
+        val fz = -(D + 2 * T) - 0.006f                                                   // outside face of the front cover
+        when (kind) {
+            0 -> {   // leather diary: gold frame + gem-like emblem, gold corners, ribbon bookmark
+                for ((cx, cy, hx, hy) in listOf(Quad(0f, H - 0.35f, W - 0.3f, 0.018f), Quad(0f, -H + 0.35f, W - 0.3f, 0.018f), Quad(-W + 0.3f, 0f, 0.018f, H - 0.35f), Quad(W - 0.3f, 0f, 0.018f, H - 0.35f))) box(cx, cy, fz, hx, hy, 0.006f, 12)
+                box(0f, 0.15f, fz, 0.2f, 0.2f, 0.008f, 12); box(0f, 0.15f, fz - 0.006f, 0.13f, 0.13f, 0.006f, 13)
+                for (sx in listOf(-1, 1)) for (sy in listOf(-1, 1)) { box(sx * (W - 0.1f), sy * (H - 0.1f), fz + 0.0f, 0.1f, 0.1f, 0.01f, 12); box(sx * (W - 0.1f), sy * (H - 0.1f), D + 2 * T + 0.0f + 0.006f, 0.1f, 0.1f, 0.01f, 2) }
+                box(0.45f, -H - 0.2f, 0f, 0.045f, 0.26f, 0.01f, 7)                       // ribbon
+            }
+            1 -> {   // spiral notebook: coil of wire around the spine, label on the cover
+                for (k in 0 until 12) { val y = -H + 0.16f + k * (2 * H - 0.32f) / 11f
+                    tube((0..14).map { i -> val a = i / 14f * 2 * PI.toFloat(); Triple(-W - 0.02f + cos(a) * (D + T + 0.07f) * 0.55f, y, sin(a) * (D + T + 0.07f)) }, 0.026f, 4, 2) }
+                box(0.12f, 0.62f, fz, 0.58f, 0.24f, 0.006f, 13)                           // label
+                box(0.12f, 0.62f, fz - 0.005f, 0.5f, 0.016f, 0.004f, 12); box(0.12f, 0.56f, fz - 0.005f, 0.4f, 0.016f, 0.004f, 12)
+            }
+            2 -> {   // school notebook: big label, staples
+                box(0.1f, 0.35f, fz, 0.62f, 0.42f, 0.006f, 13)
+                for (i in 0 until 4) box(0.1f, 0.5f - i * 0.15f, fz - 0.005f, 0.48f, 0.012f, 0.004f, 12)
+                box(-W + 0.06f, H * 0.5f, fz, 0.035f, 0.07f, 0.008f, 12); box(-W + 0.06f, -H * 0.5f, fz, 0.035f, 0.07f, 0.008f, 12)
+            }
+            3 -> {   // sketchbook: elastic band + small plate
+                box(0.5f, 0f, fz, 0.05f, H + 0.01f, 0.01f, 13); box(0.5f, 0f, D + 2 * T + 0.01f, 0.05f, H + 0.01f, 0.01f, 7)
+                box(-0.35f, 0.75f, fz, 0.3f, 0.12f, 0.008f, 12)
+            }
+            else -> {   // love diary: heart on the cover, padlock on the edge
+                ellipsoid(-0.17f, 0.34f, fz - 0.01f, 0.21f, 0.21f, 0.05f, 13, 14, 8); ellipsoid(0.17f, 0.34f, fz - 0.01f, 0.21f, 0.21f, 0.05f, 13, 14, 8)
+                ellipsoid(0f, 0.18f, fz - 0.01f, 0.36f, 0.3f, 0.05f, 13, 16, 8); ellipsoid(0f, -0.05f, fz - 0.01f, 0.2f, 0.26f, 0.05f, 13, 12, 8)
+                box(W - 0.02f, -0.1f, fz, 0.1f, 0.12f, 0.016f, 12)
+                tube((0..10).map { i -> val a = PI.toFloat() * i / 10f; Triple(W - 0.02f + cos(a) * 0.06f, 0.02f + sin(a) * 0.08f, fz - 0.005f) }, 0.016f, 4, 12)
+            }
+        }
+        // pretty pen-and-ink doodles are drawn by the renderer; nothing else to model
+    }
+    private data class Quad(val cx: Float, val cy: Float, val hx: Float, val hy: Float)
 
     private fun MeshBuilder.gemAt(x: Float, y: Float, z: Float, s: Float, part: Int) {
         val top = vert(x, y + s * 1.3f, z); val bot = vert(x, y - s * 1.0f, z)

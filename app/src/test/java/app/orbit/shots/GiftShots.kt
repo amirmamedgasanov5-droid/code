@@ -29,6 +29,17 @@ class GiftShots {
     }
     @Test fun diamondVariants() = row("/tmp/shots/variants_diamond.png", listOf(13, 14, 15))
     @Test fun plush() = row("/tmp/shots/variants_plush.png", listOf(19, 19, 19))
+    @Test fun notebooksOpen() {
+        val id = Identity.fromSeed(ByteArray(32) { (it + 11).toByte() })
+        rule.setContent { Column(Modifier.fillMaxSize()) { for (k in 20..24) Box(Modifier.weight(1f).fillMaxWidth()) { Gift3D(GiftLogic.mint(id, "Anna", k, k - 19, if (k == 22) "Happy birthday, Dasha! Keep this diary safe." else ""), animate = false, modelScale = 0.92f, nbOpen = 1f, nbInk = 0.62f) } } }
+        rule.onRoot().captureRoboImage("/tmp/shots/notebooks_open.png")
+    }
+    @Test fun notebookStages() {
+        val id = Identity.fromSeed(ByteArray(32) { (it + 11).toByte() })
+        val g = GiftLogic.mint(id, "Anna", 20, 7)
+        rule.setContent { Column(Modifier.fillMaxSize()) { for (o in listOf(0f, 0.35f, 0.7f, 1f)) Box(Modifier.weight(1f).fillMaxWidth()) { Gift3D(g, animate = false, modelScale = 0.92f, nbOpen = o, nbInk = if (o >= 1f) 0.45f else 0f) } } }
+        rule.onRoot().captureRoboImage("/tmp/shots/notebook_stages.png")
+    }
     @Test fun luxuryVariants() = row("/tmp/shots/variants_luxury.png", listOf(16, 17, 18))
 
     @Test fun allModels() {

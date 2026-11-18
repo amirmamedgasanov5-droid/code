@@ -157,6 +157,19 @@ class CoreTest {
 }
 
 class GiftTest {
+    @Test fun catalogLuxuryAndNotebooks() {
+        val a = Identity.generate()
+        assertEquals(25, app.orbit.gifts.GiftCatalog.models.size)
+        for (m in listOf(16, 17, 18)) {
+            assertEquals(2_000_000_000, app.orbit.gifts.GiftCatalog.models[m].basePrice)
+            val g = app.orbit.gifts.GiftLogic.mint(a, "x", m, 1); assertTrue(app.orbit.gifts.GiftLogic.verify(g))
+            val t = app.orbit.gifts.GiftLogic.traits(g); assertEquals(app.orbit.gifts.Tier.LEGENDARY, t.tier); assertEquals("Aurora", t.materialInfo.name)
+        }
+        for (m in 20..24) { assertTrue(app.orbit.gifts.GiftCatalog.models[m].notebook); assertTrue(app.orbit.gifts.GiftLogic.verify(app.orbit.gifts.GiftLogic.mint(a, "x", m, 1, "hello"))) }
+        // premium models are always drawn from the rarest materials, plush and notebooks are ordinary draws
+        for (m in listOf(10, 11, 12, 13, 14, 15)) assertTrue(app.orbit.gifts.GiftLogic.traits(app.orbit.gifts.GiftLogic.mint(a, "x", m, 1)).material >= 6)
+    }
+
     @Test fun mintTransferVerifyAndTamper() {
         val a = Identity.generate(); val b = Identity.generate(); val c = Identity.generate()
         val g = app.orbit.gifts.GiftLogic.mint(a, "Alice", 3, 1)

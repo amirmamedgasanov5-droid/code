@@ -9,7 +9,13 @@ import java.math.BigInteger
 
 class Material(val name: String, val base: Long, val shade: Long, val glint: Long, val shine: Float, val iridescent: Boolean, val weight: Int)
 class Backdrop(val name: String, val top: Long, val bottom: Long, val weight: Int)
-class Model(val name: String, val emoji: String, val basePrice: Int)
+enum class Cat { REGULAR, PREMIUM, LUXURY, PLUSH, NOTEBOOK }
+class Model(val name: String, val emoji: String, val basePrice: Int, val cat: Cat = Cat.REGULAR) {
+    val luxury get() = cat == Cat.LUXURY
+    val notebook get() = cat == Cat.NOTEBOOK
+    /** premium and priceless gifts are always drawn from the rarest materials */
+    val rareOnly get() = cat == Cat.PREMIUM || cat == Cat.LUXURY
+}
 
 /** Static catalog. Index order is part of the protocol: never reorder, only append. */
 object GiftCatalog {
@@ -18,11 +24,14 @@ object GiftCatalog {
         Model("Obelisk", "🔷", 12), Model("Nova", "⭐", 10), Model("Heart", "❤️", 8), Model("Elixir", "🧪", 12),
         Model("Chalice", "🏆", 16), Model("Bell", "🔔", 9),
         // premium: very expensive, always drawn from the rarest materials
-        Model("Royal Crown", "👑", 50_000), Model("Rocket", "🚀", 150_000), Model("Mega Diamond", "💠", 500_000),
-        // --- candidates for review (will be reduced to the chosen ones) ---
-        Model("Diamond A · Brilliant", "💎", 500_000), Model("Diamond B · Emerald cut", "💎", 500_000), Model("Diamond C · Rough crystal", "💎", 500_000),
-        Model("Luxury A · Orbit Genesis", "🪐", 2_000_000_000), Model("Luxury B · Imperial Crown", "👑", 2_000_000_000), Model("Luxury C · Faberge Egg", "🥚", 2_000_000_000),
-        Model("Plush Teddy", "🧸", 5_000),
+        Model("Royal Crown", "👑", 50_000, Cat.PREMIUM), Model("Rocket", "🚀", 150_000, Cat.PREMIUM), Model("Mega Diamond", "💠", 500_000, Cat.PREMIUM),
+        Model("Brilliant Cut", "💎", 300_000, Cat.PREMIUM), Model("Emerald Cut", "💎", 400_000, Cat.PREMIUM), Model("Rough Crystal", "🔷", 250_000, Cat.PREMIUM),
+        // priceless showpieces: always Aurora, legendary
+        Model("Orbit Genesis", "🪐", 2_000_000_000, Cat.LUXURY), Model("Imperial Crown", "👑", 2_000_000_000, Cat.LUXURY), Model("Faberge Egg", "🥚", 2_000_000_000, Cat.LUXURY),
+        Model("Plush Teddy", "🧸", 5_000, Cat.PLUSH),
+        // notebooks open by themselves, a pen writes in them, they close again
+        Model("Leather Diary", "📔", 800, Cat.NOTEBOOK), Model("Spiral Notebook", "📒", 400, Cat.NOTEBOOK), Model("School Notebook", "📓", 300, Cat.NOTEBOOK),
+        Model("Sketchbook", "📕", 1_500, Cat.NOTEBOOK), Model("Love Diary", "💖", 2_500, Cat.NOTEBOOK),
     )
     const val PREMIUM_FROM = 10
     val materials = listOf(
@@ -71,9 +80,11 @@ object GiftLogic {
         val h = sha256("orbit.gift.traits".utf8(), g.seed.unhex(), g.id.unhex())
         fun u(i: Int): Double = (BigInteger(1, h.copyOfRange(i * 4, i * 4 + 4)).toLong() and 0xffffffffL) / 4294967296.0
         val mats = GiftCatalog.materials.map { it.weight }; val bds = GiftCatalog.backdrops.map { it.weight }
-        val m = if (g.model >= GiftCatalog.PREMIUM_FROM) 6 + pick(mats.drop(6), u(0)) else pick(mats, u(0)); val b = pick(bds, u(1)); val s = pick(GiftCatalog.symbolWeights, u(2)); val p = pick(GiftCatalog.patternWeights, u(3))
+        val md = GiftCatalog.models.getOrNull(g.model); val lux = md?.luxury == true
+        val m = if (lux) 9 else if (md?.rareOnly == true) 6 + pick(mats.drop(6), u(0)) else pick(mats, u(0))
+        val b = if (lux) 10 + (if (u(1) < 0.5) 0 else 1) else pick(bds, u(1)); val s = if (lux) 3 else pick(GiftCatalog.symbolWeights, u(2)); val p = if (lux) 5 else pick(GiftCatalog.patternWeights, u(3))
         val pr = mats[m].toDouble() / mats.sum() * bds[b].toDouble() / bds.sum() * GiftCatalog.symbolWeights[s].toDouble() / GiftCatalog.symbolWeights.sum() * GiftCatalog.patternWeights[p].toDouble() / GiftCatalog.patternWeights.sum()
-        val tier = when { pr < 0.0004 -> Tier.LEGENDARY; pr < 0.0016 -> Tier.EPIC; pr < 0.005 -> Tier.RARE; pr < 0.012 -> Tier.UNCOMMON; else -> Tier.COMMON }
+        val tier = when { lux || pr < 0.0004 -> Tier.LEGENDARY; pr < 0.0016 -> Tier.EPIC; pr < 0.005 -> Tier.RARE; pr < 0.012 -> Tier.UNCOMMON; else -> Tier.COMMON }
         return Traits(g.model, m, b, s, p, 0.6f + u(4).toFloat() * 0.8f, pr, tier)
     }
 

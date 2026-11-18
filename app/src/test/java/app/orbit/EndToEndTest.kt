@@ -6,6 +6,7 @@ import app.orbit.core.*
 import app.orbit.core.crypto.Identity
 import app.orbit.data.*
 import app.orbit.engine.Engine
+import app.orbit.gifts.Cat
 import app.orbit.gifts.GiftCatalog
 import app.orbit.gifts.GiftLogic
 import kotlinx.coroutines.*
@@ -104,7 +105,8 @@ class EndToEndTest {
         assertEquals(before + 2_000_000, e.coins.value)
         // every premium model is buyable, expensive, verified and always rare-material
         var bought = 0
-        for (m in GiftCatalog.PREMIUM_FROM until GiftCatalog.models.size) {
+        val premium = GiftCatalog.models.indices.filter { GiftCatalog.models[it].cat == Cat.PREMIUM }
+        for (m in premium) {
             assertTrue(e.price(m) >= 50_000)
             var g: Gift? = null
             e.buyGift(m, "", null) { g = it }
@@ -113,8 +115,8 @@ class EndToEndTest {
             assertTrue(GiftLogic.traits(g!!).material >= 6)
             bought++
         }
-        assertEquals(3, bought)
-        assertEquals(before + 2_000_000 - 50_000 - 150_000 - 500_000, e.coins.value)
+        assertEquals(premium.size, bought)
+        assertEquals(before + 2_000_000 - premium.sumOf { e.price(it) }, e.coins.value)
     }
 
     @Test fun adminTokenOnceMarketSaleAndMoreCodes() {

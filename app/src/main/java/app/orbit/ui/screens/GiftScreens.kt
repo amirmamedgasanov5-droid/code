@@ -72,26 +72,23 @@ fun GiftShopScreen(chatId: String?) {
                         Text("🎡", fontSize = 26.sp); Spacer(Modifier.width(10.dp)); Column(Modifier.weight(1f)) { Text("Need coins?", color = Color.White, fontWeight = FontWeight.Bold); Text(if (engine.canSpin()) "Free spin ready: win up to 250" else "Free spin once a day", color = Color.White.copy(alpha = 0.9f), fontSize = 12.sp) }; Icon(Icons.Rounded.ChevronRight, null, tint = Color.White)
                     }
                 }
-                items((0 until GiftCatalog.PREMIUM_FROM).toList()) { m ->
-                    val m0 = GiftCatalog.models[m]; val price = engine.price(m)
-                    Column(Modifier.clip(RoundedCornerShape(20.dp)).background(p.surface).pressable({ selected = m })) {
-                        Box(Modifier.fillMaxWidth().aspectRatio(0.9f)) { Gift3D(previewGift(m)) }
-                        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Column(Modifier.weight(1f)) { Text(m0.name, fontWeight = FontWeight.Bold); Text("Unique every time", fontSize = 11.5.sp, color = p.textDim) }
-                            Text("💰 ${coinsFmt(price)}", Modifier.clip(RoundedCornerShape(10.dp)).background(if (coins >= price) p.accent else p.surfaceHigh).padding(horizontal = 9.dp, vertical = 5.dp), color = if (coins >= price) Color.White else p.textDim, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
-                        }
+                val sections = listOf(
+                    Cat.REGULAR to ("Classic" to "Unique every time"), Cat.NOTEBOOK to ("📓 Notebooks" to "They open by themselves, a pen writes in them, then they close"),
+                    Cat.PLUSH to ("🧸 Plush" to "Soft and huggable"), Cat.PREMIUM to ("👑 Premium" to "Always drawn from the rarest materials"), Cat.LUXURY to ("💎 Priceless" to "Always legendary Aurora · ${coinsFmt(2_000_000_000)} coins"))
+                for ((cat, info) in sections) {
+                    val ids = GiftCatalog.models.indices.filter { GiftCatalog.models[it].cat == cat }
+                    if (ids.isEmpty()) continue
+                    item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
+                        Column(Modifier.padding(top = 10.dp, start = 4.dp)) { Text(info.first, color = if (cat == Cat.PREMIUM || cat == Cat.LUXURY) Color(0xFFFFB020) else p.text, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp); Text(info.second, color = p.textDim, fontSize = 12.sp) }
                     }
-                }
-                item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
-                    Column(Modifier.padding(top = 10.dp, start = 4.dp)) { Text("👑 PREMIUM", color = Color(0xFFFFB020), fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp, fontSize = 13.sp); Text("Always drawn from the rarest materials", color = p.textDim, fontSize = 12.sp) }
-                }
-                items((GiftCatalog.PREMIUM_FROM until GiftCatalog.models.size).toList()) { m ->
-                    val m0 = GiftCatalog.models[m]; val price = engine.price(m)
-                    Column(Modifier.clip(RoundedCornerShape(20.dp)).background(p.surface).border(1.5.dp, Color(0xFFFFB020).copy(alpha = 0.7f), RoundedCornerShape(20.dp)).pressable({ selected = m })) {
-                        Box(Modifier.fillMaxWidth().aspectRatio(0.9f)) { Gift3D(previewGift(m)) }
-                        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Column(Modifier.weight(1f)) { Text(m0.name, fontWeight = FontWeight.Bold); Text("Premium", fontSize = 11.5.sp, color = Color(0xFFFFB020)) }
-                            Text("💰 ${coinsFmt(price)}", Modifier.clip(RoundedCornerShape(10.dp)).background(if (coins >= price) Color(0xFFFFB020) else p.surfaceHigh).padding(horizontal = 9.dp, vertical = 5.dp), color = if (coins >= price) Color.White else p.textDim, fontWeight = FontWeight.ExtraBold, fontSize = 12.5.sp)
+                    items(ids) { m ->
+                        val m0 = GiftCatalog.models[m]; val price = engine.price(m); val gold = cat == Cat.PREMIUM || cat == Cat.LUXURY
+                        Column(Modifier.clip(RoundedCornerShape(20.dp)).background(p.surface).then(if (gold) Modifier.border(1.5.dp, Color(0xFFFFB020).copy(alpha = 0.7f), RoundedCornerShape(20.dp)) else Modifier).pressable({ selected = m })) {
+                            Box(Modifier.fillMaxWidth().aspectRatio(0.9f)) { Gift3D(previewGift(m)) }
+                            Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Column(Modifier.weight(1f)) { Text(m0.name, fontWeight = FontWeight.Bold, maxLines = 1); Text(if (gold) "Premium" else if (m0.notebook) "Writes by itself" else "Unique every time", fontSize = 11.5.sp, color = if (gold) Color(0xFFFFB020) else p.textDim) }
+                                Text("💰 ${if (price >= 1_000_000) "${price / 1_000_000}M" else coinsFmt(price)}", Modifier.clip(RoundedCornerShape(10.dp)).background(if (coins >= price) (if (gold) Color(0xFFFFB020) else p.accent) else p.surfaceHigh).padding(horizontal = 8.dp, vertical = 5.dp), color = if (coins >= price) Color.White else p.textDim, fontWeight = FontWeight.ExtraBold, fontSize = 12.sp, maxLines = 1)
+                            }
                         }
                     }
                 }
@@ -120,7 +117,7 @@ fun GiftShopScreen(chatId: String?) {
                         }
                         if (tc != null) {
                             Spacer(Modifier.height(8.dp))
-                            OutlinedTextField(msg, { msg = it.take(120) }, Modifier.fillMaxWidth(), placeholder = { Text("Add a message (optional)") }, shape = RoundedCornerShape(14.dp), singleLine = true)
+                            OutlinedTextField(msg, { msg = it.take(if (GiftCatalog.models[m].notebook) 160 else 120) }, Modifier.fillMaxWidth(), placeholder = { Text(if (GiftCatalog.models[m].notebook) "What should the pen write in it? (optional)" else "Add a message (optional)") }, shape = RoundedCornerShape(14.dp), singleLine = !GiftCatalog.models[m].notebook, minLines = if (GiftCatalog.models[m].notebook) 2 else 1)
                             Spacer(Modifier.height(10.dp))
                             GradientButton("Buy & send · 💰 ${coinsFmt(price)}", { val t = pickedFor!!; engine.buyGift(m, msg.trim(), t) { g -> if (g != null) revealed = g }; selected = null }, Modifier.fillMaxWidth(), icon = Icons.Rounded.CardGiftcard)
                         }
