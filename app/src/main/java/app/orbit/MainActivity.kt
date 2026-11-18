@@ -38,6 +38,7 @@ class MainActivity : ComponentActivity() {
 
     private fun handleIntent(i: Intent?) {
         i ?: return
+        if (i.getStringExtra("call_action") == "accept") pendingOpen.value = "call:accept"
         i.getStringExtra("chat")?.let { pendingOpen.value = "chat:$it" }
         i.data?.let { if (it.scheme == "orbit") pendingOpen.value = "link:$it" }
         if (i.action == Intent.ACTION_SEND && i.type?.startsWith("text/") == true) i.getStringExtra(Intent.EXTRA_TEXT)?.let { pendingOpen.value = "text:$it" }

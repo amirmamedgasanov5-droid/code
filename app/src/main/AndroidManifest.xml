@@ -70,6 +70,8 @@
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
 
+        <receiver android:name=".engine.CallActionReceiver" android:exported="false" />
+
         <receiver android:name=".engine.BootReceiver" android:exported="true">
             <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED" /></intent-filter>
         </receiver>

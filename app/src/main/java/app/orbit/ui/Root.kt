@@ -39,7 +39,7 @@ fun OrbitRoot(app: OrbitApp, pendingOpen: MutableState<String?>, requestPerms: (
                 when {
                     !ready -> {}
                     !hasId -> Onboarding(onDone = { })
-                    else -> PermissionGate(requestPerms) { AppNav(pendingOpen) }
+                    else -> PermissionGate(requestPerms) { AppNav(pendingOpen, app) }
                 }
             }
         }
@@ -47,7 +47,7 @@ fun OrbitRoot(app: OrbitApp, pendingOpen: MutableState<String?>, requestPerms: (
 }
 
 @Composable
-private fun AppNav(pendingOpen: MutableState<String?>) {
+private fun AppNav(pendingOpen: MutableState<String?>, app0: OrbitApp) {
     val nav = remember { Navigator() }
     val engine = LocalEngine.current
     val scope = rememberCoroutineScope()
@@ -58,6 +58,13 @@ private fun AppNav(pendingOpen: MutableState<String?>) {
         val v = pendingOpen.value ?: return@LaunchedEffect
         pendingOpen.value = null
         when {
+            v == "call:accept" -> {
+                // notification "Answer": wait briefly for the ring signal, then pick up if the mic is already allowed
+                val live = app0.live
+                repeat(20) { if (engine.incomingCall.value == null) kotlinx.coroutines.delay(100) }
+                val inc = engine.incomingCall.value
+                if (inc != null && androidx.core.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED) { live.acceptCall(inc); nav.resetTo(Route.Main); nav.push(Route.Call(inc.from)) }
+            }
             v.startsWith("chat:") -> { nav.resetTo(Route.Main); nav.push(Route.Chat(v.removePrefix("chat:"))) }
             v.startsWith("link:") || v.startsWith("text:") -> {
                 val txt = v.substringAfter(":")

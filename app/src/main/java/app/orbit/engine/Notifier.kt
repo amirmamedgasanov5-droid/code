@@ -64,9 +64,12 @@ class Notifier(private val ctx: Context, private val kv: (String) -> String? = {
         try { nm.notify(chat.id.hashCode(), n) } catch (_: SecurityException) {}
     }
     fun onCall(name: String) {
+        val answerPi = PendingIntent.getActivity(ctx, 8, Intent(ctx, MainActivity::class.java).putExtra("call_action", "accept").addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val declinePi = PendingIntent.getBroadcast(ctx, 9, Intent(ctx, CallActionReceiver::class.java).setAction("orbit.call.decline"), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         if (Build.VERSION.SDK_INT >= 33 && ctx.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
         val pi = PendingIntent.getActivity(ctx, 7, Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val n = NotificationCompat.Builder(ctx, channelFor("calls_", callUri(), android.media.AudioAttributes.USAGE_NOTIFICATION_RINGTONE, "Calls")).setSmallIcon(android.R.drawable.sym_action_call).setContentTitle("Incoming call").setContentText(name).setContentIntent(pi)
+            .addAction(android.R.drawable.sym_action_call, "Answer", answerPi).addAction(android.R.drawable.ic_menu_close_clear_cancel, "Decline", declinePi)
             .setCategory(NotificationCompat.CATEGORY_CALL).setPriority(NotificationCompat.PRIORITY_MAX).setFullScreenIntent(pi, true).setVisibility(NotificationCompat.VISIBILITY_PUBLIC).setOngoing(true).setTimeoutAfter(45_000).build().also { it.flags = it.flags or android.app.Notification.FLAG_INSISTENT }
         try { nm.notify("call".hashCode(), n) } catch (_: SecurityException) {}
     }
