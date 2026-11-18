@@ -6,6 +6,8 @@ import app.orbit.core.*
 import app.orbit.core.crypto.Identity
 import app.orbit.data.*
 import app.orbit.engine.Engine
+import app.orbit.gifts.GiftCatalog
+import app.orbit.gifts.GiftLogic
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
 import org.junit.Assert.*
@@ -88,6 +90,31 @@ class EndToEndTest {
             assertEquals(ic.id, opened)
             a.shutdown(); b.shutdown(); c.shutdown()
         }
+    }
+
+    @Test fun promoCodeGivesTwoMillionOnceAndPremiumGiftsAreBuyable() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val e = Engine(app, "promo.db"); e.db.setKv("t.relay", "0")
+        e.attachIdentityForTest(Identity.generate(), Profile("P", "", "🙂", 0, ""))
+        assertEquals(Engine.PromoResult.INVALID, e.redeemPromo("12345678").first)
+        val before = e.coins.value
+        val (r, n) = e.redeemPromo("18021953")
+        assertEquals(Engine.PromoResult.OK, r); assertEquals(2_000_000, n); assertEquals(before + 2_000_000, e.coins.value)
+        assertEquals("only once", Engine.PromoResult.USED, e.redeemPromo(" 18021953 ").first)
+        assertEquals(before + 2_000_000, e.coins.value)
+        // every premium model is buyable, expensive, verified and always rare-material
+        var bought = 0
+        for (m in GiftCatalog.PREMIUM_FROM until GiftCatalog.models.size) {
+            assertTrue(e.price(m) >= 50_000)
+            var g: Gift? = null
+            e.buyGift(m, "", null) { g = it }
+            wait(what = "buy premium $m") { g != null }
+            assertTrue(GiftLogic.verify(g!!))
+            assertTrue(GiftLogic.traits(g!!).material >= 6)
+            bought++
+        }
+        assertEquals(3, bought)
+        assertEquals(before + 2_000_000 - 50_000 - 150_000 - 500_000, e.coins.value)
     }
 
     @Test fun wheelPaysOutOncePerDay() {

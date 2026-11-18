@@ -17,7 +17,10 @@ object GiftCatalog {
         Model("Brilliant", "💎", 10), Model("Present", "🎁", 8), Model("Orb", "🔮", 12), Model("Halo", "💍", 14),
         Model("Obelisk", "🔷", 12), Model("Nova", "⭐", 10), Model("Heart", "❤️", 8), Model("Elixir", "🧪", 12),
         Model("Chalice", "🏆", 16), Model("Bell", "🔔", 9),
+        // premium: very expensive, always drawn from the rarest materials
+        Model("Royal Crown", "👑", 50_000), Model("Rocket", "🚀", 150_000), Model("Mega Diamond", "💠", 500_000),
     )
+    const val PREMIUM_FROM = 10
     val materials = listOf(
         Material("Gold", 0xFFFFC83D, 0xFFB8741A, 0xFFFFF4C2, 0.9f, false, 22),
         Material("Rose Gold", 0xFFF4A58A, 0xFFB2594A, 0xFFFFE5DA, 0.85f, false, 16),
@@ -64,7 +67,7 @@ object GiftLogic {
         val h = sha256("orbit.gift.traits".utf8(), g.seed.unhex(), g.id.unhex())
         fun u(i: Int): Double = (BigInteger(1, h.copyOfRange(i * 4, i * 4 + 4)).toLong() and 0xffffffffL) / 4294967296.0
         val mats = GiftCatalog.materials.map { it.weight }; val bds = GiftCatalog.backdrops.map { it.weight }
-        val m = pick(mats, u(0)); val b = pick(bds, u(1)); val s = pick(GiftCatalog.symbolWeights, u(2)); val p = pick(GiftCatalog.patternWeights, u(3))
+        val m = if (g.model >= GiftCatalog.PREMIUM_FROM) 6 + pick(mats.drop(6), u(0)) else pick(mats, u(0)); val b = pick(bds, u(1)); val s = pick(GiftCatalog.symbolWeights, u(2)); val p = pick(GiftCatalog.patternWeights, u(3))
         val pr = mats[m].toDouble() / mats.sum() * bds[b].toDouble() / bds.sum() * GiftCatalog.symbolWeights[s].toDouble() / GiftCatalog.symbolWeights.sum() * GiftCatalog.patternWeights[p].toDouble() / GiftCatalog.patternWeights.sum()
         val tier = when { pr < 0.0004 -> Tier.LEGENDARY; pr < 0.0016 -> Tier.EPIC; pr < 0.005 -> Tier.RARE; pr < 0.012 -> Tier.UNCOMMON; else -> Tier.COMMON }
         return Traits(g.model, m, b, s, p, 0.6f + u(4).toFloat() * 0.8f, pr, tier)

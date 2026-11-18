@@ -60,7 +60,7 @@ fun MeTab() {
         val coins by engine.coins.collectAsState()
         Row(Modifier.padding(horizontal = 12.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Brush.linearGradient(listOf(Color(0xFFFFB020), Color(0xFFFF7A45)))).pressable({ nav.push(Route.Wheel) }).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("💰", fontSize = 34.sp); Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) { Text("$coins coins", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp); Text(if (engine.canSpin()) "Free spin ready — tap to win up to 250" else "Wheel of fortune · one free spin a day", color = Color.White.copy(alpha = 0.92f), fontSize = 13.sp) }
+            Column(Modifier.weight(1f)) { Text("${coinsFmt(coins)} coins", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp); Text(if (engine.canSpin()) "Free spin ready — tap to win up to 250" else "Wheel of fortune · one free spin a day", color = Color.White.copy(alpha = 0.92f), fontSize = 13.sp) }
             Icon(Icons.Rounded.ChevronRight, null, tint = Color.White)
         }
         Spacer(Modifier.height(14.dp))
@@ -73,6 +73,10 @@ fun MeTab() {
         }
         Spacer(Modifier.height(14.dp))
         Card {
+            var promo by remember { mutableStateOf(false) }
+            SettingsRow("Promo code", "Redeem a code for coins", Icons.Rounded.ConfirmationNumber, Color(0xFFFF4D8D), onClick = { promo = true })
+            if (promo) PromoDialog { promo = false }
+            Divider(60.dp)
             SettingsRow("Sounds", "Message sound, call ringtone, vibration", Icons.Rounded.MusicNote, Color(0xFFF5A524), onClick = { nav.push(Route.Sounds) })
             Divider(60.dp)
             SettingsRow("Reliable notifications", if (isBatteryExempt(LocalContext.current)) "On — messages and calls arrive in the background" else "Action needed: allow background activity", Icons.Rounded.NotificationsActive, if (isBatteryExempt(LocalContext.current)) Color(0xFF12B981) else Color(0xFFFF6B5E), onClick = { nav.push(Route.Reliable) })

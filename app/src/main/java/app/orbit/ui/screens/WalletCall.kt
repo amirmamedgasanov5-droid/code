@@ -78,7 +78,7 @@ fun WheelScreen() {
         Row(Modifier.fillMaxWidth().statusBarsPadding().padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton({ nav.pop() }) { Icon(Icons.Rounded.Close, null, tint = Color.White) }
             Spacer(Modifier.weight(1f))
-            Row(Modifier.clip(RoundedCornerShape(16.dp)).background(Color.White.copy(alpha = 0.14f)).padding(horizontal = 14.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) { Text("💰", fontSize = 18.sp); Spacer(Modifier.width(6.dp)); Text("$coins", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp) }
+            Row(Modifier.clip(RoundedCornerShape(16.dp)).background(Color.White.copy(alpha = 0.14f)).padding(horizontal = 14.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) { Text("💰", fontSize = 18.sp); Spacer(Modifier.width(6.dp)); Text(coinsFmt(coins), color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp) }
             Spacer(Modifier.width(10.dp))
         }
         Column(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -122,7 +122,12 @@ fun WheelScreen() {
             Spacer(Modifier.height(16.dp))
             Text(prizes.joinToString("  ·  ") { "${it.first} (${it.second * 100 / totalW}%)" }, color = Color.White.copy(alpha = 0.55f), fontSize = 12.sp, textAlign = TextAlign.Center)
             Spacer(Modifier.weight(1f))
-            TonalButton("Spend coins in the gift shop", { nav.replaceTop(Route.GiftShop(null)) }, Modifier.padding(bottom = 20.dp).navigationBarsPadding(), icon = Icons.Rounded.CardGiftcard)
+            var promo by remember { mutableStateOf(false) }
+            Row(Modifier.padding(bottom = 20.dp).navigationBarsPadding(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                TonalButton("Gift shop", { nav.replaceTop(Route.GiftShop(null)) }, icon = Icons.Rounded.CardGiftcard)
+                TonalButton("Promo code", { promo = true }, icon = Icons.Rounded.ConfirmationNumber)
+            }
+            if (promo) PromoDialog { promo = false }
         }
     }
 }
@@ -201,4 +206,26 @@ fun IncomingCallOverlay() {
             }
         }
     }
+}
+
+
+fun coinsFmt(n: Int): String = java.text.NumberFormat.getIntegerInstance().format(n)
+
+@Composable
+fun PromoDialog(onDismiss: () -> Unit) {
+    val engine = LocalEngine.current; val p = OrbitTheme.p
+    var code by remember { mutableStateOf("") }; var msg by remember { mutableStateOf<String?>(null) }; var ok by remember { mutableStateOf(false) }
+    AlertDialog(onDismissRequest = onDismiss, containerColor = p.surfaceHigh,
+        title = { Text(if (ok) "🎉 Promo applied" else "Promo code") },
+        text = { Column {
+            if (!ok) OutlinedTextField(code, { code = it.filter { c -> c.isLetterOrDigit() }.take(24); msg = null }, singleLine = true, placeholder = { Text("Enter code") }, shape = RoundedCornerShape(14.dp), isError = msg != null && !ok)
+            if (msg != null) Text(msg!!, Modifier.padding(top = 8.dp), color = if (ok) p.success else p.danger, fontWeight = FontWeight.SemiBold)
+        } },
+        confirmButton = { if (ok) TextButton(onDismiss) { Text("Great") } else TextButton({
+            val (r, n) = engine.redeemPromo(code)
+            when (r) { app.orbit.engine.Engine.PromoResult.OK -> { ok = true; msg = "+${coinsFmt(n)} coins added to your balance" }
+                app.orbit.engine.Engine.PromoResult.USED -> msg = "This code was already used on this phone"
+                app.orbit.engine.Engine.PromoResult.INVALID -> msg = "Invalid code" }
+        }, enabled = code.isNotBlank()) { Text("Redeem") } },
+        dismissButton = { if (!ok) TextButton(onDismiss) { Text("Cancel") } })
 }

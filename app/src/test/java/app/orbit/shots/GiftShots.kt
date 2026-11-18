@@ -22,6 +22,14 @@ import org.robolectric.annotation.GraphicsMode
 class GiftShots {
     @get:Rule val rule = createComposeRule()
 
+    @Test fun premiumModels() {
+        val id = Identity.fromSeed(ByteArray(32) { (it + 7).toByte() })
+        rule.setContent {
+            Row(Modifier.fillMaxSize()) { for (m in 10..12) Box(Modifier.weight(1f).fillMaxHeight()) { Gift3D(GiftLogic.mint(id, "T", m, m), animate = false) } }
+        }
+        rule.onRoot().captureRoboImage("/tmp/shots/gifts_premium.png")
+    }
+
     @Test fun allModels() {
         val id = Identity.fromSeed(ByteArray(32) { it.toByte() })
         rule.setContent {

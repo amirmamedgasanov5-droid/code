@@ -62,9 +62,10 @@ object Models {
     private fun build(model: Int): Mesh3D = MeshBuilder().apply {
         when (model) {
             0 -> brilliant(); 1 -> present(); 2 -> orb(); 3 -> halo(); 4 -> obelisk()
-            5 -> nova(); 6 -> heart(); 7 -> elixir(); 8 -> chalice(); else -> bell()
+            5 -> nova(); 6 -> heart(); 7 -> elixir(); 8 -> chalice(); 9 -> bell()
+            10 -> crown(); 11 -> rocket(); else -> megaDiamond()
         }
-    }.build(smooth = model in setOf(3, 6, 7, 8, 9))
+    }.build(smooth = model in setOf(3, 6, 7, 8, 9, 11))
 
     private fun MeshBuilder.brilliant() {
         val n = 16
@@ -188,6 +189,32 @@ object Models {
         lathe(prof, 24, 0, capTop = false)
         val ring = listOf(0.25f to -0.38f, 0.3f to -0.3f, 0.3f to -0.22f, 0.25f to -0.14f)
         lathe(ring, 16, 1)
+    }
+
+    private fun MeshBuilder.crown() {
+        lathe(listOf(0.86f to -0.6f, 0.98f to -0.6f, 0.98f to 0.0f, 0.86f to 0.0f), 20, 0, capTop = false, capBottom = false)
+        lathe(listOf(0.86f to 0.0f, 0.98f to 0.0f, 0.98f to -0.6f, 0.86f to -0.6f), 20, 0, capTop = false, capBottom = false)
+        for (i in 0 until 5) {
+            val a = i / 5f * 2 * PI.toFloat(); val ca = cos(a); val sa = sin(a); val tx = -sa * 0.2f; val tz = ca * 0.2f
+            val b1 = vert(ca * 0.98f + tx, 0f, sa * 0.98f + tz); val b2 = vert(ca * 0.98f - tx, 0f, sa * 0.98f - tz)
+            val b3 = vert(ca * 0.86f - tx, 0f, sa * 0.86f - tz); val b4 = vert(ca * 0.86f + tx, 0f, sa * 0.86f + tz)
+            val tip = vert(ca * 1.05f, 0.85f, sa * 1.05f)
+            face(0, b1, b2, tip); face(0, b2, b3, tip); face(0, b3, b4, tip); face(0, b4, b1, tip)
+            box(ca * 1.05f, 0.9f, sa * 1.05f, 0.09f, 0.09f, 0.09f, 1)
+            box(ca * 0.99f, -0.3f, sa * 0.99f, 0.07f, 0.12f, 0.07f, 1)
+        }
+    }
+
+    private fun MeshBuilder.rocket() {
+        lathe(listOf(0f to -1.0f, 0.35f to -0.95f, 0.55f to -0.6f, 0.58f to 0.2f, 0.45f to 0.7f, 0.22f to 1.1f, 0f to 1.35f), 24, 0, capBottom = false)
+        lathe(listOf(0.25f to -1.0f, 0.3f to -1.2f, 0.18f to -1.35f), 16, 2, capTop = false)
+        box(0f, -0.7f, 0f, 0.92f, 0.34f, 0.05f, 1); box(0f, -0.7f, 0f, 0.05f, 0.34f, 0.92f, 1)
+        lathe(listOf(0f to 0.25f, 0.2f to 0.28f, 0.2f to 0.55f, 0f to 0.58f), 16, 1, ox = 0f, oy = 0f, scale = 1f, capTop = true, capBottom = false)
+    }
+
+    private fun MeshBuilder.megaDiamond() {
+        brilliant()
+        lathe(listOf(0f to -1.5f, 0.7f to -1.5f, 0.75f to -1.38f, 0.3f to -1.3f, 0f to -1.3f), 24, 2, capBottom = false)
     }
 
     private fun MeshBuilder.bell() {

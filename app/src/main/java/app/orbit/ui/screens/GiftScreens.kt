@@ -62,7 +62,7 @@ fun GiftShopScreen(chatId: String?) {
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             TopBar("Gift shop", { nav.pop() }, actions = {
-                Row(Modifier.padding(end = 8.dp).clip(RoundedCornerShape(16.dp)).background(Color(0xFFFFB020).copy(alpha = 0.2f)).clickable { nav.push(Route.Wheel) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) { Text("💰", fontSize = 16.sp); Spacer(Modifier.width(5.dp)); Text("$coins", fontWeight = FontWeight.ExtraBold, color = Color(0xFFFFB020)); Text("  +", color = Color(0xFFFFB020), fontWeight = FontWeight.Bold) }
+                Row(Modifier.padding(end = 8.dp).clip(RoundedCornerShape(16.dp)).background(Color(0xFFFFB020).copy(alpha = 0.2f)).clickable { nav.push(Route.Wheel) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) { Text("💰", fontSize = 16.sp); Spacer(Modifier.width(5.dp)); Text(coinsFmt(coins), fontWeight = FontWeight.ExtraBold, color = Color(0xFFFFB020)); Text("  +", color = Color(0xFFFFB020), fontWeight = FontWeight.Bold) }
                 IconButton({ nav.push(Route.Inventory) }) { Icon(Icons.Rounded.CardGiftcard, null, tint = p.accent) }
             })
             LazyVerticalGrid(GridCells.Fixed(2), contentPadding = PaddingValues(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -71,13 +71,26 @@ fun GiftShopScreen(chatId: String?) {
                         Text("🎡", fontSize = 26.sp); Spacer(Modifier.width(10.dp)); Column(Modifier.weight(1f)) { Text("Need coins?", color = Color.White, fontWeight = FontWeight.Bold); Text(if (engine.canSpin()) "Free spin ready: win up to 250" else "Free spin once a day", color = Color.White.copy(alpha = 0.9f), fontSize = 12.sp) }; Icon(Icons.Rounded.ChevronRight, null, tint = Color.White)
                     }
                 }
-                items((0 until GiftCatalog.models.size).toList()) { m ->
+                items((0 until GiftCatalog.PREMIUM_FROM).toList()) { m ->
                     val m0 = GiftCatalog.models[m]; val price = engine.price(m)
                     Column(Modifier.clip(RoundedCornerShape(20.dp)).background(p.surface).pressable({ selected = m })) {
                         Box(Modifier.fillMaxWidth().aspectRatio(0.9f)) { Gift3D(previewGift(m)) }
                         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) { Text(m0.name, fontWeight = FontWeight.Bold); Text("Unique every time", fontSize = 11.5.sp, color = p.textDim) }
-                            Text("💰 $price", Modifier.clip(RoundedCornerShape(10.dp)).background(if (coins >= price) p.accent else p.surfaceHigh).padding(horizontal = 9.dp, vertical = 5.dp), color = if (coins >= price) Color.White else p.textDim, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
+                            Text("💰 ${coinsFmt(price)}", Modifier.clip(RoundedCornerShape(10.dp)).background(if (coins >= price) p.accent else p.surfaceHigh).padding(horizontal = 9.dp, vertical = 5.dp), color = if (coins >= price) Color.White else p.textDim, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
+                        }
+                    }
+                }
+                item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
+                    Column(Modifier.padding(top = 10.dp, start = 4.dp)) { Text("👑 PREMIUM", color = Color(0xFFFFB020), fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp, fontSize = 13.sp); Text("Always drawn from the rarest materials", color = p.textDim, fontSize = 12.sp) }
+                }
+                items((GiftCatalog.PREMIUM_FROM until GiftCatalog.models.size).toList()) { m ->
+                    val m0 = GiftCatalog.models[m]; val price = engine.price(m)
+                    Column(Modifier.clip(RoundedCornerShape(20.dp)).background(p.surface).border(1.5.dp, Color(0xFFFFB020).copy(alpha = 0.7f), RoundedCornerShape(20.dp)).pressable({ selected = m })) {
+                        Box(Modifier.fillMaxWidth().aspectRatio(0.9f)) { Gift3D(previewGift(m)) }
+                        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) { Text(m0.name, fontWeight = FontWeight.Bold); Text("Premium", fontSize = 11.5.sp, color = Color(0xFFFFB020)) }
+                            Text("💰 ${coinsFmt(price)}", Modifier.clip(RoundedCornerShape(10.dp)).background(if (coins >= price) Color(0xFFFFB020) else p.surfaceHigh).padding(horizontal = 9.dp, vertical = 5.dp), color = if (coins >= price) Color.White else p.textDim, fontWeight = FontWeight.ExtraBold, fontSize = 12.5.sp)
                         }
                     }
                 }
@@ -94,11 +107,11 @@ fun GiftShopScreen(chatId: String?) {
                     Text("Material, backdrop and rarity are drawn at random when you buy — each gift is one of a kind.", color = p.textDim, fontSize = 13.sp, textAlign = TextAlign.Center)
                     Spacer(Modifier.height(14.dp))
                     if (!enough) {
-                        Text("You need ${price - coins} more coins", color = p.danger, fontWeight = FontWeight.SemiBold)
+                        Text("You need ${coinsFmt(price - coins)} more coins", color = p.danger, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(8.dp))
                         GradientButton("Spin the wheel for free coins", { selected = null; nav.push(Route.Wheel) }, Modifier.fillMaxWidth(), icon = Icons.Rounded.Casino)
                     } else {
-                        GradientButton("Buy for me · 💰 $price", { engine.buyGift(m, "", null) { g -> if (g != null) { revealed = g; pickedFor = null } }; selected = null }, Modifier.fillMaxWidth(), icon = Icons.Rounded.ShoppingBag)
+                        GradientButton("Buy for me · 💰 ${coinsFmt(price)}", { engine.buyGift(m, "", null) { g -> if (g != null) { revealed = g; pickedFor = null } }; selected = null }, Modifier.fillMaxWidth(), icon = Icons.Rounded.ShoppingBag)
                         Spacer(Modifier.height(10.dp))
                         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(p.surfaceHigh).clickable { picking = true }.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             if (tc != null) { Avatar(tc.displayName, tc.emoji, tc.color, 30.dp); Spacer(Modifier.width(10.dp)); Text("Gift to ${tc.displayName}", Modifier.weight(1f)) } else { Icon(Icons.Rounded.CardGiftcard, null, tint = p.accent); Spacer(Modifier.width(10.dp)); Text("Or buy as a present for a friend…", Modifier.weight(1f), color = p.textDim) }
@@ -108,7 +121,7 @@ fun GiftShopScreen(chatId: String?) {
                             Spacer(Modifier.height(8.dp))
                             OutlinedTextField(msg, { msg = it.take(120) }, Modifier.fillMaxWidth(), placeholder = { Text("Add a message (optional)") }, shape = RoundedCornerShape(14.dp), singleLine = true)
                             Spacer(Modifier.height(10.dp))
-                            GradientButton("Buy & send · 💰 $price", { val t = pickedFor!!; engine.buyGift(m, msg.trim(), t) { g -> if (g != null) revealed = g }; selected = null }, Modifier.fillMaxWidth(), icon = Icons.Rounded.CardGiftcard)
+                            GradientButton("Buy & send · 💰 ${coinsFmt(price)}", { val t = pickedFor!!; engine.buyGift(m, msg.trim(), t) { g -> if (g != null) revealed = g }; selected = null }, Modifier.fillMaxWidth(), icon = Icons.Rounded.CardGiftcard)
                         }
                     }
                 }

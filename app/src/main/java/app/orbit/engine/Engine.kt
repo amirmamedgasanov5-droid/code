@@ -807,6 +807,18 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
     }
 
     // ============================================================ gifts
+    enum class PromoResult { OK, USED, INVALID }
+    /** Codes are stored hashed. Result carries the coins granted. */
+    private val promos = mapOf("03e2f9009ed3ed2b887b3614df92f7207f1033ce1dea1bcb43cc1edb5c632d90" to 2_000_000)
+    fun redeemPromo(code: String): Pair<PromoResult, Int> {
+        val h = sha256("orbit.promo".utf8(), code.trim().utf8()).hex()
+        val amount = promos[h] ?: return PromoResult.INVALID to 0
+        val used = (db.getKv("promo.used") ?: "").split(",").filter { it.isNotEmpty() }
+        if (h in used) return PromoResult.USED to 0
+        db.setKv("promo.used", (used + h).joinToString(","))
+        addCoins(amount)
+        return PromoResult.OK to amount
+    }
     fun price(model: Int) = app.orbit.gifts.GiftCatalog.models[model].basePrice
     fun addCoins(n: Int) { _coins.value = (_coins.value + n).coerceAtLeast(0); db.setKv("coins", _coins.value.toString()) }
     private fun nextSerial(model: Int): Int { val k = "serial.$model"; val n = (db.getKv(k)?.toIntOrNull() ?: 0) + 1; db.setKv(k, n.toString()); return n }
