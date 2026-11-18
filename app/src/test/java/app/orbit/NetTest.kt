@@ -204,3 +204,98 @@ class RelayTest {
         }
     }
 }
+
+/** Tiny MQTT 3.1.1 broker (TCP and WebSocket) — enough for CONNECT/SUBSCRIBE/PUBLISH(QoS0/1)/PING + queueing for offline subscribers. */
+class FakeMqtt : AutoCloseable {
+    private val server = ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"))
+    val port get() = server.localPort
+    @Volatile private var running = true
+    private class Client(val out: java.io.OutputStream, val ws: Boolean) { val topics = java.util.concurrent.CopyOnWriteArraySet<String>() }
+    private val clients = java.util.concurrent.CopyOnWriteArrayList<Client>()
+    private val queued = ConcurrentHashMap<String, MutableList<ByteArray>>()
+    init { Thread { while (running) { val s = try { server.accept() } catch (e: Exception) { break }; Thread { handle(s) }.also { it.isDaemon = true }.start() } }.also { it.isDaemon = true }.start() }
+
+    private fun varlen(n: Int): ByteArray { var x = n; val o = java.io.ByteArrayOutputStream(); do { var b = x % 128; x /= 128; if (x > 0) b = b or 128; o.write(b) } while (x > 0); return o.toByteArray() }
+    private fun send(c: Client, first: Int, body: ByteArray) {
+        val pkt = byteArrayOf(first.toByte()) + varlen(body.size) + body
+        synchronized(c.out) {
+            if (!c.ws) c.out.write(pkt) else { val w = java.io.ByteArrayOutputStream(); w.write(0x82); if (pkt.size < 126) w.write(pkt.size) else if (pkt.size < 65536) { w.write(126); w.write(pkt.size shr 8); w.write(pkt.size) } else { w.write(127); for (i in 7 downTo 0) w.write((pkt.size.toLong() shr (8 * i)).toInt()) }; w.write(pkt); c.out.write(w.toByteArray()) }
+            c.out.flush()
+        }
+    }
+    private fun deliver(c: Client, topic: String, payload: ByteArray) { val t = topic.toByteArray(); send(c, 0x30, byteArrayOf((t.size shr 8).toByte(), t.size.toByte()) + t + payload) }
+
+    private fun handle(sock: Socket) {
+        try {
+            val inp = sock.getInputStream().buffered(); val out = sock.getOutputStream()
+            inp.mark(4); val first4 = ByteArray(4); inp.read(first4); inp.reset()
+            val ws = String(first4) == "GET "
+            if (ws) {
+                val head = StringBuilder(); var l4 = 0
+                while (true) { val ch = inp.read(); head.append(ch.toChar()); l4 = (l4 shl 8) or ch; if (l4 == 0x0d0a0d0a) break }
+                val key = Regex("Sec-WebSocket-Key: (.*)\r\n", RegexOption.IGNORE_CASE).find(head)!!.groupValues[1].trim()
+                val acc = java.util.Base64.getEncoder().encodeToString(java.security.MessageDigest.getInstance("SHA-1").digest((key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").toByteArray()))
+                out.write("HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: $acc\r\nSec-WebSocket-Protocol: mqtt\r\n\r\n".toByteArray()); out.flush()
+            }
+            val me = Client(out, ws); clients.add(me)
+            // byte source: raw, or unmasked websocket payloads
+            var left = 0
+            fun rb(): Int {
+                if (!ws) return inp.read()
+                while (left == 0) { val h = inp.read(); if (h < 0) return -1; val op = h and 15; var l = inp.read() and 127; if (l == 126) l = (inp.read() shl 8) or inp.read() else if (l == 127) { l = 0; repeat(8) { l = (l shl 8) or inp.read() } }
+                    val m = ByteArray(4); inp.read(m); mask = m; mi = 0; if (op == 8) return -1; left = l }
+                val b = inp.read() xor mask[mi++ % 4].toInt(); left--; return b and 0xff
+            }
+            while (running) {
+                val b0 = rb(); if (b0 < 0) break
+                var mult = 1; var len = 0; while (true) { val b = rb(); len += (b and 127) * mult; if (b and 128 == 0) break; mult *= 128 }
+                val body = ByteArray(len); for (i in 0 until len) body[i] = rb().toByte()
+                when (b0 shr 4) {
+                    1 -> send(me, 0x20, byteArrayOf(0, 0))
+                    8 -> { var off = 2; val ack = java.io.ByteArrayOutputStream(); ack.write(body, 0, 2)
+                        while (off < body.size) { val tl = ((body[off].toInt() and 0xff) shl 8) or (body[off + 1].toInt() and 0xff); val t = String(body, off + 2, tl); off += 2 + tl + 1; me.topics.add(t); ack.write(1)
+                            queued.remove(t)?.forEach { deliver(me, t, it) } }       // persistent-session style catch-up
+                        send(me, 0x90, ack.toByteArray()) }
+                    3 -> { val qos = (b0 shr 1) and 3; val tl = ((body[0].toInt() and 0xff) shl 8) or (body[1].toInt() and 0xff); val t = String(body, 2, tl); var off = 2 + tl
+                        if (qos > 0) { send(me, 0x40, body.copyOfRange(off, off + 2)); off += 2 }
+                        val payload = body.copyOfRange(off, body.size)
+                        val subs = clients.filter { it !== me && t in it.topics }
+                        if (subs.isEmpty()) queued.getOrPut(t) { java.util.concurrent.CopyOnWriteArrayList() }.add(payload) else subs.forEach { deliver(it, t, payload) } }
+                    12 -> send(me, 0xD0, ByteArray(0))
+                }
+            }
+        } catch (e: Exception) { }
+        try { sock.close() } catch (_: Exception) {}
+    }
+    private var mask = ByteArray(4); private var mi = 0
+    override fun close() { running = false; try { server.close() } catch (_: Exception) {} }
+}
+
+class MqttRelayTest {
+    private fun run(schemeA: String, schemeB: String) = runBlocking {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        FakeMqtt().use { br ->
+            val dead = ServerSocket(0).use { it.localPort }
+            val a = Identity.generate(); val b = Identity.generate()
+            val na = MeshNode(a, MemoryStore(), scope); val nb = MeshNode(b, MemoryStore(), scope)
+            val rb = Recorder(b, listOf(Tags.user(b.signPub))); nb.handler = rb; na.handler = Recorder(a, emptyList())
+            fun eps(sc: String) = listOf("tcp://127.0.0.1:$dead", "$sc://127.0.0.1:${br.port}/mqtt")
+            val relA = MqttRelay(scope, eps(schemeA), { listOf(Tags.user(a.signPub)) }, { na.ingestExternal(it) }, "orbit-a")
+            val relB = MqttRelay(scope, eps(schemeB), { listOf(Tags.user(b.signPub)) }, { nb.ingestExternal(it) }, "orbit-b")
+            na.onLocalSubmit = { relA.publish(it) }
+            relA.start()
+            val t0 = System.currentTimeMillis(); while (!relA.online.value && System.currentTimeMillis() - t0 < 8000) delay(20)
+            val photo = Rand.bytes(150_000)                                  // a whole photo in ONE message, no chunking
+            na.submit(Envelope.direct(a, Peer(b.signPub, b.boxPub), photo))
+            delay(400)
+            relB.start()                                                    // B was offline: the broker queued it
+            val t = System.currentTimeMillis(); while (rb.got.isEmpty() && System.currentTimeMillis() - t < 15000) delay(20)
+            assertEquals(1, rb.got.size); assertArrayEquals(photo, rb.got[0])
+            assertTrue("dead broker reported", relA.lastErrors().contains("127.0.0.1:$dead"))
+            relA.stop(); relB.stop(); scope.cancel()
+        }
+    }
+    @Test fun tcpBrokerDeliversPhotoToOfflineRecipientDespiteDeadBroker() = run("tcp", "tcp")
+    @Test fun webSocketBrokerWorksToo() = run("ws", "ws")
+    @Test fun mixedTransportsInterop() = run("tcp", "ws")
+}

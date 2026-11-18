@@ -121,26 +121,28 @@ class CloudRelay(
         }
     }
 
-    private suspend fun publishTo(s: Srv, topic: String, parts: List<String>): Boolean {
-        if (System.currentTimeMillis() < s.pausedUntil) return false          // server told us to stop: do not hammer it
-        for (part in parts) {
-            var ok = false; var wait = 300L
-            repeat(2) {
-                if (!ok) {
-                    ok = try { post(s, topic, part) } catch (ex: Exception) {
-                        s.lastError = ("send: " + ex.javaClass.simpleName + " " + (ex.message ?: "")).take(110)
-                        // circuit breaker: a host we cannot reach costs one attempt per minute, not one per message
-                        s.pausedUntil = System.currentTimeMillis() + if (ex is java.net.UnknownHostException || ex is javax.net.ssl.SSLException) 10 * 60_000L else 60_000L
-                        return false
-                    }
-                    if (!ok) { if (System.currentTimeMillis() < s.pausedUntil) return false; delay(wait); wait *= 2 }
-                }
+    private suspend fun publishTo(s: Srv, topic: String, parts: List<String>): Boolean = coroutineScope {
+        if (System.currentTimeMillis() < s.pausedUntil) return@coroutineScope false          // server told us to stop: do not hammer it
+        val gate = kotlinx.coroutines.sync.Semaphore(6)                                      // up to 6 parts in flight (was: strictly one after another)
+        val ok = parts.map { part -> async { gate.acquire(); try { postWithRetry(s, topic, part) } finally { gate.release() } } }.awaitAll().all { it }
+        if (ok) { s.sent++; if (s.lastError.startsWith("HTTP") || s.lastError.startsWith("send:")) s.lastError = "" }
+        ok
+    }
+
+    private suspend fun postWithRetry(s: Srv, topic: String, part: String): Boolean {
+        var wait = 300L
+        repeat(2) {
+            val ok = try { post(s, topic, part) } catch (ex: Exception) {
+                s.lastError = ("send: " + ex.javaClass.simpleName + " " + (ex.message ?: "")).take(110)
+                // circuit breaker: a host we cannot reach costs one attempt per minute, not one per message
+                s.pausedUntil = System.currentTimeMillis() + if (ex is java.net.UnknownHostException || ex is javax.net.ssl.SSLException) 10 * 60_000L else 60_000L
+                return false
             }
-            if (!ok) return false
+            if (ok) return true
+            if (System.currentTimeMillis() < s.pausedUntil) return false
+            delay(wait); wait *= 2
         }
-        s.sent++
-        if (s.lastError.startsWith("HTTP") || s.lastError.startsWith("send:")) s.lastError = ""
-        return true
+        return false
     }
 
     private fun post(s: Srv, topic: String, body: String): Boolean {

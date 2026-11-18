@@ -48,7 +48,7 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
     private val _events = MutableSharedFlow<String>(extraBufferCapacity = 16); val events: SharedFlow<String> = _events
 
     // ---- cloud relay (optional fallback), wallet, calls
-    private var relay: app.orbit.core.net.CloudRelay? = null
+    private var relay: app.orbit.core.net.RelayHub? = null
     private val _relayOnline = MutableStateFlow(false); val relayOnline: StateFlow<Boolean> = _relayOnline
     private val _coins = MutableStateFlow(0); val coins: StateFlow<Int> = _coins
     private val _lastSpin = MutableStateFlow(0L); val lastSpin: StateFlow<Long> = _lastSpin
@@ -116,8 +116,7 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
         val r = relay
         if (!relayEnabled()) return "Cloud relay: OFF (turn it on in Profile → Connection)"
         if (r == null) return "Cloud relay: not started"
-        return "Cloud relay: ${if (_relayOnline.value) "connected" else "NOT connected"}   Sent: ${r.published}  Received: ${r.received}\n" +
-            r.servers.joinToString("\n") { "• ${it.name}: " + (if (it.online) "ok" else "unreachable") + (if (it.lastError.isNotEmpty()) " — ${it.lastError}" else "") }
+        return "Cloud relay: ${if (_relayOnline.value) "connected" else "NOT connected"}   Sent: ${r.published}  Received: ${r.received}\n" + r.diag()
     }
     fun relayKick() { relay?.kick() }
     private var netCb: android.net.ConnectivityManager.NetworkCallback? = null
@@ -134,15 +133,19 @@ class Engine(val ctx: Context, dbName: String = "orbit.db") : MeshHandler {
     fun relayEnabled() = db.getKv("t.relay") != "0"
     /** one server URL per line; all are used at the same time */
     /** ntfy.sh (official) + community servers listed in the ntfy docs. Availability and anonymous access are not guaranteed. */
-    val defaultRelays = listOf("https://ntfy.sh", "https://ntfy.envs.net", "https://ntfy.adminforge.de", "https://ntfy.tedomum.fr", "https://ntfy.jae.fi", "https://ntfy.mzte.de", "https://ntfy.hostux.net", "https://ntfy.fossman.de", "https://notify.utilibre.org")
-    fun relayUrls(): List<String> = (db.getKv("relay.urls") ?: db.getKv("relay.url") ?: defaultRelays.joinToString("\n")).lines().map { it.trim().trimEnd('/') }.filter { it.startsWith("http") }.ifEmpty { listOf("https://ntfy.sh") }
-    fun relayUrl() = relayUrls().size.let { if (it == 1) relayUrls()[0].removePrefix("https://") else "$it servers" }
+    val defaultRelays = listOf(
+        // MQTT brokers first: whole messages, no tight rate limits, different ports (TLS 8883, secure WebSocket 8084 look like normal HTTPS traffic)
+        "tls://broker.emqx.io:8883", "wss://broker.emqx.io:8084/mqtt", "ws://broker.hivemq.com:8000/mqtt", "tcp://broker.hivemq.com:1883", "tcp://broker.emqx.io:1883", "tcp://test.mosquitto.org:1883",
+        // ntfy servers
+        "https://ntfy.sh", "https://ntfy.envs.net", "https://ntfy.adminforge.de", "https://ntfy.tedomum.fr", "https://ntfy.jae.fi", "https://ntfy.mzte.de", "https://ntfy.hostux.net", "https://ntfy.fossman.de", "https://notify.utilibre.org")
+    fun relayUrls(): List<String> = (db.getKv("relay.urls") ?: db.getKv("relay.url") ?: defaultRelays.joinToString("\n")).lines().map { it.trim().trimEnd('/') }.filter { Regex("^(https?|tcp|tls|ws|wss)://.+").matches(it) }.ifEmpty { listOf("https://ntfy.sh") }
+    fun relayUrl() = relayUrls().size.let { if (it == 1) relayUrls()[0].substringAfter("://") else "$it servers" }
     fun setRelay(on: Boolean, urls: String? = null) { db.setKv("t.relay", if (on) "1" else "0"); if (urls != null) db.setKv("relay.urls", urls.lines().map { it.trim().trimEnd('/') }.filter { it.isNotEmpty() }.joinToString("\n")); configureRelay() }
     fun relayUrlsText() = relayUrls().joinToString("\n")
     fun configureRelay() {
         relay?.stop(); relay = null; _relayOnline.value = false
         if (!relayEnabled() || identity == null) return
-        val r = app.orbit.core.net.CloudRelay(scope, relayUrls(), { tagIndex.keys.map { it.unhex() } }, { env -> mesh.ingestExternal(env) })
+        val r = app.orbit.core.net.RelayHub(scope, relayUrls(), { tagIndex.keys.map { it.unhex() } }, { env -> mesh.ingestExternal(env) }, "orbit-" + identity!!.signPub.let { Tags.user(it).hex() })
         relay = r; r.start()
         scope.launch { r.online.collect { _relayOnline.value = it } }
     }
