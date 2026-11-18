@@ -13,7 +13,7 @@ class OrbitApp : Application() {
     override fun onCreate() {
         super.onCreate()
         engine = Engine(this)
-        engine.notifier = Notifier(this)
+        engine.notifier = Notifier(this) { engine.db.getKv(it) }
         transports = TransportManager(this, engine)
         live = LiveManager(this, engine)
         engine.boot()

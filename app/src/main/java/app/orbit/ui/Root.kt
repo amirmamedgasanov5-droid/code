@@ -100,6 +100,7 @@ private fun AppNav(pendingOpen: MutableState<String?>) {
                     Route.Search -> SearchScreen()
                     Route.Mesh -> MeshScreen()
                     Route.Reliable -> ReliableScreen()
+                    Route.Sounds -> SoundsScreen()
                     Route.Wheel -> WheelScreen()
                     is Route.Call -> CallScreen(r.peerId)
                 }
