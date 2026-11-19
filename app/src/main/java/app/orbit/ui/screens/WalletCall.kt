@@ -166,6 +166,7 @@ fun CallScreen(peerId: String) {
         Text(c?.displayName ?: "Contact", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
         Text(status, color = Color.White.copy(alpha = 0.75f), fontSize = 18.sp)
         if (st == CallStatus.CONNECTING || st == CallStatus.RINGING) Text("Voice goes directly phone to phone (Wi-Fi, Bluetooth or internet)", Modifier.padding(horizontal = 40.dp, vertical = 10.dp), color = Color.White.copy(alpha = 0.45f), fontSize = 12.sp, textAlign = TextAlign.Center)
+        if (st == CallStatus.CONNECTING || st == CallStatus.RINGING) { val d = remember(now / 1000) { try { engine.webrtcDiag() } catch (_: Exception) { "" } }; if (d.isNotBlank()) Text(d, Modifier.padding(horizontal = 28.dp), color = Color.White.copy(alpha = 0.4f), fontSize = 11.sp, textAlign = TextAlign.Center) }
         Spacer(Modifier.weight(1f))
         Row(Modifier.fillMaxWidth().padding(bottom = 40.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
             CallBtn(if (mic) Icons.Rounded.Mic else Icons.Rounded.MicOff, if (mic) "Mute" else "Unmute", if (mic) Color.White.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.9f), if (mic) Color.White else Color.Black) { live.setMic(!mic) }
