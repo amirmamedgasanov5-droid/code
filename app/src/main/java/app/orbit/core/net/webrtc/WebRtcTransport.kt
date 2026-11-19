@@ -25,7 +25,17 @@ class WebRtcTransport(
     private val myId: String,
     private val signaling: Signaling,
     private val stun: List<String> = listOf("stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302", "stun:stun.cloudflare.com:3478"),
+    /** TURN relays: needed when both phones sit behind mobile-carrier / symmetric NAT (different networks). */
+    private val turn: List<TurnServer> = DEFAULT_TURN,
 ) : Transport {
+    class TurnServer(val urls: List<String>, val user: String, val pass: String)
+    companion object {
+        /** Public Open Relay (metered.ca) free TURN, UDP + TCP + TLS/443 so it also passes strict firewalls. */
+        val DEFAULT_TURN = listOf(TurnServer(listOf(
+            "turn:openrelay.metered.ca:80", "turn:openrelay.metered.ca:443",
+            "turn:openrelay.metered.ca:80?transport=tcp", "turn:openrelay.metered.ca:443?transport=tcp",
+            "turns:openrelay.metered.ca:443?transport=tcp"), "openrelayproject", "openrelayproject"))
+    }
     override val name = "WebRTC"
     private val _state = MutableStateFlow(TransportState.OFF)
     override val state: StateFlow<TransportState> = _state
@@ -33,6 +43,7 @@ class WebRtcTransport(
     private var factory: PeerConnectionFactory? = null
     private val sessions = ConcurrentHashMap<String, Session>()
     @Volatile var lastEvent = ""
+    @Volatile var relayCands = 0  // >0 means the TURN relay answered us
     val activeLinks: Int get() = sessions.values.count { it.link != null }
 
     private inner class Session(val peerId: String, val offerer: Boolean) {
@@ -95,13 +106,22 @@ class WebRtcTransport(
         val f = factory ?: return null
         sessions[peerId]?.let { drop(it) }
         val s = Session(peerId, offerer)
-        val cfg = PeerConnection.RTCConfiguration(stun.map { PeerConnection.IceServer.builder(it).createIceServer() }).apply { sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN }
+        val servers = stun.map { PeerConnection.IceServer.builder(it).createIceServer() } +
+            turn.map { t -> PeerConnection.IceServer.builder(t.urls).setUsername(t.user).setPassword(t.pass).createIceServer() }
+        val cfg = PeerConnection.RTCConfiguration(servers).apply {
+            sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
+            tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.ENABLED
+            continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY
+            iceCandidatePoolSize = 2
+        }
         s.pc = f.createPeerConnection(cfg, object : PeerConnection.Observer {
-            override fun onIceCandidate(c: IceCandidate) { send(peerId, "ice", c.sdp, c.sdpMid ?: "0", c.sdpMLineIndex) }
+            override fun onIceCandidate(c: IceCandidate) { if (c.sdp.contains(" typ relay")) relayCands++; send(peerId, "ice", c.sdp, c.sdpMid ?: "0", c.sdpMLineIndex) }
             override fun onDataChannel(ch: DataChannel) { attach(s, ch) }
             override fun onConnectionChange(st: PeerConnection.PeerConnectionState) {
                 lastEvent = "$peerId: $st"
-                if (st == PeerConnection.PeerConnectionState.FAILED || st == PeerConnection.PeerConnectionState.CLOSED || st == PeerConnection.PeerConnectionState.DISCONNECTED) drop(s)
+                if (st == PeerConnection.PeerConnectionState.FAILED || st == PeerConnection.PeerConnectionState.CLOSED) drop(s)
+                // DISCONNECTED is often a short blip on mobile networks: give it time to recover
+                else if (st == PeerConnection.PeerConnectionState.DISCONNECTED) scope.launch { delay(10_000); if (s.pc?.connectionState() != PeerConnection.PeerConnectionState.CONNECTED) drop(s) }
             }
             override fun onSignalingChange(p0: PeerConnection.SignalingState?) {}
             override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {}

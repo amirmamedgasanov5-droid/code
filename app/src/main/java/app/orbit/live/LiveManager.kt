@@ -92,10 +92,11 @@ class LiveManager(private val ctx: Context, private val engine: Engine) {
                 val c = _call.value ?: break; if (c.status == CallStatus.ENDED) break
                 val st = _room.value?.state?.value
                 val together = st != null && st.participants.size >= 2
+                if (!together) engine.requestDirect(peer)  // retries (throttled) until a direct/TURN link exists
                 if (together && c.status != CallStatus.ACTIVE) _call.value = CallState(c.peerId, c.outgoing, CallStatus.ACTIVE, now())
                 if (st?.ended == true) { finishCall(c, "Ended"); break }
                 if (c.status == CallStatus.RINGING && now() - started > 45_000) { hangup("No answer"); break }
-                if (c.status == CallStatus.CONNECTING && now() - started > 30_000) { engine.logCall(peer, "Call failed — no direct connection"); finishCall(c, "No direct connection"); break }
+                if (c.status == CallStatus.CONNECTING && now() - started > 50_000) { engine.logCall(peer, "Call failed — no direct connection"); finishCall(c, "No direct connection"); break }
             }
         }
     }

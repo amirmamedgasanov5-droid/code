@@ -56,7 +56,7 @@ class TransportManager(private val ctx: Context, private val engine: Engine) {
             val w = app.orbit.core.net.webrtc.WebRtcTransport(ctx, scope, id.id, sig)
             w.start(node); webrtc = w
             engine.directRequest = { peer -> w.connect(peer) }
-            engine.webrtcDiag = { "WebRTC direct: signalling ${sig.status}; direct links: ${w.activeLinks}" + (if (w.lastEvent.isNotEmpty()) "; ${w.lastEvent}" else "") }
+            engine.webrtcDiag = { "WebRTC direct: signalling ${sig.status}; direct links: ${w.activeLinks}; TURN relay ${if (w.relayCands > 0) "reachable" else "not seen yet"}" + (if (w.lastEvent.isNotEmpty()) "; ${w.lastEvent}" else "") }
         } catch (e: Throwable) { engine.webrtcDiag = { "WebRTC direct: failed to start — ${e.message}" } }
         else engine.webrtcDiag = { if (!fb.valid) "WebRTC direct: not set up (Profile → Connection → Direct connection)" else "WebRTC direct: off" }
         scope.launchStates()
