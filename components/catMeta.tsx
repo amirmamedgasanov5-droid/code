@@ -13,7 +13,7 @@ export const CAT_META: Record<CategoryId, { Icon: LucideIcon; color: string }> =
 export function CatIcon({ id, size = 34 }: { id: CategoryId; size?: number }) {
   const { Icon, color } = CAT_META[id];
   return (
-    <span className="grid shrink-0 place-items-center text-white" style={{ width: size, height: size, borderRadius: size * 0.28, background: `linear-gradient(160deg, ${color}, color-mix(in srgb, ${color} 70%, black))` }}>
+    <span className="grid shrink-0 place-items-center text-white" style={{ width: size, height: size, borderRadius: size * 0.28, background: color }}>
       <Icon size={size * 0.56} strokeWidth={2} />
     </span>
   );

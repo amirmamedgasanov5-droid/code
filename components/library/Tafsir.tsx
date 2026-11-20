@@ -194,8 +194,8 @@ export function TafsirSuraScreen({ id, n, a }: { id: string; n: number; a?: numb
             );
           })}
           <div className="flex justify-between gap-3 pt-2">
-            {n > 1 ? <button onClick={() => (stack.length > 1 && stack[stack.length - 2]?.k === 'tafsirsura' ? pop() : push({ k: 'tafsirsura', id, n: n - 1 }))} className="glass rounded-full px-5 py-3 text-[15px] font-semibold text-tint">‹ {idx?.suras[n - 2].tr}</button> : <span />}
-            {n < 114 && <button onClick={() => push({ k: 'tafsirsura', id, n: n + 1 })} className="glass rounded-full px-5 py-3 text-[15px] font-semibold text-tint">{idx?.suras[n].tr} ›</button>}
+            {n > 1 ? <button onClick={() => (stack.length > 1 && stack[stack.length - 2]?.k === 'tafsirsura' ? pop() : push({ k: 'tafsirsura', id, n: n - 1 }))} className="rounded-full bg-surface px-5 py-3 text-[15px] font-semibold text-tint">‹ {idx?.suras[n - 2].tr}</button> : <span />}
+            {n < 114 && <button onClick={() => push({ k: 'tafsirsura', id, n: n + 1 })} className="rounded-full bg-surface px-5 py-3 text-[15px] font-semibold text-tint">{idx?.suras[n].tr} ›</button>}
           </div>
         </div>
       )}

@@ -46,7 +46,7 @@ export function Splash() {
     >
       <motion.div
         className="grid size-[128px] place-items-center rounded-[30px]"
-        style={{ background: 'linear-gradient(180deg,#2f9a5f,#145c34)', boxShadow: 'inset 0 1px 0 rgb(255 255 255 /.3), 0 30px 80px rgb(0 0 0 /.5)' }}
+        style={{ background: '#1f7a47' }}
         initial={{ scale: 0.55, opacity: 0 }}
         animate={open ? { scale: 22, opacity: 0 } : { scale: 1, opacity: 1 }}
         transition={open ? { duration: 0.9, ease: [0.7, 0, 0.84, 0] } : { type: 'spring', stiffness: 200, damping: 17 }}

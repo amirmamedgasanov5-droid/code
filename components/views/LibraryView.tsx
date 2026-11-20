@@ -22,7 +22,7 @@ import { Group, Row, fmt, plural } from '../ui';
 
 function Tile({ Icon, color }: { Icon: typeof BookOpen; color: string }) {
   return (
-    <span className="grid size-[34px] shrink-0 place-items-center rounded-[9px] text-white" style={{ background: `linear-gradient(160deg, ${color}, color-mix(in srgb, ${color} 72%, black))` }}>
+    <span className="grid size-[34px] shrink-0 place-items-center rounded-[8px] text-white" style={{ background: color }}>
       <Icon size={19} strokeWidth={2} />
     </span>
   );
@@ -119,7 +119,7 @@ function Root() {
   const searching = dq.trim().length >= 2;
 
   return (
-    <Screen title="Библиотека" subtitle="Коран, хадисы, дуа и все публикации канала — в одном месте.">
+    <Screen title="Библиотека" subtitle="Коран, тафсир, хадисы, азкары и публикации канала.">
       <div className="space-y-6">
         <SearchField id="lib-search" value={q} onChange={setQ} placeholder="Коран, хадисы, публикации · 2:255" />
         {searching ? (
@@ -141,7 +141,7 @@ function Root() {
               </Row>
             </Group>
 
-            <Group header="Хадисы" footer="Только достоверные: два «Сахиха» и «сахих» из четырёх Сунанов по оценке аль-Албани.">
+            <Group header="Хадисы" footer="Только достоверные: два «Сахиха», «сахих» из «Сунан» Абу Дауда по оценке аль-Албани и «Сорок хадисов».">
               <Row onClick={() => push({ k: 'hadith' })} last>
                 <div className="flex items-center gap-3"><Tile Icon={Quote} color="#b8893b" /><div><p className="text-[17px]">Хадисы</p><p className="text-[13px] text-label2">Только достоверные{hadiths ? ` · ${fmt(hadiths)} ${plural(hadiths, 'хадис', 'хадиса', 'хадисов')}` : ''}</p></div></div>
               </Row>

@@ -14,7 +14,7 @@ export function ChannelView() {
   return (
     <Screen title="Канал" subtitle="Хидая живёт в Telegram. Здесь — всё, что нужно, чтобы присоединиться." back={{ label: 'Главная', onClick: () => go('home') }}>
       <div className="grid gap-3 lg:grid-cols-[1.15fr_0.85fr]">
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 160, damping: 22 }} className="relative overflow-hidden rounded-[28px] p-7 text-white" style={{ background: 'linear-gradient(160deg,#256b4d,#0b2a1d)' }}>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 160, damping: 22 }} className="relative overflow-hidden rounded-[20px] p-7 text-white" style={{ background: '#1f6b43' }}>
           
           <div className="relative flex items-center gap-4">
             <span lang="ar" className="grid size-16 place-items-center rounded-[18px] bg-white/15 pb-2 text-[3.2rem] leading-none text-white">ه</span>
@@ -24,7 +24,7 @@ export function ChannelView() {
             </div>
           </div>
           <p className="relative mt-8 text-[2.1rem] font-bold leading-[1.05] tracking-[-0.04em]">Присоединяйтесь к&nbsp;Хидае</p>
-          <p className="relative mt-3 max-w-sm text-[16px] leading-snug opacity-85">Напоминания приходят прямо в Telegram — коротко и без лишних шагов. Вход в канал — только для сестёр.</p>
+          <p className="relative mt-3 max-w-sm text-[16px] leading-snug opacity-85">Канал в Telegram: напоминания, тафсир ас-Саади и сунны дня. Вход только для сестёр.</p>
           <motion.a
             href={telegramUrl}
             target="_blank"
@@ -38,7 +38,7 @@ export function ChannelView() {
           </motion.a>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 160, damping: 22, delay: 0.08 }} className="grid place-items-center rounded-[28px] bg-surface p-7 text-center">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 160, damping: 22, delay: 0.08 }} className="grid place-items-center rounded-[20px] bg-surface p-7 text-center">
           <div className="size-[11rem] overflow-hidden rounded-[22px] border border-sep bg-white p-1.5"><QrCode qr={qr} label="QR-код со ссылкой на Telegram-канал Хидаи" /></div>
           <p className="mt-4 max-w-[15rem] text-[15px] leading-snug text-label2">Наведите камеру телефона на код — канал откроется в Telegram.</p>
           <p className="mt-1 text-[14px] font-semibold text-tint">t.me/hidaya_islam1</p>

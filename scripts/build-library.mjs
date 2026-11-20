@@ -78,6 +78,9 @@ function chunkBySize(items, target) {
 }
 
 /* ——— Коран ——— */
+/** Русские названия сур (общепринятая транскрипция) */
+const SURA_RU = ["Аль-Фатиха", "Аль-Бакара", "Али Имран", "Ан-Ниса", "Аль-Маида", "Аль-Анам", "Аль-Араф", "Аль-Анфаль", "Ат-Тауба", "Юнус", "Худ", "Юсуф", "Ар-Раад", "Ибрахим", "Аль-Хиджр", "Ан-Нахль", "Аль-Исра", "Аль-Кахф", "Марьям", "Та Ха", "Аль-Анбия", "Аль-Хаджж", "Аль-Муминун", "Ан-Нур", "Аль-Фуркан", "Аш-Шуара", "Ан-Намль", "Аль-Касас", "Аль-Анкабут", "Ар-Рум", "Лукман", "Ас-Саджда", "Аль-Ахзаб", "Саба", "Фатыр", "Йа Син", "Ас-Саффат", "Сад", "Аз-Зумар", "Гафир", "Фуссылат", "Аш-Шура", "Аз-Зухруф", "Ад-Духан", "Аль-Джасия", "Аль-Ахкаф", "Мухаммад", "Аль-Фатх", "Аль-Худжурат", "Каф", "Аз-Зарият", "Ат-Тур", "Ан-Наджм", "Аль-Камар", "Ар-Рахман", "Аль-Вакиа", "Аль-Хадид", "Аль-Муджадаля", "Аль-Хашр", "Аль-Мумтахана", "Ас-Сафф", "Аль-Джумуа", "Аль-Мунафикун", "Ат-Тагабун", "Ат-Талак", "Ат-Тахрим", "Аль-Мульк", "Аль-Калям", "Аль-Хакка", "Аль-Мааридж", "Нух", "Аль-Джинн", "Аль-Муззаммиль", "Аль-Муддассир", "Аль-Кыяма", "Аль-Инсан", "Аль-Мурсалят", "Ан-Наба", "Ан-Назиат", "Абаса", "Ат-Таквир", "Аль-Инфитар", "Аль-Мутаффифин", "Аль-Иншикак", "Аль-Бурудж", "Ат-Тарик", "Аль-Аля", "Аль-Гашия", "Аль-Фаджр", "Аль-Баляд", "Аш-Шамс", "Аль-Лейль", "Ад-Духа", "Аш-Шарх", "Ат-Тин", "Аль-Аляк", "Аль-Кадр", "Аль-Баййина", "Аз-Зальзаля", "Аль-Адият", "Аль-Кариа", "Ат-Такасур", "Аль-Аср", "Аль-Хумаза", "Аль-Филь", "Курайш", "Аль-Маун", "Аль-Каусар", "Аль-Кафирун", "Ан-Наср", "Аль-Масад", "Аль-Ихлас", "Аль-Фаляк", "Ан-Нас"];
+
 const TRANSLATIONS = [
   { id: 'kuliev', name: 'Эльмир Кулиев', ed: 'rus-elmirkuliev' },
   { id: 'abuadel', name: 'Абу Адель', ed: 'rus-abuadel' },
@@ -97,9 +100,9 @@ async function quran() {
   const kuliev = [];
   for (let n = 1; n <= 114; n++) {
     const c = JSON.parse(await readFile(`${src}/${n}.json`, 'utf8'));
-    suras.push({ n, ar: c.name, tr: c.transliteration, ru: c.translation, t: c.type === 'meccan' ? 'm' : 'd', v: c.verses.length });
+    suras.push({ n, ar: c.name, tr: SURA_RU[n - 1], ru: c.translation, t: c.type === 'meccan' ? 'm' : 'd', v: c.verses.length });
     kuliev.push(c.verses.map((v) => v.translation));
-    await w(`quran/${n}.json`, { n, a: c.verses.map((v) => v.text), r: kuliev[n - 1], t: c.verses.map((v) => v.transliteration) });
+    await w(`quran/${n}.json`, { n, a: c.verses.map((v) => v.text), r: kuliev[n - 1] });
   }
   const firsts = (n, get) => Array.from({ length: n }, (_, i) => get(i + 1).first);
   const juz = firsts(30, meta.getJuzMeta);
@@ -169,10 +172,7 @@ const HADITH_SETS = [
   { id: 'bukhari', ru: 'Сахих аль-Бухари', ar: 'صحيح البخاري', author: 'Имам аль-Бухари', lang: 'ru', filter: null, about: 'Самая достоверная книга после Книги Аллаха. Русский перевод: Абдуллах Нирша и редакторы Daura.com; показаны переведённые хадисы.' },
   { id: 'muslim', ru: 'Сахих Муслим', ar: 'صحيح مسلم', author: 'Имам Муслим', lang: 'ru', filter: null, about: 'Вторая по достоверности книга после Корана. В русском издании источника переведена только часть хадисов — показаны переведённые.' },
   { id: 'abudawud', ru: 'Сунан Абу Дауда', ar: 'سنن أبي داود', author: 'Имам Абу Дауд', lang: 'ru', filter: 'albani', about: SAHIH_NOTE },
-  { id: 'tirmidhi', ru: 'Джами ат-Тирмизи', ar: 'جامع الترمذي', author: 'Имам ат-Тирмизи', lang: 'en', filter: 'albani', about: `${SAHIH_NOTE} Русского перевода в источнике нет: арабский текст и перевод на английский.` },
-  { id: 'nasai', ru: 'Сунан ан-Насаи', ar: 'سنن النسائي', author: 'Имам ан-Насаи', lang: 'en', filter: 'albani', about: `${SAHIH_NOTE} Русского перевода в источнике нет: арабский текст и перевод на английский.` },
-  { id: 'ibnmajah', ru: 'Сунан Ибн Маджа', ar: 'سنن ابن ماجه', author: 'Имам Ибн Маджа', lang: 'en', filter: 'albani', about: `${SAHIH_NOTE} Русского перевода в источнике нет: арабский текст и перевод на английский.` },
-  { id: 'nawawi', ru: 'Сорок хадисов ан-Навави', ar: 'الأربعون النووية', author: 'Имам ан-Навави', lang: 'en', filter: null, about: 'Знаменитый сборник основ религии, составленный имамом ан-Навави. Русского перевода в источнике нет: арабский текст и перевод на английский.' },
+  { id: 'nawawi', ru: 'Сорок хадисов ан-Навави', ar: 'الأربعون النووية', author: 'Имам ан-Навави', lang: 'ar', filter: null, about: 'Знаменитый сборник основ религии. Арабский текст; русского перевода в открытых данных нет (его можно добавить файлом data/translations/nawawi.json).' },
 ];
 const GRADES = { sahih: 'сахих', hasan: 'хасан', daif: 'да‘иф', "da'if": 'да‘иф' };
 const grade = (gs) => (gs ?? []).map((g) => `${GRADES[String(g.grade).toLowerCase()] ?? g.grade}${g.name ? ` · ${g.name}` : ''}`).join('; ');
@@ -181,7 +181,12 @@ const albaniSahih = (gs) => (gs ?? []).some((g) => g.name === 'Al-Albani' && /^s
 
 async function hadith() {
   for (const set of HADITH_SETS) {
-    const tx = await download(`${RAW}/fawazahmed0/hadith-api/1/editions/${set.lang === 'ru' ? 'rus' : 'eng'}-${set.id}.json`, `hadith/${set.lang}-${set.id}.json`);
+    const tx = await download(`${RAW}/fawazahmed0/hadith-api/1/editions/${set.lang === 'ru' ? 'rus' : 'ara'}-${set.id}.json`, `hadith/${set.lang === 'ru' ? 'ru' : 'ara'}-${set.id}.json`);
+    // дополнительные русские переводы, добавленные вручную: data/translations/<id>.json = { "<номер>": "текст" }
+    let extra = {};
+    try {
+      extra = JSON.parse(await readFile(`data/translations/${set.id}.json`, 'utf8'));
+    } catch {}
     const ar = await download(`${RAW}/fawazahmed0/hadith-api/1/editions/ara-${set.id}.json`, `hadith/ara-${set.id}.json`);
     const arMap = new Map(ar.hadiths.map((h) => [String(h.hadithnumber), h.text]));
     const ranges = Object.entries(tx.metadata.section_details ?? {})
@@ -190,19 +195,19 @@ async function hadith() {
     const bookOf = (h) => ranges.find((r) => h.hadithnumber >= r.from && h.hadithnumber <= r.to)?.b ?? h.reference?.book ?? 0;
 
     // оценки берём из английского издания (в русском изданиях Абу Дауда их нет)
-    const gradeSrc = set.filter ? (set.lang === 'en' ? tx : await download(`${RAW}/fawazahmed0/hadith-api/1/editions/eng-${set.id}.json`, `hadith/en-${set.id}.json`)) : null;
+    const gradeSrc = set.filter ? await download(`${RAW}/fawazahmed0/hadith-api/1/editions/eng-${set.id}.json`, `hadith/en-${set.id}.json`) : null;
     const grades = new Map((gradeSrc?.hadiths ?? []).map((h) => [String(h.hadithnumber), h.grades]));
     const all = tx.hadiths
       .filter((h) => (h.text ?? '').trim())
       .filter((h) => !set.filter || albaniSahih(grades.get(String(h.hadithnumber))))
-      .map((h) => ({ n: h.hadithnumber, b: bookOf(h), a: (arMap.get(String(h.hadithnumber)) ?? '').trim(), x: h.text.trim(), ...(set.filter ? { g: 'сахих · аль-Албани' } : {}) }))
+      .map((h) => ({ n: h.hadithnumber, b: bookOf(h), a: (arMap.get(String(h.hadithnumber)) ?? '').trim(), x: set.lang === 'ru' ? h.text.trim() : (extra[h.hadithnumber] ?? ''), ...(set.filter ? { g: 'сахих · аль-Албани' } : {}) }))
       .sort((p, q) => p.n - q.n);
     const chunks = chunkBySize(all, 700_000);
     const books = new Map();
     for (let k = 0; k < chunks.length; k++) {
       await w(`hadith/${set.id}/c${k}.json`, chunks[k]);
       for (const h of chunks[k]) {
-        if (!books.has(h.b)) books.set(h.b, { b: h.b, en: tx.metadata.sections?.[h.b] ?? '', c: 0, ch: [] });
+        if (!books.has(h.b)) books.set(h.b, { b: h.b, c: 0, ch: [] });
         const bk = books.get(h.b);
         bk.c++;
         if (!bk.ch.includes(k)) bk.ch.push(k);
@@ -216,21 +221,61 @@ async function hadith() {
 /* ——— Азкары: «Хисн аль-Муслим» ——— */
 const strip = (t) => t.replace(/[\u064B-\u065F\u0670\u0640\u06D6-\u06ED]/g, '').replace(/[إأآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/[^\u0621-\u064A ]/g, '').replace(/\s+/g, ' ').trim();
 
+/** сильно упрощённая запись для сравнения: без огласовок, алифов, хамз и различий в написании ي/ى */
+const loose = (t) => strip(t).replace(/[اءأإؤئ]/g, '').replace(/ /g, '');
+const shingles = (t) => Array.from({ length: Math.max(0, t.length - 3) }, (_, i) => t.slice(i, i + 4));
+
 async function azkar() {
   const src = await download(`${RAW}/rn0x/Adhkar-json/main/adhkar.json`, 'adhkar/adhkar.json');
-  const tl = JSON.parse(await readFile('node_modules/@kazishariar/hisnul-muslim-data/data.json', 'utf8')).data;
-  const tr = new Map(tl.map((d) => [strip(d.arabic), d.transliteration]));
-  let withTr = 0;
+  // аяты Корана с переводом Кулиева — чтобы показать смысл тех азкаров, которые являются аятами
+  const verses = [];
+  const suraLen = [];
+  const suraTr = [];
+  for (let n = 1; n <= 114; n++) {
+    const sura = JSON.parse(await readFile(resolve(OUT, `quran/${n}.json`), 'utf8'));
+    suraLen.push(sura.a.length);
+    suraTr.push(sura.r);
+    sura.a.forEach((ar, i) => {
+      const key = loose(ar);
+      if (key.length >= 10) verses.push({ n, a: i + 1, key, ru: sura.r[i] });
+    });
+  }
+  let withRu = 0;
   const cats = src.map((c) => ({
     title: c.category,
     items: c.array.map((x) => {
-      const t = tr.get(strip(x.text));
-      if (t) withTr++;
-      return { ar: x.text.trim(), n: x.count, ...(t ? { tr: t } : {}) };
+      const text = loose(x.text.replace(/\([^)]*\)/g, ' '));
+      const grams = new Set(shingles(text));
+      const found = verses
+        .map((v) => {
+          const sh = shingles(v.key);
+          return { v, share: sh.filter((g) => grams.has(g)).length / Math.max(1, sh.length), pos: text.indexOf(v.key.slice(0, 4)) };
+        })
+        .filter((h) => h.share >= 0.9 && h.pos >= 0)
+        .sort((p, q) => q.v.key.length - p.v.key.length);
+      // берём самые длинные совпадения, не перекрывающие друг друга (иначе 2:255 тянет за собой 3:2 и 42:4)
+      const picked = [];
+      for (const h of found) if (!picked.some((p) => h.pos >= p.pos && h.pos < p.pos + p.v.key.length)) picked.push(h);
+      picked.sort((p, q) => p.pos - q.pos);
+      const covered = picked.reduce((sum, h) => sum + h.v.key.length, 0);
+      let q = [];
+      if (picked.length && covered / text.length >= 0.5) {
+        // подряд идущие аяты одной суры: заполняем пропуски; короткая сура берётся целиком
+        const bySura = new Map();
+        for (const h of picked) bySura.set(h.v.n, [...(bySura.get(h.v.n) ?? []), h.v.a]);
+        for (const [n, list] of bySura) {
+          const total = suraLen[n - 1];
+          const from = total <= 6 && n !== 1 ? 1 : Math.min(...list);
+          const to = total <= 6 && n !== 1 ? total : Math.max(...list);
+          for (let a = from; a <= to; a++) q.push([n, a, suraTr[n - 1][a - 1]]);
+        }
+        withRu++;
+      }
+      return { ar: x.text.trim(), n: x.count, ...(q.length ? { q } : {}) };
     }),
   }));
   await w('azkar.json', cats);
-  console.log('Азкары:', cats.reduce((s, c) => s + c.items.length, 0), 'текстов,', cats.length, 'разделов, с транслитерацией', withTr);
+  console.log('Азкары:', cats.reduce((s, c) => s + c.items.length, 0), 'текстов,', cats.length, 'разделов, из них аятов с переводом', withRu);
 }
 
 /* ——— 99 имён Аллаха: места упоминания в Коране считаются по тексту ——— */

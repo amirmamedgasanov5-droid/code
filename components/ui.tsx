@@ -17,7 +17,7 @@ export function Group({ children, header, footer, className = '' }: { children: 
   return (
     <section className={className}>
       {header && <h2 className="mb-1.5 px-4 text-[13px] uppercase tracking-[-0.01em] text-label2">{header}</h2>}
-      <div className="overflow-hidden rounded-[22px] bg-surface">{children}</div>
+      <div className="overflow-hidden rounded-[16px] bg-surface">{children}</div>
       {footer && <p className="mt-1.5 px-4 text-[13px] leading-snug text-label2">{footer}</p>}
     </section>
   );
@@ -85,7 +85,7 @@ export function Button({
   className?: string;
 }) {
   const cls = `inline-flex h-[50px] items-center justify-center gap-2 rounded-full px-7 text-[17px] font-semibold ${
-    variant === 'filled' ? 'bg-tint text-tint-ink' : 'glass text-tint'
+    variant === 'filled' ? 'bg-tint text-tint-ink' : 'bg-surface text-tint'
   } ${className}`;
   const p = { whileTap: { scale: 0.95 }, transition: SPRING };
   if (href)

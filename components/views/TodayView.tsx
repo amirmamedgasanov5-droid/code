@@ -17,7 +17,7 @@ function Card({ children, className = '' }: { children: React.ReactNode; classNa
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '0px 0px -8% 0px' }}
       transition={{ type: 'spring', stiffness: 160, damping: 22 }}
-      className={`rounded-[22px] bg-surface p-5 ${className}`}
+      className={`rounded-[16px] bg-surface p-5 ${className}`}
     >
       {children}
     </motion.section>
@@ -78,7 +78,7 @@ function Prayers() {
       </div>
       {geoErr && <p className="mt-2 text-[13px] text-[#c0566b]">{geoErr}</p>}
 
-      <div className="mt-5 rounded-[22px] bg-tint p-5 text-tint-ink" aria-live="off">
+      <div className="mt-5 rounded-[16px] bg-tint p-5 text-tint-ink" aria-live="off">
         {data && now ? (
           <>
             <p className="text-[13px] font-semibold opacity-75">{data.tomorrow ? 'Завтра' : 'Следующая'} · {data.next.name}</p>

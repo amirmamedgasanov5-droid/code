@@ -188,20 +188,20 @@ export function QuizScreen({ mode }: { mode: string }) {
         </div>
         {err && <Group><p className="p-5 text-center text-label2">Не удалось подготовить вопрос. Проверьте соединение.</p></Group>}
         {done ? (
-          <motion.div initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={SPRING} className="rounded-[26px] bg-surface p-8 text-center">
+          <motion.div initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={SPRING} className="rounded-[18px] bg-surface p-8 text-center">
             <p className="text-[13px] font-semibold uppercase tracking-[0.05em] text-label2">Результат</p>
             <p className="mt-2 text-[4.5rem] font-bold leading-none tracking-[-0.05em] tabular-nums text-tint">{score}<span className="text-label3">/{ROUND}</span></p>
-            <p className="mt-3 text-[17px] text-label2">{score >= 9 ? 'Прекрасно! Да воздаст вам Аллах благом.' : score >= 6 ? 'Хороший результат. Попробуйте ещё раз.' : 'Повторите материал и попробуйте снова.'}</p>
+            <p className="mt-3 text-[17px] text-label2">{score >= 9 ? 'Отличный результат.' : score >= 6 ? 'Хороший результат, можно лучше.' : 'Повторите материал и попробуйте снова.'}</p>
             <div className="mt-6 flex justify-center gap-3">
               <button onClick={() => data && start(data)} className="rounded-full bg-tint px-7 py-3 text-[16px] font-semibold text-tint-ink">Ещё раз</button>
-              <button onClick={back.onClick} className="glass rounded-full px-7 py-3 text-[16px] font-semibold text-tint">К списку</button>
+              <button onClick={back.onClick} className="rounded-full bg-surface px-7 py-3 text-[16px] font-semibold text-tint">К списку</button>
             </div>
           </motion.div>
         ) : (
           <AnimatePresence mode="wait">
             {q ? (
               <motion.div key={n} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} className="space-y-3">
-                <div className="rounded-[26px] bg-surface p-5">
+                <div className="rounded-[18px] bg-surface p-5">
                   <p className="text-[20px] font-bold leading-snug tracking-[-0.03em]">{q.prompt}</p>
                   {q.ar && <p lang="ar" dir="rtl" className="quran mt-3 text-center text-[1.7rem] leading-[2.1]">{q.ar}</p>}
                 </div>
@@ -215,7 +215,7 @@ export function QuizScreen({ mode }: { mode: string }) {
                         whileTap={{ scale: chosen === null ? 0.97 : 1 }}
                         animate={state === 'wrong' ? { x: [0, -8, 8, -5, 5, 0] } : {}}
                         transition={{ duration: 0.4 }}
-                        className={`flex w-full items-center justify-between gap-3 rounded-[20px] px-5 py-4 text-left text-[17px] font-medium transition-colors ${
+                        className={`flex w-full items-center justify-between gap-3 rounded-[16px] px-5 py-4 text-left text-[17px] font-medium transition-colors ${
                           state === 'right' ? 'bg-tint text-tint-ink' : state === 'wrong' ? 'bg-red text-white' : state === 'dim' ? 'bg-surface opacity-50' : 'bg-surface'
                         }`}
                       >
@@ -227,7 +227,7 @@ export function QuizScreen({ mode }: { mode: string }) {
                   })}
                 </div>
                 {chosen !== null && (
-                  <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="rounded-[20px] bg-tint-soft p-4 text-[15px] leading-snug">
+                  <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="rounded-[16px] bg-tint-soft p-4 text-[15px] leading-snug">
                     <p className="font-semibold text-tint">{chosen === q.answer ? 'Верно!' : 'Неверно.'}{streak > 1 && chosen === q.answer ? ` Серия: ${streak}` : ''}</p>
                     {q.note && <p className="mt-0.5 text-label2">{q.note}</p>}
                     <button onClick={advance} className="mt-3 rounded-full bg-tint px-6 py-2.5 text-[15px] font-semibold text-tint-ink">{n + 1 >= ROUND ? 'Завершить' : 'Дальше'}</button>
@@ -235,7 +235,7 @@ export function QuizScreen({ mode }: { mode: string }) {
                 )}
               </motion.div>
             ) : (
-              !err && <div key="load" className="space-y-3"><div className="h-28 animate-pulse rounded-[26px] bg-fill" /><div className="h-14 animate-pulse rounded-[20px] bg-fill" /><div className="h-14 animate-pulse rounded-[20px] bg-fill" /></div>
+              !err && <div key="load" className="space-y-3"><div className="h-28 animate-pulse rounded-[18px] bg-fill" /><div className="h-14 animate-pulse rounded-[16px] bg-fill" /><div className="h-14 animate-pulse rounded-[16px] bg-fill" /></div>
             )}
           </AnimatePresence>
         )}

@@ -8,7 +8,7 @@ import { Group, Row, fmt } from '../ui';
 import { useBack } from './nav';
 
 const KINDS: { kind: IndexKind; title: string; desc: string }[] = [
-  { kind: 'alpha', title: 'Суры по алфавиту', desc: 'Названия в латинской транскрипции' },
+  { kind: 'alpha', title: 'Суры по алфавиту', desc: 'По названию, без артикля «аль-»' },
   { kind: 'place', title: 'Мекканские и мединские', desc: 'Где ниспослана сура' },
   { kind: 'length', title: 'Суры по длине', desc: 'От самой длинной к самой короткой' },
   { kind: 'page', title: 'Страницы мусхафа', desc: '604 страницы Мединского мусхафа' },
@@ -76,7 +76,7 @@ export function IndexScreen({ kind }: { kind: IndexKind }) {
     );
     switch (kind) {
       case 'alpha': {
-        const l = [...idx.suras].sort((a, b) => a.tr.replace(/^(Al|An|Ar|As|Ash|At|Az|Ad|Adh)-/i, '').localeCompare(b.tr.replace(/^(Al|An|Ar|As|Ash|At|Az|Ad|Adh)-/i, '')));
+        const l = [...idx.suras].sort((a, b) => a.tr.replace(/^(Аль|Ан|Ар|Ас|Аш|Ат|Аз|Ад)-/i, '').localeCompare(b.tr.replace(/^(Аль|Ан|Ар|Ас|Аш|Ат|Аз|Ад)-/i, ''), 'ru'));
         return <Group>{l.map((s, i) => suraRow(s, i === l.length - 1))}</Group>;
       }
       case 'place': {

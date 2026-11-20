@@ -53,11 +53,10 @@ function useDaily() {
 }
 
 function Card({ children, className = '', onClick, tint }: { children: React.ReactNode; className?: string; onClick?: () => void; tint?: boolean }) {
-  const cls = `relative overflow-hidden rounded-[26px] p-5 text-left ${tint ? 'text-white' : 'bg-surface'} ${className}`;
-  const style = tint ? { background: 'linear-gradient(165deg,#2c8f5a,#124f2d)' } : undefined;
-  if (!onClick) return <motion.div variants={rise} style={style} className={cls}>{children}</motion.div>;
+  const cls = `relative overflow-hidden rounded-[18px] p-5 text-left ${tint ? 'bg-tint text-tint-ink' : 'bg-surface'} ${className}`;
+    if (!onClick) return <motion.div variants={rise} className={cls}>{children}</motion.div>;
   return (
-    <motion.button variants={rise} style={style} onClick={onClick} whileTap={{ scale: 0.97 }} transition={SPRING} className={cls}>
+    <motion.button variants={rise} onClick={onClick} whileTap={{ scale: 0.97 }} transition={SPRING} className={cls}>
       {children}
     </motion.button>
   );
@@ -92,8 +91,8 @@ export function HomeView() {
       <motion.div variants={stagger(0.07, 0.05)} initial="hidden" animate={show} className="space-y-3">
         <motion.div variants={rise} className="grid grid-cols-3 gap-2 md:grid-cols-6">
           {sections.map(({ Icon, label, color, go: fn }) => (
-            <motion.button key={label} onClick={fn} whileTap={{ scale: 0.93 }} transition={SPRING} className="flex flex-col items-center gap-2 rounded-[22px] bg-surface px-2 py-4">
-              <span className="grid size-[46px] place-items-center rounded-[13px] text-white" style={{ background: `linear-gradient(160deg, ${color}, color-mix(in srgb, ${color} 70%, black))` }}>
+            <motion.button key={label} onClick={fn} whileTap={{ scale: 0.93 }} transition={SPRING} className="flex flex-col items-center gap-2 rounded-[16px] bg-surface px-2 py-4">
+              <span className="grid size-[46px] place-items-center rounded-[11px] text-white" style={{ background: color }}>
                 <Icon size={24} strokeWidth={2} />
               </span>
               <span className="text-[13px] font-medium">{label}</span>
@@ -147,8 +146,8 @@ export function HomeView() {
                   onClick={() => open(f.postId)}
                   whileTap={{ scale: 0.97 }}
                   transition={SPRING}
-                  className="flex h-[21rem] w-[min(82vw,21rem)] shrink-0 snap-center flex-col overflow-hidden rounded-[28px] p-6 text-left text-white md:w-[22rem]"
-                  style={{ background: ['linear-gradient(165deg,#2c8f5a,#0f4426)', 'linear-gradient(165deg,#2f6f93,#102838)', 'linear-gradient(165deg,#86703f,#2b2316)'][i % 3] }}
+                  className="flex h-[21rem] w-[min(82vw,21rem)] shrink-0 snap-center flex-col overflow-hidden rounded-[20px] p-6 text-left text-white md:w-[22rem]"
+                  style={{ background: ['#1f6b43', '#2b5b78', '#6a5733'][i % 3] }}
                 >
                   <span className="text-[12px] font-semibold uppercase tracking-[0.06em] opacity-75">{f.kind === 'ayah' ? 'Аят и тафсир' : 'Из публикации'}</span>
                   {f.kind === 'ayah' && f.arabic ? (
@@ -167,18 +166,18 @@ export function HomeView() {
         )}
 
         <motion.div variants={rise} className="grid gap-3 pt-3 md:grid-cols-[1.4fr_1fr]">
-          <div className="rounded-[26px] bg-surface p-6">
+          <div className="rounded-[18px] bg-surface p-6">
             <p className="text-[24px] font-bold leading-[1.1] tracking-[-0.035em]">Хидая — в Telegram</p>
-            <p className="mt-2 max-w-md text-[15px] leading-snug text-label2">Напоминания, тафсир ас-Саади и сунны дня приходят прямо в канал. Вход — только для сестёр.</p>
+            <p className="mt-2 max-w-md text-[15px] leading-snug text-label2">Напоминания, тафсир ас-Саади и сунны дня. Вход только для сестёр.</p>
             <div className="mt-4 flex flex-wrap gap-2.5">
               <Button href={telegramUrl} external>Присоединиться <ArrowUpRight size={19} strokeWidth={2.4} /></Button>
               <Button variant="glass" onClick={() => go('channel')}>О канале</Button>
             </div>
           </div>
-          <div className="rounded-[26px] bg-surface p-6">
+          <div className="rounded-[18px] bg-surface p-6">
             <p className="text-[12px] font-semibold uppercase tracking-[0.05em] text-label2">В вашей библиотеке</p>
             <p className="mt-2 text-[34px] font-bold leading-none tracking-[-0.045em] tabular-nums">{fmt(6236 + hadithTotal + 298 + posts.length)}</p>
-            <p className="mt-1 text-[14px] text-label2">аятов, хадисов, дуа и публикаций; плюс тафсир на все 114 сур</p>
+            <p className="mt-1 text-[14px] text-label2">аятов, хадисов, дуа и публикаций</p>
             <p className="mt-3 text-[14px] text-label2">Закладок: <span className="font-semibold text-label">{bookmarks.length}</span></p>
           </div>
         </motion.div>

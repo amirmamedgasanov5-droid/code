@@ -2,13 +2,10 @@ export const HADITH_NAMES: Record<string, { ru: string; ar: string; author: stri
   bukhari: { ru: 'Сахих аль-Бухари', ar: 'صحيح البخاري', author: 'Имам аль-Бухари' },
   muslim: { ru: 'Сахих Муслим', ar: 'صحيح مسلم', author: 'Имам Муслим' },
   abudawud: { ru: 'Сунан Абу Дауда', ar: 'سنن أبي داود', author: 'Имам Абу Дауд' },
-  tirmidhi: { ru: 'Джами ат-Тирмизи', ar: 'جامع الترمذي', author: 'Имам ат-Тирмизи' },
-  nasai: { ru: 'Сунан ан-Насаи', ar: 'سنن النسائي', author: 'Имам ан-Насаи' },
-  ibnmajah: { ru: 'Сунан Ибн Маджа', ar: 'سنن ابن ماجه', author: 'Имам Ибн Маджа' },
   nawawi: { ru: 'Сорок хадисов ан-Навави', ar: 'الأربعون النووية', author: 'Имам ан-Навави' },
 };
 export const MAIN_COLLECTIONS = ['bukhari', 'muslim'];
-export const SUNAN_COLLECTIONS = ['abudawud', 'tirmidhi', 'nasai', 'ibnmajah'];
+export const SUNAN_COLLECTIONS = ['abudawud'];
 export const FORTY_COLLECTIONS = ['nawawi'];
 export const BISMILLAH = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ';
 export const norm = (s: string) => s.toLowerCase().replace(/ё/g, 'е');

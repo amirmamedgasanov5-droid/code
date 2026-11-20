@@ -92,16 +92,10 @@ function TextSettings({ open, onClose, translations }: { open: boolean; onClose:
             </div>
             <input type="range" min={1.4} max={3.2} step={0.1} value={settings.arSize} onChange={(e) => setSettings({ arSize: Number(e.target.value) })} aria-label="Размер арабского текста" className="mt-2 w-full accent-[var(--tint)]" />
           </div>
-          <Row chevron={false}>
+          <Row chevron={false} last>
             <div className="flex items-center justify-between">
               <span className="text-[17px]">Перевод</span>
               <Switch checked={settings.translation} onChange={(v) => setSettings({ translation: v })} label="Показывать перевод" />
-            </div>
-          </Row>
-          <Row chevron={false} last>
-            <div className="flex items-center justify-between">
-              <span className="text-[17px]">Транслитерация</span>
-              <Switch checked={settings.translit} onChange={(v) => setSettings({ translit: v })} label="Показывать транслитерацию" />
             </div>
           </Row>
         </Group>
@@ -165,8 +159,8 @@ function TafsirSheet({ n, ayah, onChange, onClose, data, tr }: { n: number; ayah
           {!entries && !err && <div className="space-y-3">{[95, 100, 88, 70].map((w, i) => <div key={i} className="h-4 animate-pulse rounded-full bg-fill" style={{ width: `${w}%` }} />)}</div>}
           {entries && <div className="whitespace-pre-line text-[17px] leading-[1.6]">{text || 'К этому аяту в данном тафсире нет отдельного комментария.'}</div>}
           <div className="flex justify-between gap-3 pt-2">
-            <button disabled={ayah <= 1} onClick={() => onChange(ayah - 1)} className="glass rounded-full px-5 py-3 text-[15px] font-semibold text-tint disabled:opacity-35">‹ Аят {ayah - 1}</button>
-            <button disabled={ayah >= data.a.length} onClick={() => onChange(ayah + 1)} className="glass rounded-full px-5 py-3 text-[15px] font-semibold text-tint disabled:opacity-35">Аят {ayah + 1} ›</button>
+            <button disabled={ayah <= 1} onClick={() => onChange(ayah - 1)} className="rounded-full bg-surface px-5 py-3 text-[15px] font-semibold text-tint disabled:opacity-35">‹ Аят {ayah - 1}</button>
+            <button disabled={ayah >= data.a.length} onClick={() => onChange(ayah + 1)} className="rounded-full bg-surface px-5 py-3 text-[15px] font-semibold text-tint disabled:opacity-35">Аят {ayah + 1} ›</button>
           </div>
         </div>
       )}
@@ -278,7 +272,6 @@ export function SuraScreen({ n, a }: { n: number; a?: number }) {
                   </div>
                 </div>
                 <p lang="ar" dir="rtl" className="quran mt-1 text-right" style={{ fontSize: `${settings.arSize}rem` }}>{ar}</p>
-                {settings.translit && <p className="mt-2 text-[15px] italic leading-snug text-label2">{data.t[i]}</p>}
                 {settings.translation && <p className="mt-2 text-[17px] leading-[1.45]">{tr[i]}</p>}
                 {link && (
                   <button onClick={() => open(link.id)} className="mt-2 inline-flex items-center gap-1 rounded-full bg-tint-soft px-3 py-1.5 text-[13px] font-semibold text-tint">
@@ -294,12 +287,12 @@ export function SuraScreen({ n, a }: { n: number; a?: number }) {
       {data && idx && (
         <div className="mt-6 flex justify-between gap-3">
           {n > 1 ? (
-            <button onClick={() => (stack.length > 1 && stack[stack.length - 2]?.k === 'sura' ? pop() : push({ k: 'sura', n: n - 1 }))} className="glass rounded-full px-5 py-3 text-[15px] font-semibold text-tint">
+            <button onClick={() => (stack.length > 1 && stack[stack.length - 2]?.k === 'sura' ? pop() : push({ k: 'sura', n: n - 1 }))} className="rounded-full bg-surface px-5 py-3 text-[15px] font-semibold text-tint">
               ‹ {idx.suras[n - 2].tr}
             </button>
           ) : <span />}
           {n < 114 && (
-            <button onClick={() => push({ k: 'sura', n: n + 1 })} className="glass rounded-full px-5 py-3 text-[15px] font-semibold text-tint">
+            <button onClick={() => push({ k: 'sura', n: n + 1 })} className="rounded-full bg-surface px-5 py-3 text-[15px] font-semibold text-tint">
               {idx.suras[n].tr} ›
             </button>
           )}

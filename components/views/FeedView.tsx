@@ -64,7 +64,7 @@ export function FeedView() {
       )}
 
       {list.length > shown && (
-        <motion.button whileTap={{ scale: 0.95 }} transition={SPRING} onClick={() => setShown((s) => s + STEP)} className="glass mx-auto mt-6 block rounded-full px-7 py-3 text-[16px] font-semibold text-tint">
+        <motion.button whileTap={{ scale: 0.95 }} transition={SPRING} onClick={() => setShown((s) => s + STEP)} className="mx-auto mt-6 block rounded-full bg-surface px-7 py-3 text-[16px] font-semibold text-tint">
           Показать ещё · {list.length - shown}
         </motion.button>
       )}
