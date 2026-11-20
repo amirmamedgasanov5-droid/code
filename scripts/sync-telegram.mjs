@@ -5,14 +5,15 @@
  *
  * - Если сеть недоступна, остаётся прежний data/channel.json (сборка не падает).
  * - Запуск вручную:  npm run sync
- * - Глубина истории: SYNC_PAGES=20 npm run sync   (≈20 сообщений на страницу)
+ * - Обновление инкрементальное: новые публикации добавляются к уже сохранённым.
+ * - Вся история:  SYNC_PAGES=400 npm run sync   (≈20 сообщений на страницу)
  */
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const CHANNEL = 'hidaya_islam1';
-const PAGES = Number(process.env.SYNC_PAGES ?? 16);
+const PAGES = Number(process.env.SYNC_PAGES ?? 4); // 4 страниц ≈ 80 последних сообщений — хватает для регулярного обновления
 const OUT = resolve(dirname(fileURLToPath(import.meta.url)), '../data/channel.json');
 const MIN_TEXT = 140; // короткие подписи к картинкам в ленту не берём
 
@@ -106,13 +107,23 @@ async function main() {
     }
   }
 
-  const seen = new Set();
-  const posts = all
-    .filter((p) => !seen.has(p.id) && seen.add(p.id))
-    .map((p) => ({ ...p, length: p.paragraphs.reduce((n, x) => n + x.t.length, 0) }))
-    .filter((p) => p.length >= MIN_TEXT)
-    .sort((a, b) => b.id - a.id)
-    .map(({ length, ...p }) => p);
+  let prev = { posts: [] };
+  try {
+    prev = JSON.parse(await readFile(OUT, 'utf8'));
+  } catch {}
+  const fresh = new Map();
+  for (const p of all) {
+    const length = p.paragraphs.reduce((n, x) => n + x.t.length, 0);
+    if (length >= MIN_TEXT) fresh.set(p.id, { id: p.id, date: p.date, paragraphs: p.paragraphs });
+  }
+  // свежие данные заменяют старые (посты можно редактировать), остальное сохраняется
+  const merged = new Map(prev.posts.map((p) => [p.id, p]));
+  for (const [id, p] of fresh) merged.set(id, p);
+  // удалённые в канале посты убираем, если они попали в просмотренный диапазон
+  const lo = Math.min(...all.map((p) => p.id));
+  const seenIds = new Set(all.map((p) => p.id));
+  for (const id of [...merged.keys()]) if (id >= lo && !seenIds.has(id)) merged.delete(id);
+  const posts = [...merged.values()].sort((a, b) => b.id - a.id);
 
   const data = {
     channel: CHANNEL,
@@ -125,7 +136,7 @@ async function main() {
   };
   await mkdir(dirname(OUT), { recursive: true });
   await writeFile(OUT, JSON.stringify(data, null, 2) + '\n');
-  console.log(`[sync] ${posts.length} публикаций, последний id ${data.lastPostId}, счётчики:`, counters);
+  console.log(`[sync] всего ${posts.length} публикаций (новых/обновлённых за запуск: ${fresh.size}), последний id ${data.lastPostId}`);
 }
 
 main().catch((e) => {

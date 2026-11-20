@@ -14,6 +14,8 @@ export type Post = {
   category: CategoryId;
   paragraphs: Paragraph[];
   minutes: number;
+  /** [сура, первый аят, последний аят] — для публикаций с тафсиром */
+  refs?: [number, number, number];
 };
 
 export type Category = {

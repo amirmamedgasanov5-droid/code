@@ -8,7 +8,7 @@ import { useNow, useStored } from '@/lib/hooks';
 import { PLACES, countdown, fmtTime, qibla, schedule, type Place } from '@/lib/prayer';
 import { useApp } from '../AppProvider';
 import { Screen } from '../Screen';
-import { Group, Row, SPRING } from '../ui';
+import { SPRING } from '../ui';
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
@@ -17,7 +17,7 @@ function Card({ children, className = '' }: { children: React.ReactNode; classNa
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '0px 0px -8% 0px' }}
       transition={{ type: 'spring', stiffness: 160, damping: 22 }}
-      className={`rounded-[28px] bg-surface p-5 ${className}`}
+      className={`rounded-[22px] bg-surface p-5 ${className}`}
     >
       {children}
     </motion.section>
@@ -108,7 +108,7 @@ function Prayers() {
         })}
       </ul>
 
-      <div className="mt-2 flex items-center gap-3 rounded-[18px] bg-surface2 p-3.5">
+      <div className="mt-2 flex items-center gap-3 rounded-[18px] bg-fill/60 p-3.5">
         <motion.span animate={{ rotate: q }} transition={{ type: 'spring', stiffness: 60, damping: 12 }} className="grid size-11 place-items-center rounded-full bg-tint-soft text-tint">
           <Compass size={22} strokeWidth={2} style={{ transform: 'rotate(-45deg)' }} />
         </motion.span>
@@ -147,14 +147,14 @@ function Tasbih() {
       <div className="flex items-center justify-between">
         <p className="text-[13px] font-semibold uppercase tracking-[0.05em] text-label2">Тасбих</p>
         <div className="flex items-center gap-2">
-          <div className="flex rounded-full bg-surface2 p-0.5" role="group" aria-label="Цель">
+          <div className="flex rounded-full bg-fill/60 p-0.5" role="group" aria-label="Цель">
             {[33, 99, 0].map((t) => (
               <button key={t} onClick={() => setTarget(t)} aria-pressed={target === t} className={`rounded-full px-3 py-1 text-[13px] font-semibold transition-colors ${target === t ? 'bg-tint text-tint-ink' : 'text-label2'}`}>
                 {t || '∞'}
               </button>
             ))}
           </div>
-          <button onClick={() => setCount(0)} aria-label="Сбросить" className="grid size-8 place-items-center rounded-full bg-surface2 text-label2">
+          <button onClick={() => setCount(0)} aria-label="Сбросить" className="grid size-8 place-items-center rounded-full bg-fill/60 text-label2">
             <RotateCcw size={15} strokeWidth={2.3} />
           </button>
         </div>

@@ -1,186 +1,184 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowUpRight, ChevronRight } from 'lucide-react';
+import { ArrowUpRight, Bookmark, BookOpen, CalendarDays, ChevronRight, HandHeart, Newspaper, Quote } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { CATEGORIES, CATEGORY_BY_ID } from '@/lib/categories';
+import { hadithBook, hadithIndex, quranIndex, sura as loadSura, type Hadith, type QuranIndex, type Sura } from '@/lib/client-data';
+import { HADITH_NAMES } from '@/lib/library-meta';
 import { hijriParts } from '@/lib/hijri';
 import { useApp } from '../AppProvider';
-import { CAT_META, CatIcon } from '../catMeta';
-import { Emblem } from '../Geometry';
 import { Screen } from '../Screen';
-import { Button, Pill, SPRING, rise, stagger } from '../ui';
+import { Button, Pill, SPRING, fmt, rise, stagger } from '../ui';
 
-function Tile({ children, className = '', onClick, tone = 'surface' }: { children: React.ReactNode; className?: string; onClick?: () => void; tone?: 'surface' | 'tint' }) {
-  const cls = `relative overflow-hidden rounded-[28px] p-5 text-left ${tone === 'tint' ? 'bg-tint text-tint-ink' : 'bg-surface'} ${className}`;
-  if (!onClick) return <motion.div variants={rise} className={cls}>{children}</motion.div>;
+/** «Аят дня» и «Хадис дня»: выбираются по дате из настоящих текстов библиотеки */
+function useDaily() {
+  const [ayah, setAyah] = useState<{ n: number; a: number; ar: string; ru: string; name: string } | null>(null);
+  const [hadith, setHadith] = useState<{ c: string; b: number; h: Hadith } | null>(null);
+
+  useEffect(() => {
+    const day = Math.floor(Date.now() / 864e5);
+    const rnd = (k: number) => ((day * 2654435761 + k * 40503) >>> 0) % 1000003;
+    let alive = true;
+    (async () => {
+      try {
+        const idx: QuranIndex = await quranIndex();
+        const total = idx.suras.reduce((s, x) => s + x.v, 0);
+        for (let t = 0; t < 12 && alive; t++) {
+          let g = (rnd(1 + t) % total) + 1;
+          let n = 1;
+          while (g > idx.suras[n - 1].v) g -= idx.suras[n++ - 1].v;
+          const s: Sura = await loadSura(n);
+          if (s.r[g - 1].length <= 230 && s.a[g - 1].length <= 190) {
+            if (alive) setAyah({ n, a: g, ar: s.a[g - 1], ru: s.r[g - 1], name: idx.suras[n - 1].tr });
+            break;
+          }
+        }
+        const c = 'bukhari';
+        const hi = await hadithIndex(c);
+        for (let t = 0; t < 8 && alive; t++) {
+          const bk = hi.books[rnd(50 + t) % hi.books.length];
+          const hs = (await hadithBook(c, bk.b)).filter((h) => h.ru.length > 90 && h.ru.length < 330);
+          if (hs.length) {
+            if (alive) setHadith({ c, b: bk.b, h: hs[rnd(70 + t) % hs.length] });
+            break;
+          }
+        }
+      } catch {}
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return { ayah, hadith };
+}
+
+function Card({ children, className = '', onClick, tint }: { children: React.ReactNode; className?: string; onClick?: () => void; tint?: boolean }) {
+  const cls = `relative overflow-hidden rounded-[26px] p-5 text-left ${tint ? 'text-white' : 'bg-surface'} ${className}`;
+  const style = tint ? { background: 'linear-gradient(165deg,#2c8f5a,#124f2d)' } : undefined;
+  if (!onClick) return <motion.div variants={rise} style={style} className={cls}>{children}</motion.div>;
   return (
-    <motion.button variants={rise} onClick={onClick} whileTap={{ scale: 0.96 }} whileHover={{ y: -3 }} transition={SPRING} className={cls}>
+    <motion.button variants={rise} style={style} onClick={onClick} whileTap={{ scale: 0.97 }} transition={SPRING} className={cls}>
       {children}
     </motion.button>
   );
 }
 
 export function HomeView() {
-  const { posts, featured, items, ready, go, open, telegramUrl } = useApp();
+  const { posts, featured, ready, go, open, openRoute, lastRead, telegramUrl, bookmarks } = useApp();
+  const { ayah, hadith } = useDaily();
   const latest = posts[0];
-  const [today, setToday] = useState<{ h: ReturnType<typeof hijriParts>; wd: string } | null>(null);
+  const [date, setDate] = useState<{ g: string; h: string } | null>(null);
   useEffect(() => {
     const n = new Date();
-    setToday({ h: hijriParts(n), wd: new Intl.DateTimeFormat('ru', { weekday: 'long', day: 'numeric', month: 'long' }).format(n) });
+    const h = hijriParts(n);
+    setDate({ g: new Intl.DateTimeFormat('ru', { weekday: 'long', day: 'numeric', month: 'long' }).format(n), h: h ? `${h.day} ${h.month} ${h.year} г. х.` : '' });
   }, []);
   const show = ready ? 'show' : 'hidden';
+  const sections = [
+    { Icon: BookOpen, label: 'Коран', color: '#2f7d5b', go: () => openRoute([{ k: 'quran' }]) },
+    { Icon: Quote, label: 'Хадисы', color: '#b8893b', go: () => openRoute([{ k: 'hadith' }]) },
+    { Icon: HandHeart, label: 'Дуа', color: '#6b5bb0', go: () => openRoute([{ k: 'hisn' }]) },
+    { Icon: Newspaper, label: 'Лента', color: '#c0566b', go: () => go('feed') },
+    { Icon: Bookmark, label: 'Закладки', color: '#d9822b', go: () => go('bookmarks') },
+    { Icon: CalendarDays, label: 'Сегодня', color: '#2b6e8f', go: () => go('today') },
+  ];
 
   return (
-    <Screen title="Хидая" hero>
-      {/* Hero */}
-      <motion.div variants={stagger(0.09, 0.05)} initial="hidden" animate={show} className="grid items-center gap-6 pt-2 lg:grid-cols-[1.1fr_0.9fr] lg:gap-10 lg:pt-8">
-        <div>
-          <motion.div variants={rise}>
-            <Pill>Telegram-канал · для сестёр</Pill>
-          </motion.div>
-          <motion.h1 variants={rise} className="font-display mt-5 text-[clamp(2.9rem,9.2vw,5.9rem)] font-bold leading-[0.98] tracking-[-0.045em]">
-            Прямой путь
-            <br />
-            начинается
-            <br />
-            <span className="bg-gradient-to-r from-tint to-gold bg-clip-text text-transparent">с сердца.</span>
-          </motion.h1>
-          <motion.p variants={rise} className="mt-5 max-w-[31rem] text-[19px] leading-[1.4] text-label2">
-            Хидая — «наставление на прямой путь». Аяты и тафсир, хадисы и дуа, короткие напоминания — спокойно, с источниками и на русском.
-          </motion.p>
-          <motion.div variants={rise} className="mt-7 flex flex-wrap gap-3">
-            <Button href={telegramUrl} external>
-              Присоединиться
-              <ArrowUpRight size={19} strokeWidth={2.4} />
-            </Button>
-            <Button variant="glass" onClick={() => go('feed')}>
-              Читать
-            </Button>
-          </motion.div>
-        </div>
-        <motion.div variants={rise} className="mx-auto w-[min(76vw,24rem)] lg:w-full lg:max-w-[34rem]">
-          <Emblem animate />
-        </motion.div>
-      </motion.div>
-
-      {/* Bento */}
-      <motion.div
-        variants={stagger(0.07)}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, margin: '0px 0px -12% 0px' }}
-        className="mt-14 grid grid-cols-2 gap-3 md:grid-cols-4"
-      >
-        {latest && (
-          <Tile className="col-span-2 flex min-h-[19rem] flex-col md:row-span-2" onClick={() => open(latest.id)}>
-            <div className="flex items-center gap-2">
-              <Pill>Последнее в канале</Pill>
-              <span className="text-[13px] text-label2">{latest.dateLabel}</span>
-            </div>
-            <p className="mt-5 text-[clamp(1.7rem,3.6vw,2.2rem)] font-bold leading-[1.08] tracking-[-0.035em]">{latest.title}</p>
-            <p className="mt-3 line-clamp-4 text-[16px] leading-snug text-label2">{latest.preview}</p>
-            <span className="mt-auto flex items-center gap-1 pt-5 text-[16px] font-semibold text-tint">
-              Читать <ChevronRight size={18} strokeWidth={2.6} />
-            </span>
-          </Tile>
-        )}
-
-        <Tile onClick={() => go('today')} className="min-h-[9rem]">
-          <p className="text-[13px] font-semibold uppercase tracking-[0.05em] text-label2">Сегодня</p>
-          <p className="mt-2 text-[3.4rem] font-bold leading-none tracking-[-0.05em] tabular-nums">{today?.h?.day ?? '–'}</p>
-          <p className="mt-1.5 text-[14px] leading-tight text-label2">
-            {today?.h ? `${today.h.month} ${today.h.year}` : ' '}
-          </p>
-          <p className="mt-0.5 text-[13px] leading-tight text-label3 first-letter:uppercase">{today?.wd ?? ' '}</p>
-        </Tile>
-
-        <Tile tone="tint" className="min-h-[9rem]">
-          <p className="text-[12px] font-semibold uppercase tracking-[0.05em] opacity-70">Аль-Фатиха · 1:6</p>
-          <p lang="ar" dir="rtl" className="quran mt-2 text-[1.5rem] leading-[1.7]">
-            ٱهْدِنَا ٱلصِّرَٰطَ ٱلْمُسْتَقِيمَ
-          </p>
-          <p className="mt-1 text-[15px] font-medium leading-tight">Веди нас прямым путём</p>
-        </Tile>
-
-        <Tile className="col-span-2" onClick={() => go('library')}>
-          <div className="flex items-center justify-between">
-            <p className="text-[19px] font-bold tracking-[-0.025em]">Знания</p>
-            <ChevronRight size={20} className="text-label3" />
-          </div>
-          <div className="mt-4 flex -space-x-2">
-            {CATEGORIES.map((c) => (
-              <span key={c.id} className="rounded-[12px] ring-[3px] ring-surface">
-                <CatIcon id={c.id} size={40} />
+    <Screen title="Хидая" subtitle={date ? `${date.g.replace(/^./, (c) => c.toUpperCase())} · ${date.h}` : undefined}>
+      <motion.div variants={stagger(0.07, 0.05)} initial="hidden" animate={show} className="space-y-3">
+        <motion.div variants={rise} className="grid grid-cols-3 gap-2 md:grid-cols-6">
+          {sections.map(({ Icon, label, color, go: fn }) => (
+            <motion.button key={label} onClick={fn} whileTap={{ scale: 0.93 }} transition={SPRING} className="flex flex-col items-center gap-2 rounded-[22px] bg-surface px-2 py-4">
+              <span className="grid size-[46px] place-items-center rounded-[13px] text-white" style={{ background: `linear-gradient(160deg, ${color}, color-mix(in srgb, ${color} 70%, black))` }}>
+                <Icon size={24} strokeWidth={2} />
               </span>
-            ))}
-          </div>
-          <p className="mt-3 text-[14px] text-label2">Коран, тафсир, хадис, напоминания, дуа и знания — {posts.length} публикаций</p>
-        </Tile>
+              <span className="text-[13px] font-medium">{label}</span>
+            </motion.button>
+          ))}
+        </motion.div>
 
-        <Tile className="col-span-2" onClick={() => go('channel')}>
-          <div className="flex items-center justify-between">
-            <p className="text-[19px] font-bold tracking-[-0.025em]">Telegram</p>
-            <ChevronRight size={20} className="text-label3" />
-          </div>
-          <p className="mt-2 text-[15px] leading-snug text-label2">@hidaya_islam1 — вход только для сестёр. Откройте QR-код и присоединяйтесь.</p>
-        </Tile>
-      </motion.div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <Card tint onClick={ayah ? () => openRoute([{ k: 'quran' }, { k: 'sura', n: ayah.n, a: ayah.a }]) : undefined} className="min-h-[15rem]">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.05em] opacity-75">Аят дня{ayah ? ` · ${ayah.name} ${ayah.n}:${ayah.a}` : ''}</p>
+            {ayah ? (
+              <>
+                <p lang="ar" dir="rtl" className="quran mt-3 text-right text-[1.65rem] leading-[2]">{ayah.ar}</p>
+                <p className="mt-3 text-[16px] leading-snug opacity-95">{ayah.ru}</p>
+              </>
+            ) : (
+              <div className="mt-4 space-y-3"><div className="ml-auto h-7 w-3/4 animate-pulse rounded-full bg-white/20" /><div className="h-4 w-full animate-pulse rounded-full bg-white/20" /></div>
+            )}
+          </Card>
 
-      {/* Избранное */}
-      {featured.length > 0 && (
-        <motion.section
-          className="-mx-4 mt-14 md:mx-0"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '0px 0px -10% 0px' }}
-          transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-        >
-          <h2 className="mb-4 px-5 text-[1.7rem] font-bold tracking-[-0.03em] md:px-1">Избранное</h2>
-          <div className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 md:px-1">
-            {featured.map((f, i) => {
-              const post = posts.find((p) => p.id === f.postId);
-              const bg = [
-                'linear-gradient(160deg,#256b4d,#0b2a1d)',
-                'linear-gradient(160deg,#2d5a74,#0f2230)',
-                'linear-gradient(160deg,#76623a,#2a2216)',
-              ][i % 3];
-              return (
+          <Card onClick={hadith ? () => openRoute([{ k: 'hadith' }, { k: 'coll', c: hadith.c }, { k: 'book', c: hadith.c, b: hadith.b, n: hadith.h.n }]) : undefined} className="min-h-[15rem]">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.05em] text-tint">Хадис дня{hadith ? ` · ${HADITH_NAMES[hadith.c].ru} № ${hadith.h.n}` : ''}</p>
+            {hadith ? <p className="mt-3 line-clamp-[9] text-[17px] leading-[1.42]">{hadith.h.ru}</p> : <div className="mt-4 space-y-3"><div className="h-4 w-full animate-pulse rounded-full bg-fill" /><div className="h-4 w-5/6 animate-pulse rounded-full bg-fill" /><div className="h-4 w-2/3 animate-pulse rounded-full bg-fill" /></div>}
+          </Card>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          {lastRead && (
+            <Card onClick={() => openRoute([{ k: 'quran' }, { k: 'sura', n: lastRead.n, a: lastRead.a }])}>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.05em] text-label2">Продолжить чтение</p>
+              <p className="mt-1.5 text-[22px] font-bold tracking-[-0.03em]">Сура {lastRead.n}, аят {lastRead.a}</p>
+              <span className="mt-2 flex items-center gap-1 text-[15px] font-semibold text-tint">Открыть <ChevronRight size={17} strokeWidth={2.6} /></span>
+            </Card>
+          )}
+          {latest && (
+            <Card onClick={() => open(latest.id)} className={lastRead ? '' : 'md:col-span-2'}>
+              <div className="flex items-center gap-2"><Pill>Последнее в канале</Pill><span className="text-[13px] text-label2">{latest.dateLabel}</span></div>
+              <p className="mt-3 text-[clamp(1.4rem,3vw,1.9rem)] font-bold leading-[1.12] tracking-[-0.035em]">{latest.title}</p>
+              <p className="mt-2 line-clamp-3 text-[15px] leading-snug text-label2">{latest.preview}</p>
+            </Card>
+          )}
+        </div>
+
+        {featured.length > 0 && (
+          <motion.section variants={rise} className="-mx-4 pt-3 md:mx-0">
+            <h2 className="mb-3 px-5 text-[22px] font-bold tracking-[-0.03em] md:px-1">Избранное из канала</h2>
+            <div className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:px-1">
+              {featured.map((f, i) => (
                 <motion.button
                   key={f.postId + f.text.slice(0, 6)}
                   onClick={() => open(f.postId)}
                   whileTap={{ scale: 0.97 }}
-                  whileHover={{ y: -4 }}
                   transition={SPRING}
-                  className="relative flex h-[24rem] w-[min(84vw,22rem)] shrink-0 snap-center flex-col overflow-hidden rounded-[34px] p-6 text-left text-white md:w-[24rem]"
-                  style={{ background: bg }}
+                  className="flex h-[21rem] w-[min(82vw,21rem)] shrink-0 snap-center flex-col overflow-hidden rounded-[28px] p-6 text-left text-white md:w-[22rem]"
+                  style={{ background: ['linear-gradient(165deg,#2c8f5a,#0f4426)', 'linear-gradient(165deg,#2f6f93,#102838)', 'linear-gradient(165deg,#86703f,#2b2316)'][i % 3] }}
                 >
-                  <svg aria-hidden viewBox="-110 -110 220 220" className="absolute -right-20 -top-20 w-72 opacity-[0.14]" fill="none" stroke="#fff" strokeWidth="1">
-                    <rect x="-80" y="-80" width="160" height="160" />
-                    <rect x="-80" y="-80" width="160" height="160" transform="rotate(45)" />
-                    <rect x="-50" y="-50" width="100" height="100" transform="rotate(22.5)" />
-                  </svg>
-                  <span className="relative text-[12px] font-semibold uppercase tracking-[0.07em] opacity-70">{f.kind === 'ayah' ? 'Аят и тафсир' : 'Из публикации'}</span>
+                  <span className="text-[12px] font-semibold uppercase tracking-[0.06em] opacity-75">{f.kind === 'ayah' ? 'Аят и тафсир' : 'Из публикации'}</span>
                   {f.kind === 'ayah' && f.arabic ? (
                     <>
-                      <span lang="ar" dir="rtl" className="quran relative mt-5 block text-[1.45rem] leading-[2]">
-                        {f.arabic}
-                      </span>
-                      <span className="relative mt-3 block text-[16px] leading-snug opacity-90">{f.text}</span>
+                      <span lang="ar" dir="rtl" className="quran mt-4 block text-[1.4rem] leading-[2]">{f.arabic}</span>
+                      <span className="mt-3 block text-[16px] leading-snug opacity-90">{f.text}</span>
                     </>
                   ) : (
-                    <span className="font-serif relative mt-5 block text-[1.85rem] italic leading-[1.14] tracking-[-0.01em]">«{f.text}»</span>
+                    <span className="font-serif mt-4 block text-[1.8rem] italic leading-[1.14]">«{f.text}»</span>
                   )}
-                  <span className="relative mt-auto text-[13px] opacity-70">
-                    {f.source}
-                    {post ? ` · ${post.dateLabel}` : ''}
-                  </span>
+                  <span className="mt-auto text-[13px] opacity-75">{f.source}</span>
                 </motion.button>
-              );
-            })}
+              ))}
+            </div>
+          </motion.section>
+        )}
+
+        <motion.div variants={rise} className="grid gap-3 pt-3 md:grid-cols-[1.4fr_1fr]">
+          <div className="rounded-[26px] bg-surface p-6">
+            <p className="text-[24px] font-bold leading-[1.1] tracking-[-0.035em]">Хидая — в Telegram</p>
+            <p className="mt-2 max-w-md text-[15px] leading-snug text-label2">Напоминания, тафсир ас-Саади и сунны дня приходят прямо в канал. Вход — только для сестёр.</p>
+            <div className="mt-4 flex flex-wrap gap-2.5">
+              <Button href={telegramUrl} external>Присоединиться <ArrowUpRight size={19} strokeWidth={2.4} /></Button>
+              <Button variant="glass" onClick={() => go('channel')}>О канале</Button>
+            </div>
           </div>
-        </motion.section>
-      )}
+          <div className="rounded-[26px] bg-surface p-6">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.05em] text-label2">В вашей библиотеке</p>
+            <p className="mt-2 text-[34px] font-bold leading-none tracking-[-0.045em] tabular-nums">{fmt(6236 + 14823 + 298 + posts.length)}</p>
+            <p className="mt-1 text-[14px] text-label2">аятов, хадисов, дуа и публикаций</p>
+            <p className="mt-3 text-[14px] text-label2">Закладок: <span className="font-semibold text-label">{bookmarks.length}</span></p>
+          </div>
+        </motion.div>
+      </motion.div>
     </Screen>
   );
 }

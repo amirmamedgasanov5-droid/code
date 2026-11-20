@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion';
 import { ArrowUpRight, ExternalLink, Globe } from 'lucide-react';
 import { useApp } from '../AppProvider';
-import { StarMark } from '../Geometry';
 import { QrCode } from '../QrCode';
 import { Screen } from '../Screen';
 import { Button, Group, Row } from '../ui';
@@ -11,21 +10,14 @@ import { Button, Group, Row } from '../ui';
 const STEPS = ['Откройте канал по кнопке или наведите камеру на QR-код.', 'Нажмите «Присоединиться» в Telegram.', 'Включите уведомления, чтобы напоминания приходили вовремя.'];
 
 export function ChannelView() {
-  const { telegramUrl, stats, updated, posts, qr } = useApp();
+  const { telegramUrl, stats, updated, posts, qr, go } = useApp();
   return (
-    <Screen title="Канал" subtitle="Хидая живёт в Telegram. Здесь — всё, что нужно, чтобы присоединиться.">
+    <Screen title="Канал" subtitle="Хидая живёт в Telegram. Здесь — всё, что нужно, чтобы присоединиться." back={{ label: 'Главная', onClick: () => go('home') }}>
       <div className="grid gap-3 lg:grid-cols-[1.15fr_0.85fr]">
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 160, damping: 22 }} className="relative overflow-hidden rounded-[34px] p-7 text-white" style={{ background: 'linear-gradient(160deg,#256b4d,#0b2a1d)' }}>
-          <svg aria-hidden viewBox="-110 -110 220 220" className="absolute -right-24 -top-24 w-[26rem] max-w-none opacity-[0.12]" fill="none" stroke="#fff" strokeWidth="0.8">
-            <rect x="-80" y="-80" width="160" height="160" />
-            <rect x="-80" y="-80" width="160" height="160" transform="rotate(45)" />
-            <rect x="-50" y="-50" width="100" height="100" transform="rotate(22.5)" />
-            <rect x="-50" y="-50" width="100" height="100" transform="rotate(67.5)" />
-          </svg>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 160, damping: 22 }} className="relative overflow-hidden rounded-[28px] p-7 text-white" style={{ background: 'linear-gradient(160deg,#256b4d,#0b2a1d)' }}>
+          
           <div className="relative flex items-center gap-4">
-            <span className="glass grid size-16 place-items-center rounded-[20px] text-white">
-              <StarMark size={36} accent="#d3bd8a" />
-            </span>
+            <span lang="ar" className="grid size-16 place-items-center rounded-[18px] bg-white/15 pb-2 text-[3.2rem] leading-none text-white">ه</span>
             <div>
               <p className="text-[22px] font-bold leading-tight tracking-[-0.03em]">𝐇𝐈𝐃𝐀𝐘𝐀</p>
               <p className="text-[15px] opacity-75">@hidaya_islam1 · Telegram-канал</p>
@@ -46,7 +38,7 @@ export function ChannelView() {
           </motion.a>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 160, damping: 22, delay: 0.08 }} className="grid place-items-center rounded-[34px] bg-surface p-7 text-center">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 160, damping: 22, delay: 0.08 }} className="grid place-items-center rounded-[28px] bg-surface p-7 text-center">
           <div className="size-[11rem] overflow-hidden rounded-[22px] border border-sep bg-white p-1.5"><QrCode qr={qr} label="QR-код со ссылкой на Telegram-канал Хидаи" /></div>
           <p className="mt-4 max-w-[15rem] text-[15px] leading-snug text-label2">Наведите камеру телефона на код — канал откроется в Telegram.</p>
           <p className="mt-1 text-[14px] font-semibold text-tint">t.me/hidaya_islam1</p>
@@ -64,7 +56,7 @@ export function ChannelView() {
             </Row>
           ))}
         </Group>
-        <Group header="В канале" footer={`На сайте — ${posts.length} последних текстовых публикаций. Данные обновлены ${updated}.`}>
+        <Group header="В канале" footer={`На сайте — ${posts.length} текстовых публикаций канала. Данные обновлены ${updated}.`}>
           {stats.map((s) => (
             <Row key={s.label} chevron={false}>
               <div className="flex items-center justify-between">

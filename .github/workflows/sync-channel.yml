@@ -1,0 +1,30 @@
+name: Обновление публикаций канала
+
+# Раз в час забирает новые публикации с t.me/s/hidaya_islam1 и коммитит data/channel.json.
+# Хостинг (Vercel, Netlify, Cloudflare Pages), подключённый к репозиторию, сам пересоберёт сайт после коммита.
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/sync-telegram.mjs
+      - name: Commit if changed
+        run: |
+          if [ -n "$(git status --porcelain data/channel.json)" ]; then
+            git config user.name "hidaya-sync"
+            git config user.email "actions@users.noreply.github.com"
+            git add data/channel.json
+            git commit -m "Обновление публикаций канала"
+            git push
+          fi

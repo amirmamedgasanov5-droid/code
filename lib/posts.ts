@@ -74,6 +74,16 @@ function derivePreview(p: RawPost, title: string): string {
   return cut((body.length ? body : paras).join(' '), 230);
 }
 
+function deriveRefs(p: RawPost): [number, number, number] | undefined {
+  const pairs = p.paragraphs
+    .filter((x) => /^Толкование/i.test(x.t))
+    .flatMap((h) => [...h.t.matchAll(/(\d{1,3}):(\d{1,3})/g)].map((m) => [Number(m[1]), Number(m[2])] as const));
+  if (!pairs.length) return undefined;
+  const sura = pairs[0][0];
+  const ay = pairs.filter((x) => x[0] === sura).map((x) => x[1]);
+  return sura >= 1 && sura <= 114 ? [sura, Math.min(...ay), Math.max(...ay)] : undefined;
+}
+
 export function getPosts(): Post[] {
   return (channelJson.posts as RawPost[])
     .map((raw) => {
@@ -89,6 +99,7 @@ export function getPosts(): Post[] {
         category: classify(raw),
         paragraphs: raw.paragraphs,
         minutes: Math.max(1, Math.round(words / 180)),
+        refs: deriveRefs(raw),
       } satisfies Post;
     })
     .sort((a, b) => b.id - a.id);

@@ -3,28 +3,36 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useRef } from 'react';
 import { useApp, type Tab } from './AppProvider';
+import { Reader } from './Reader';
+import { Splash } from './Splash';
+import { TabBar } from './TabBar';
+import { BookmarksView } from './views/BookmarksView';
 import { ChannelView } from './views/ChannelView';
 import { FeedView } from './views/FeedView';
 import { HomeView } from './views/HomeView';
 import { LibraryView } from './views/LibraryView';
 import { TodayView } from './views/TodayView';
-import { Reader } from './Reader';
-import { Splash } from './Splash';
-import { TabBar } from './TabBar';
 
 const VIEWS: Record<Tab, React.ComponentType> = {
   home: HomeView,
   library: LibraryView,
   feed: FeedView,
+  bookmarks: BookmarksView,
   today: TodayView,
   channel: ChannelView,
 };
 
-function Ambient() {
+function Toast() {
+  const { toastMsg } = useApp();
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      <div className="blob blob-a -left-[10vw] -top-[12vh] size-[55vmax] max-h-[44rem] max-w-[44rem]" />
-      <div className="blob blob-b -bottom-[16vh] -right-[12vw] size-[50vmax] max-h-[40rem] max-w-[40rem]" />
+    <div className="pointer-events-none fixed inset-x-0 top-[max(14px,env(safe-area-inset-top))] z-[120] flex justify-center">
+      <AnimatePresence>
+        {toastMsg && (
+          <motion.div key={toastMsg} initial={{ opacity: 0, y: -24, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -16, scale: 0.95 }} transition={{ type: 'spring', stiffness: 400, damping: 28 }} role="status" className="glass rounded-full px-5 py-2.5 text-[15px] font-semibold">
+            {toastMsg}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -47,14 +55,13 @@ export function Shell() {
   const View = VIEWS[tab];
   return (
     <>
-      <Ambient />
       <main id="main" className="md:pl-[6.5rem]">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={tab}
-            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 18, scale: 0.985 }}
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.988 }}
             animate={{ opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 260, damping: 28 } }}
-            exit={{ opacity: 0, scale: reduce ? 1 : 0.985, transition: { duration: 0.14 } }}
+            exit={{ opacity: 0, scale: reduce ? 1 : 0.988, transition: { duration: 0.13 } }}
             onAnimationStart={(def) => {
               if (typeof def === 'object' && 'y' in def && def.y === 0) window.scrollTo(0, saved.current[tab] ?? 0);
             }}
@@ -65,6 +72,7 @@ export function Shell() {
       </main>
       <TabBar />
       <Reader />
+      <Toast />
       <Splash />
     </>
   );

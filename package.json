@@ -26,12 +26,14 @@
     "server-only": "^0.0.1"
   },
   "devDependencies": {
+    "@kazishariar/hisnul-muslim-data": "^1.0.3",
     "@tailwindcss/postcss": "^4.3.5",
     "@types/node": "^26.6.6",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "postcss": "^8.5.33",
+    "quran-meta": "^7.0.0",
     "tailwindcss": "^4.3.5",
     "typescript": "5.9"
   }
