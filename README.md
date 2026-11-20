@@ -1,11 +1,56 @@
-<div align="center">
+# Хидая · هداية
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+Сайт Telegram-канала **[@hidaya_islam1](https://t.me/hidaya_islam1)** — канала для сестёр с тафсиром ас-Саади,
+хадисами, дуа и ежедневными напоминаниями на русском языке.
 
-  <h1>Built with AI Studio</h2>
+Next.js 15 (статический экспорт) · TypeScript · Tailwind CSS 4 · Framer Motion · Lucide.
+Шрифты ставятся из npm (`@fontsource`), внешних запросов при просмотре нет.
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## Запуск
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+```bash
+npm install
+npm run dev          # разработка
+npm run build        # синхронизация с Telegram + сборка в ./out
+npm run start        # посмотреть ./out локально
+```
 
-</div>
+Для публикации достаточно залить папку `out/` на любой статический хостинг. Укажите адрес сайта для OG-тегов и sitemap:
+
+```bash
+NEXT_PUBLIC_SITE_URL=https://ваш-домен npm run build
+```
+
+## Откуда берутся публикации
+
+Ничего не выдумано и не вписано вручную. `scripts/sync-telegram.mjs` читает публичную веб-ленту
+`t.me/s/hidaya_islam1`, очищает декоративные эмодзи и сохраняет тексты в `data/channel.json`
+(в репозитории лежит актуальный снимок). Если Telegram недоступен, сборка использует этот снимок.
+
+```bash
+npm run sync                  # обновить данные (Node ≥ 22.21 за прокси: NODE_USE_ENV_PROXY=1)
+SYNC_PAGES=40 npm run sync    # глубже в историю (≈20 сообщений на страницу)
+```
+
+Новые публикации сами попадают в ленту, рубрики определяются по тексту. Редакторская настройка — в `data/curation.ts`:
+рубрика и короткое название для конкретного поста, список «Избранного». Цитата в «Избранном» показывается,
+только если она дословно есть в тексте публикации.
+
+Полный текст каждого поста отдаётся статическим файлом `/posts/<id>.json` и подгружается при открытии читалки,
+поэтому главная страница остаётся лёгкой. Ссылка вида `/#post-4039` открывает публикацию сразу.
+
+## Структура
+
+| Путь | Что там |
+| --- | --- |
+| `app/` | layout, метаданные (OG, JSON-LD), robots, sitemap, `/posts/[id].json` |
+| `components/` | Hero, About, Knowledge, Publications, Featured, Community, Footer, Nav, Reader, Loader |
+| `lib/geometry.ts` | построение восьмиугольной геометрии эмблемы |
+| `lib/posts.ts` | загрузка, рубрики, названия, превью |
+| `data/` | `channel.json` (снимок канала), `curation.ts` |
+
+## Дизайн-система
+
+Слоновая кость `#f5f0e6`, глубокий лесной зелёный `#1e3b2e`, приглушённое шампань-золото `#b39a66` (только линии и акценты),
+почти чёрный `#141613`. Cormorant Garamond — заголовки, Inter — текст, Amiri / Amiri Quran — арабский (RTL).
+Анимации уважают `prefers-reduced-motion`.
