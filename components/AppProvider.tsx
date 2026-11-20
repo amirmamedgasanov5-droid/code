@@ -2,65 +2,79 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { MotionConfig } from 'framer-motion';
-import type { CategoryId, PostLite } from '@/lib/types';
-import { Loader } from './Loader';
-import { Reader } from './Reader';
+import type { Qr } from './QrCode';
+import type { CategoryId, FeaturedItem, PostLite } from '@/lib/types';
 
-type Filter = CategoryId | 'all';
+export type Tab = 'home' | 'library' | 'feed' | 'today' | 'channel';
+export const TAB_IDS: Tab[] = ['home', 'library', 'feed', 'today', 'channel'];
 
-type Ctx = {
-  ready: boolean;
-  filter: Filter;
-  setFilter: (f: Filter) => void;
+export type AppData = {
   posts: PostLite[];
+  featured: FeaturedItem[];
+  items: { id: CategoryId; count: number; latest: PostLite | null }[];
+  stats: { label: string; value: number; suffix?: string }[];
+  telegramUrl: string;
+  qr: Qr;
+  updated: string;
+  fridayPostId?: number;
+};
+
+type Ctx = AppData & {
+  tab: Tab;
+  go: (t: Tab) => void;
+  ready: boolean;
+  setReady: (v: boolean) => void;
+  filter: CategoryId | 'all';
+  setFilter: (f: CategoryId | 'all') => void;
   openId: number | null;
   open: (id: number) => void;
   close: () => void;
-  telegramUrl: string;
 };
 
 const AppCtx = createContext<Ctx | null>(null);
-
 export function useApp() {
   const c = useContext(AppCtx);
   if (!c) throw new Error('useApp outside provider');
   return c;
 }
 
-export function AppProvider({
-  posts,
-  telegramUrl,
-  children,
-}: {
-  posts: PostLite[];
-  telegramUrl: string;
-  children: React.ReactNode;
-}) {
+export function AppProvider({ data, children }: { data: AppData; children: React.ReactNode }) {
+  const [tab, setTab] = useState<Tab>('home');
   const [ready, setReady] = useState(false);
-  const [filter, setFilter] = useState<Filter>('all');
+  const [filter, setFilter] = useState<CategoryId | 'all'>('all');
   const [openId, setOpenId] = useState<number | null>(null);
 
-  const open = useCallback((id: number) => setOpenId(id), []);
-  const close = useCallback(() => setOpenId(null), []);
-
-  // открыть публикацию по ссылке вида #post-4039
-  useEffect(() => {
-    const m = window.location.hash.match(/^#post-(\d+)$/);
-    if (m) setOpenId(Number(m[1]));
+  const go = useCallback((t: Tab) => {
+    setTab(t);
+    history.replaceState(null, '', t === 'home' ? location.pathname : `#${t}`);
   }, []);
 
-  const value = useMemo(
-    () => ({ ready, filter, setFilter, posts, openId, open, close, telegramUrl }),
-    [ready, filter, posts, openId, open, close, telegramUrl],
+  useEffect(() => {
+    const h = location.hash.slice(1);
+    const m = h.match(/^post-(\d+)$/);
+    if (m) setOpenId(Number(m[1]));
+    else if ((TAB_IDS as string[]).includes(h)) setTab(h as Tab);
+  }, []);
+
+  const value = useMemo<Ctx>(
+    () => ({
+      ...data,
+      tab,
+      go,
+      ready,
+      setReady,
+      filter,
+      setFilter,
+      openId,
+      open: (id) => setOpenId(id),
+      close: () => setOpenId(null),
+    }),
+    [data, tab, go, ready, filter, openId],
   );
 
   return (
     <AppCtx.Provider value={value}>
-      <MotionConfig reducedMotion="user">
-        <Loader onDone={() => setReady(true)} />
-        {children}
-        <Reader />
-      </MotionConfig>
+      <MotionConfig reducedMotion="user">{children}</MotionConfig>
     </AppCtx.Provider>
   );
 }

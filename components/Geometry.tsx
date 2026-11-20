@@ -2,7 +2,7 @@
 
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { ring, star } from '@/lib/geometry';
-import { EXPO } from './motion';
+const EXPO = [0.16, 1, 0.3, 1] as const;
 
 type Layer = { d: string; w: number; o: number; gold?: boolean; spin?: 'fwd' | 'rev'; depth: number };
 
@@ -55,7 +55,7 @@ export function Emblem({ animate = true, className = '', word = true }: { animat
             <motion.path
               d={l.d}
               fill="none"
-              stroke={l.gold ? '#b39a66' : '#1e3b2e'}
+              style={{ stroke: l.gold ? 'var(--gold)' : 'var(--tint)' }}
               strokeWidth={l.w}
               strokeLinejoin="round"
               strokeOpacity={l.o}
@@ -70,18 +70,17 @@ export function Emblem({ animate = true, className = '', word = true }: { animat
           initial={animate ? { opacity: 0 } : false}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.2, duration: 1.2 }}
-          style={{ fill: '#fbf8f2' }}
+          style={{ fill: 'var(--surface)' }}
         />
-        <path d={ring(8, 120, 0)} fill="none" stroke="#1e3b2e" strokeWidth="1.4" />
-        <path d={ring(8, 109, 0)} fill="none" stroke="#b39a66" strokeWidth="0.9" />
+        <path d={ring(8, 120, 0)} fill="none" style={{ stroke: 'var(--tint)' }} strokeWidth="1.4" />
+        <path d={ring(8, 109, 0)} fill="none" style={{ stroke: 'var(--gold)' }} strokeWidth="0.9" />
         {word && (
           <motion.text
             x="0"
             y="31"
             textAnchor="middle"
             fontSize="94"
-            fill="#112219"
-            style={{ fontFamily: 'var(--font-arabic)' }}
+            style={{ fontFamily: 'var(--font-arabic)', fill: 'var(--label)' }}
             direction="rtl"
             initial={animate ? { opacity: 0, y: 14 } : false}
             animate={{ opacity: 1, y: 0 }}
@@ -95,13 +94,13 @@ export function Emblem({ animate = true, className = '', word = true }: { animat
   );
 }
 
-/** Только линейная звезда без слова — для маленьких знаков и загрузки. */
-export function StarMark({ size = 28, stroke = '#1e3b2e', accent = '#b39a66' }: { size?: number; stroke?: string; accent?: string }) {
+/** Знак Хидаи: две перекрещённые квадратные рамки. Цвет — currentColor и золото. */
+export function StarMark({ size = 28, accent = 'var(--gold)' }: { size?: number; accent?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none" aria-hidden>
-      <g strokeWidth="2.2" strokeLinejoin="round">
-        <rect x="15" y="15" width="34" height="34" stroke={stroke} />
-        <rect x="15" y="15" width="34" height="34" transform="rotate(45 32 32)" stroke={accent} />
+      <g strokeWidth="2.6" strokeLinejoin="round">
+        <rect x="15" y="15" width="34" height="34" stroke="currentColor" />
+        <rect x="15" y="15" width="34" height="34" transform="rotate(45 32 32)" style={{ stroke: accent }} />
       </g>
     </svg>
   );

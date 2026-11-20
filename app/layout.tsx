@@ -36,7 +36,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#f5f0e6',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f3f2ee' },
+    { media: '(prefers-color-scheme: dark)', color: '#090c0b' },
+  ],
+  viewportFit: 'cover',
   width: 'device-width',
   initialScale: 1,
 };
@@ -61,17 +65,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
         <noscript>
-          <style>{`.loader{display:none!important}[data-reveal]{opacity:1!important;transform:none!important}`}</style>
+          <style>{`.splash{display:none!important}`}</style>
         </noscript>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </head>
       <body>
-        <a
-          href="#main"
-          className="fixed left-4 top-4 z-[200] -translate-y-24 rounded-full bg-forest px-5 py-3 text-sm text-ivory transition-transform focus:translate-y-0"
-        >
-          Перейти к содержимому
-        </a>
         {children}
       </body>
     </html>
