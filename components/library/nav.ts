@@ -12,7 +12,19 @@ export function routeLabel(r?: Route): string {
     case 'coll':
       return HADITH_NAMES[r.c]?.ru ?? 'Сборник';
     case 'hisn':
-      return 'Хисн аль-Муслим';
+      return 'Азкары';
+    case 'names':
+      return '99 имён';
+    case 'indexes':
+      return 'Указатели';
+    case 'quizzes':
+      return 'Викторины';
+    case 'books':
+      return 'Путь знаний';
+    case 'tafsirs':
+      return 'Тафсир';
+    case 'tafsir':
+      return 'Тафсир';
     case 'sura':
       return 'Сура';
     case 'book':

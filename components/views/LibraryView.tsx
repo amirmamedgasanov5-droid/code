@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { BookOpen, CircleHelp, HandHeart, Layers, Newspaper, Quote, ScrollText } from 'lucide-react';
+import { BookMarked, BookOpen, CircleHelp, Gem, HandHeart, Layers, ListTree, Newspaper, Quote, ScrollText, Trophy } from 'lucide-react';
 import { useDeferredValue, useEffect, useRef, useState } from 'react';
 import { COLLECTIONS, hadithIndex, quranIndex, quranRu, type HadithIndex, type QuranIndex } from '@/lib/client-data';
 import { HADITH_NAMES, norm } from '@/lib/library-meta';
@@ -9,7 +9,12 @@ import { useApp, type Route } from '../AppProvider';
 import { BookScreen, CollScreen, HadithScreen } from '../library/Hadith';
 import { HisnScreen, HisnSectionScreen } from '../library/Hisn';
 import { QuranScreen, SuraScreen } from '../library/Quran';
+import { IndexScreen, IndexesScreen } from '../library/Indexes';
+import { NameScreen, NamesScreen } from '../library/Names';
+import { QuizScreen, QuizzesScreen } from '../library/Quiz';
+import { BooksScreen } from '../library/Books';
 import { SourcesScreen } from '../library/Sources';
+import { TafsirScreen, TafsirsScreen, TafsirSuraScreen } from '../library/Tafsir';
 import { SearchField } from '../library/Cards';
 import { PostRow } from '../PostRow';
 import { Screen } from '../Screen';
@@ -75,6 +80,14 @@ function Results({ q }: { q: string }) {
           ))}
         </Group>
       )}
+      <Group header="Тафсир">
+        <Row onClick={() => push({ k: 'tafsir', id: 'saadi', q: q.trim() })}>
+          <p className="text-[16px]">Искать «{q.trim()}» в <span className="font-semibold">тафсире ас-Саади</span></p>
+        </Row>
+        <Row onClick={() => push({ k: 'tafsir', id: 'kathir', q: q.trim() })} last>
+          <p className="text-[16px]">Искать «{q.trim()}» в <span className="font-semibold">тафсире Ибн Касира</span></p>
+        </Row>
+      </Group>
       <Group header="Хадисы">
         {COLLECTIONS.map((c, i) => (
           <Row key={c} onClick={() => push({ k: 'coll', c, q: q.trim() })} last={i === COLLECTIONS.length - 1}>
@@ -113,30 +126,51 @@ function Root() {
           <Results q={dq} />
         ) : (
           <>
-            <Group header="Коран" footer="Арабский текст и перевод Э. Кулиева. Закладки, продолжение чтения, настройка шрифта.">
+            <Group header="Коран" footer="Арабский текст и перевод Э. Кулиева. Переводы Э. Кулиева и Абу Адель, тафсир к каждому аяту, закладки, продолжение чтения.">
               <Row onClick={() => push({ k: 'quran' })}>
-                <div className="flex items-center gap-3"><Tile Icon={BookOpen} color="#2f7d5b" /><div><p className="text-[17px]">Коран</p><p className="text-[13px] text-label2">114 сур · 6 236 аятов</p></div></div>
+                <div className="flex items-center gap-3"><Tile Icon={BookOpen} color="#2f7d5b" /><div><p className="text-[17px]">Коран</p><p className="text-[13px] text-label2">114 сур · 6 236 аятов · 2 перевода</p></div></div>
               </Row>
               <Row onClick={() => push({ k: 'quran', juz: true })} last>
                 <div className="flex items-center gap-3"><Tile Icon={Layers} color="#2b6e8f" /><div><p className="text-[17px]">Джузы</p><p className="text-[13px] text-label2">30 частей для чтения по порядку</p></div></div>
               </Row>
             </Group>
 
-            <Group header="Хадисы">
-              <Row onClick={() => push({ k: 'hadith' })} last>
-                <div className="flex items-center gap-3"><Tile Icon={Quote} color="#b8893b" /><div><p className="text-[17px]">Хадисы</p><p className="text-[13px] text-label2">Бухари, Муслим, Абу Дауд{hadiths ? ` · ${fmt(hadiths)} ${plural(hadiths, 'хадис', 'хадиса', 'хадисов')}` : ''}</p></div></div>
+            <Group header="Тафсир" footer="Толкование каждого аята на русском: три книги. Кнопка «Тафсир» есть и рядом с каждым аятом.">
+              <Row onClick={() => push({ k: 'tafsirs' })} last>
+                <div className="flex items-center gap-3"><Tile Icon={ScrollText} color="#2b6e8f" /><div><p className="text-[17px]">Тафсир Корана</p><p className="text-[13px] text-label2">Ас-Саади · Ибн Касир · Аль-Мухтасар</p></div></div>
               </Row>
             </Group>
 
-            <Group header="Дуа">
+            <Group header="Хадисы" footer="Только достоверные: два «Сахиха» и «сахих» из четырёх Сунанов по оценке аль-Албани.">
+              <Row onClick={() => push({ k: 'hadith' })} last>
+                <div className="flex items-center gap-3"><Tile Icon={Quote} color="#b8893b" /><div><p className="text-[17px]">Хадисы</p><p className="text-[13px] text-label2">Только достоверные{hadiths ? ` · ${fmt(hadiths)} ${plural(hadiths, 'хадис', 'хадиса', 'хадисов')}` : ''}</p></div></div>
+              </Row>
+            </Group>
+
+            <Group header="Имена Аллаха и азкары" footer="99 имён — с местами упоминания в Коране, подсчитанными по тексту. Азкары — из «Хисн аль-Муслим» с числом повторений.">
+              <Row onClick={() => push({ k: 'names' })}>
+                <div className="flex items-center gap-3"><Tile Icon={Gem} color="#b8893b" /><div><p className="text-[17px]">99 имён Аллаха</p><p className="text-[13px] text-label2">Смысл, написание, упоминания в Коране</p></div></div>
+              </Row>
               <Row onClick={() => push({ k: 'hisn' })} last>
-                <div className="flex items-center gap-3"><Tile Icon={HandHeart} color="#6b5bb0" /><div><p className="text-[17px]">Хисн аль-Муслим</p><p className="text-[13px] text-label2">298 дуа и азкаров · арабский текст</p></div></div>
+                <div className="flex items-center gap-3"><Tile Icon={HandHeart} color="#6b5bb0" /><div><p className="text-[17px]">Азкары</p><p className="text-[13px] text-label2">Хисн аль-Муслим · 267 текстов, 132 раздела</p></div></div>
+              </Row>
+            </Group>
+
+            <Group header="Учиться и проверять себя">
+              <Row onClick={() => push({ k: 'quizzes' })}>
+                <div className="flex items-center gap-3"><Tile Icon={Trophy} color="#d9822b" /><div><p className="text-[17px]">Викторины</p><p className="text-[13px] text-label2">7 видов вопросов по Корану и именам Аллаха</p></div></div>
+              </Row>
+              <Row onClick={() => push({ k: 'indexes' })}>
+                <div className="flex items-center gap-3"><Tile Icon={ListTree} color="#2b6e8f" /><div><p className="text-[17px]">Указатели</p><p className="text-[13px] text-label2">Страницы мусхафа, хизбы, манзили, саджды</p></div></div>
+              </Row>
+              <Row onClick={() => push({ k: 'books' })} last>
+                <div className="flex items-center gap-3"><Tile Icon={BookMarked} color="#7a5c45" /><div><p className="text-[17px]">Путь знаний</p><p className="text-[13px] text-label2">Основные труды учёных ахлю-сунны</p></div></div>
               </Row>
             </Group>
 
             <Group header="Из канала">
               <Row onClick={() => { setFilter('tafsir'); go('feed'); }}>
-                <div className="flex items-center gap-3"><Tile Icon={ScrollText} color="#2b6e8f" /><div><p className="text-[17px]">Тафсир ас-Саади</p><p className="text-[13px] text-label2">{tafsir} {plural(tafsir, 'публикация', 'публикации', 'публикаций')} в канале</p></div></div>
+                <div className="flex items-center gap-3"><Tile Icon={ScrollText} color="#2b6e8f" /><div><p className="text-[17px]">Тафсир ас-Саади из канала</p><p className="text-[13px] text-label2">{tafsir} {plural(tafsir, 'публикация', 'публикации', 'публикаций')}</p></div></div>
               </Row>
               <Row onClick={() => { setFilter('all'); go('feed'); }} last>
                 <div className="flex items-center gap-3"><Tile Icon={Newspaper} color="#c0566b" /><div><p className="text-[17px]">Все публикации</p><p className="text-[13px] text-label2">Обновляются автоматически · {fmt(Math.max(posts.length, 1))}+</p></div></div>
@@ -173,6 +207,26 @@ function render(r: Route | undefined) {
       return <HisnScreen />;
     case 'hisnsec':
       return <HisnSectionScreen i={r.i} />;
+    case 'tafsirs':
+      return <TafsirsScreen />;
+    case 'tafsir':
+      return <TafsirScreen id={r.id} q={r.q} />;
+    case 'tafsirsura':
+      return <TafsirSuraScreen id={r.id} n={r.n} a={r.a} />;
+    case 'names':
+      return <NamesScreen />;
+    case 'name':
+      return <NameScreen i={r.i} />;
+    case 'indexes':
+      return <IndexesScreen />;
+    case 'index':
+      return <IndexScreen kind={r.kind} />;
+    case 'quizzes':
+      return <QuizzesScreen />;
+    case 'quiz':
+      return <QuizScreen mode={r.mode} />;
+    case 'books':
+      return <BooksScreen />;
     case 'sources':
       return <SourcesScreen />;
   }

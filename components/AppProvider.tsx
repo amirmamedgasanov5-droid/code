@@ -19,11 +19,22 @@ export type Route =
   | { k: 'book'; c: string; b: number; n?: number }
   | { k: 'hisn' }
   | { k: 'hisnsec'; i: number }
+  | { k: 'names' }
+  | { k: 'name'; i: number }
+  | { k: 'indexes' }
+  | { k: 'index'; kind: IndexKind }
+  | { k: 'quizzes' }
+  | { k: 'quiz'; mode: string }
+  | { k: 'books' }
+  | { k: 'tafsirs' }
+  | { k: 'tafsir'; id: string; q?: string }
+  | { k: 'tafsirsura'; id: string; n: number; a?: number }
   | { k: 'sources' };
 
-export type BKind = 'quran' | 'hadith' | 'dua' | 'post';
+export type IndexKind = 'alpha' | 'place' | 'length' | 'page' | 'hizb' | 'manzil' | 'sajda';
+export type BKind = 'quran' | 'hadith' | 'dua' | 'name' | 'post';
 export type Bookmark = { id: string; kind: BKind; title: string; sub?: string; route?: Route[]; post?: number; ts: number };
-export type Settings = { arSize: number; translation: boolean; translit: boolean; hadithAr: boolean };
+export type Settings = { arSize: number; translation: boolean; translit: boolean; hadithAr: boolean; translationId: string; tafsirId: string };
 export type LastRead = { n: number; a: number; ts: number } | null;
 
 export type AppData = {
@@ -75,7 +86,7 @@ export function useApp() {
   return c;
 }
 
-const DEFAULTS: Settings = { arSize: 1.7, translation: true, translit: false, hadithAr: true };
+const DEFAULTS: Settings = { arSize: 1.7, translation: true, translit: false, hadithAr: true, translationId: 'kuliev', tafsirId: 'saadi' };
 
 export function AppProvider({ data, children }: { data: AppData; children: React.ReactNode }) {
   const [tab, setTab] = useState<Tab>('home');

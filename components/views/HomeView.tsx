@@ -1,9 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowUpRight, Bookmark, BookOpen, CalendarDays, ChevronRight, HandHeart, Newspaper, Quote } from 'lucide-react';
+import { ArrowUpRight, BookOpen, ChevronRight, Gem, HandHeart, Quote, ScrollText, Trophy } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { hadithBook, hadithIndex, quranIndex, sura as loadSura, type Hadith, type QuranIndex, type Sura } from '@/lib/client-data';
+import { COLLECTIONS, hadithBook, hadithIndex, quranIndex, sura as loadSura, type Hadith, type QuranIndex, type Sura } from '@/lib/client-data';
 import { HADITH_NAMES } from '@/lib/library-meta';
 import { hijriParts } from '@/lib/hijri';
 import { useApp } from '../AppProvider';
@@ -37,7 +37,7 @@ function useDaily() {
         const hi = await hadithIndex(c);
         for (let t = 0; t < 8 && alive; t++) {
           const bk = hi.books[rnd(50 + t) % hi.books.length];
-          const hs = (await hadithBook(c, bk.b)).filter((h) => h.ru.length > 90 && h.ru.length < 330);
+          const hs = (await hadithBook(c, bk.b)).filter((h) => h.x.length > 90 && h.x.length < 330);
           if (hs.length) {
             if (alive) setHadith({ c, b: bk.b, h: hs[rnd(70 + t) % hs.length] });
             break;
@@ -67,6 +67,10 @@ export function HomeView() {
   const { posts, featured, ready, go, open, openRoute, lastRead, telegramUrl, bookmarks } = useApp();
   const { ayah, hadith } = useDaily();
   const latest = posts[0];
+  const [hadithTotal, setHadithTotal] = useState(0);
+  useEffect(() => {
+    Promise.all(COLLECTIONS.map((c) => hadithIndex(c))).then((l) => setHadithTotal(l.reduce((s, i) => s + i.total, 0))).catch(() => {});
+  }, []);
   const [date, setDate] = useState<{ g: string; h: string } | null>(null);
   useEffect(() => {
     const n = new Date();
@@ -76,11 +80,11 @@ export function HomeView() {
   const show = ready ? 'show' : 'hidden';
   const sections = [
     { Icon: BookOpen, label: 'Коран', color: '#2f7d5b', go: () => openRoute([{ k: 'quran' }]) },
+    { Icon: ScrollText, label: 'Тафсир', color: '#2b6e8f', go: () => openRoute([{ k: 'tafsirs' }]) },
     { Icon: Quote, label: 'Хадисы', color: '#b8893b', go: () => openRoute([{ k: 'hadith' }]) },
-    { Icon: HandHeart, label: 'Дуа', color: '#6b5bb0', go: () => openRoute([{ k: 'hisn' }]) },
-    { Icon: Newspaper, label: 'Лента', color: '#c0566b', go: () => go('feed') },
-    { Icon: Bookmark, label: 'Закладки', color: '#d9822b', go: () => go('bookmarks') },
-    { Icon: CalendarDays, label: 'Сегодня', color: '#2b6e8f', go: () => go('today') },
+    { Icon: HandHeart, label: 'Азкары', color: '#6b5bb0', go: () => openRoute([{ k: 'hisn' }]) },
+    { Icon: Gem, label: '99 имён', color: '#c0566b', go: () => openRoute([{ k: 'names' }]) },
+    { Icon: Trophy, label: 'Викторины', color: '#d9822b', go: () => openRoute([{ k: 'quizzes' }]) },
   ];
 
   return (
@@ -112,7 +116,7 @@ export function HomeView() {
 
           <Card onClick={hadith ? () => openRoute([{ k: 'hadith' }, { k: 'coll', c: hadith.c }, { k: 'book', c: hadith.c, b: hadith.b, n: hadith.h.n }]) : undefined} className="min-h-[15rem]">
             <p className="text-[12px] font-semibold uppercase tracking-[0.05em] text-tint">Хадис дня{hadith ? ` · ${HADITH_NAMES[hadith.c].ru} № ${hadith.h.n}` : ''}</p>
-            {hadith ? <p className="mt-3 line-clamp-[9] text-[17px] leading-[1.42]">{hadith.h.ru}</p> : <div className="mt-4 space-y-3"><div className="h-4 w-full animate-pulse rounded-full bg-fill" /><div className="h-4 w-5/6 animate-pulse rounded-full bg-fill" /><div className="h-4 w-2/3 animate-pulse rounded-full bg-fill" /></div>}
+            {hadith ? <p className="mt-3 line-clamp-[9] text-[17px] leading-[1.42]">{hadith.h.x}</p> : <div className="mt-4 space-y-3"><div className="h-4 w-full animate-pulse rounded-full bg-fill" /><div className="h-4 w-5/6 animate-pulse rounded-full bg-fill" /><div className="h-4 w-2/3 animate-pulse rounded-full bg-fill" /></div>}
           </Card>
         </div>
 
@@ -173,8 +177,8 @@ export function HomeView() {
           </div>
           <div className="rounded-[26px] bg-surface p-6">
             <p className="text-[12px] font-semibold uppercase tracking-[0.05em] text-label2">В вашей библиотеке</p>
-            <p className="mt-2 text-[34px] font-bold leading-none tracking-[-0.045em] tabular-nums">{fmt(6236 + 14823 + 298 + posts.length)}</p>
-            <p className="mt-1 text-[14px] text-label2">аятов, хадисов, дуа и публикаций</p>
+            <p className="mt-2 text-[34px] font-bold leading-none tracking-[-0.045em] tabular-nums">{fmt(6236 + hadithTotal + 298 + posts.length)}</p>
+            <p className="mt-1 text-[14px] text-label2">аятов, хадисов, дуа и публикаций; плюс тафсир на все 114 сур</p>
             <p className="mt-3 text-[14px] text-label2">Закладок: <span className="font-semibold text-label">{bookmarks.length}</span></p>
           </div>
         </motion.div>

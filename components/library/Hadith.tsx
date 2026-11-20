@@ -2,31 +2,49 @@
 
 import { motion } from 'framer-motion';
 import { useDeferredValue, useEffect, useRef, useState } from 'react';
-import { COLLECTIONS, hadithBook, hadithIndex, type Hadith, type HadithIndex } from '@/lib/client-data';
-import { HADITH_NAMES, norm } from '@/lib/library-meta';
+import { COLLECTIONS, hadithBook, hadithChunk, hadithIndex, type Hadith, type HadithIndex } from '@/lib/client-data';
+import { FORTY_COLLECTIONS, HADITH_NAMES, MAIN_COLLECTIONS, SUNAN_COLLECTIONS, norm } from '@/lib/library-meta';
 import { useApp, type Route } from '../AppProvider';
 import { Screen } from '../Screen';
 import { Group, Row, fmt, plural } from '../ui';
 import { Actions, SearchField } from './Cards';
 import { useBack } from './nav';
 
-export function HadithCard({ c, b, h, flash }: { c: string; b: number; h: Hadith; flash?: boolean }) {
+const bookTitle = (b: number, en?: string) => (b === 0 ? (en ? 'Вступление' : 'Без раздела') : `Книга ${b}`);
+
+export function HadithCard({ c, h, lang, flash }: { c: string; h: Hadith; lang: 'ru' | 'en'; flash?: boolean }) {
   const { settings } = useApp();
   const name = HADITH_NAMES[c].ru;
-  const route: Route[] = [{ k: 'hadith' }, { k: 'coll', c }, { k: 'book', c, b, n: h.n }];
+  const route: Route[] = [{ k: 'hadith' }, { k: 'coll', c }, { k: 'book', c, b: h.b, n: h.n }];
   return (
     <motion.article id={`h-${h.n}`} animate={{ backgroundColor: flash ? 'var(--tint-soft)' : 'rgba(0,0,0,0)' }} transition={{ duration: 0.6 }} className="relative scroll-mt-28 px-4 pb-4 pt-3">
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <span className="rounded-full bg-tint-soft px-2.5 py-1 text-[12px] font-bold tabular-nums text-tint">№ {h.n}</span>
+          {lang === 'en' && <span className="rounded-full bg-fill px-2.5 py-1 text-[12px] font-semibold text-label2">English</span>}
           {h.g && <span className="rounded-full bg-fill px-2.5 py-1 text-[12px] font-semibold text-label2">{h.g}</span>}
         </div>
-        <Actions markId={`h:${c}:${h.n}`} mark={{ id: `h:${c}:${h.n}`, kind: 'hadith', title: `${name}, № ${h.n}`, sub: h.ru, route }} text={`${h.ru}\n\n— ${name}, хадис № ${h.n}`} />
+        <Actions markId={`h:${c}:${h.n}`} mark={{ id: `h:${c}:${h.n}`, kind: 'hadith', title: `${name}, № ${h.n}`, sub: h.x, route }} text={`${h.x}\n\n— ${name}, хадис № ${h.n}`} />
       </div>
-      {settings.hadithAr && h.ar && <p lang="ar" dir="rtl" className="quran mt-2 text-right text-[1.45rem] leading-[2.1]">{h.ar}</p>}
-      <p className="mt-2 whitespace-pre-line text-[17px] leading-[1.5]">{h.ru}</p>
+      {settings.hadithAr && h.a && <p lang="ar" dir="rtl" className="quran mt-2 text-right text-[1.45rem] leading-[2.1]">{h.a}</p>}
+      <p lang={lang} className="mt-2 whitespace-pre-line text-[17px] leading-[1.5]">{h.x}</p>
       <span aria-hidden className="absolute bottom-0 left-4 right-0 h-px bg-sep" />
     </motion.article>
+  );
+}
+
+function CollRow({ c, x, last, onClick }: { c: string; x?: HadithIndex; last: boolean; onClick: () => void }) {
+  const m = HADITH_NAMES[c];
+  return (
+    <Row onClick={onClick} last={last}>
+      <div className="flex items-center gap-3">
+        <div className="min-w-0 flex-1 py-0.5">
+          <p className="text-[17px] font-medium leading-tight">{m.ru}</p>
+          <p className="text-[13px] text-label2">{m.author}{x ? ` · ${fmt(x.total)} ${plural(x.total, 'хадис', 'хадиса', 'хадисов')}${x.books.length > 1 ? ` · ${x.books.length} книг` : ''}` : ''}</p>
+        </div>
+        <span lang="ar" dir="rtl" className="text-[21px] leading-none">{m.ar}</span>
+      </div>
+    </Row>
   );
 }
 
@@ -39,31 +57,23 @@ export function HadithScreen() {
   }, []);
   const total = Object.values(idx).reduce((s, i) => s + i.total, 0);
   return (
-    <Screen title="Хадисы" subtitle={total ? `${fmt(total)} хадисов на русском и арабском` : 'Три сборника на русском и арабском'} back={back}>
-      <Group footer="Тексты — из открытого набора данных. Русский перевод в нём есть не для всех хадисов: показаны только переведённые. Для проверки сверяйтесь с печатными изданиями.">
-        {COLLECTIONS.map((c, i) => {
-          const m = HADITH_NAMES[c];
-          const x = idx[c];
-          return (
-            <Row key={c} onClick={() => push({ k: 'coll', c })} last={i === COLLECTIONS.length - 1}>
-              <div className="flex items-center gap-3">
-                <div className="min-w-0 flex-1 py-0.5">
-                  <p className="text-[17px] font-medium leading-tight">{m.ru}</p>
-                  <p className="text-[13px] text-label2">{m.author}{x ? ` · ${fmt(x.total)} ${plural(x.total, 'хадис', 'хадиса', 'хадисов')} · ${x.books.length} книг` : ''}</p>
-                </div>
-                <span lang="ar" dir="rtl" className="text-[21px] leading-none">{m.ar}</span>
-              </div>
-            </Row>
-          );
-        })}
-      </Group>
+    <Screen title="Хадисы" subtitle={total ? `${fmt(total)} хадисов — только достоверные` : 'Только достоверные хадисы'} back={back}>
+      <div className="space-y-6">
+        <Group header="Два «Сахиха»" footer="Самые достоверные книги после Книги Аллаха. Русский перевод есть не у всех хадисов — показаны переведённые.">
+          {MAIN_COLLECTIONS.map((c, i) => <CollRow key={c} c={c} x={idx[c]} last={i === MAIN_COLLECTIONS.length - 1} onClick={() => push({ k: 'coll', c })} />)}
+        </Group>
+        <Group header="Четыре «Сунана» — только сахих" footer="Из этих сборников приводятся лишь хадисы, которые аль-Албани оценил как «сахих» (по данным hadith-api); слабые хадисы намеренно не показываются. Абу Дауд — на русском, остальные — на английском с арабским текстом.">
+          {SUNAN_COLLECTIONS.map((c, i) => <CollRow key={c} c={c} x={idx[c]} last={i === SUNAN_COLLECTIONS.length - 1} onClick={() => push({ k: 'coll', c })} />)}
+        </Group>
+        <Group header="Сорок хадисов" footer="Арабский текст и перевод на английский — в источнике нет русского перевода.">
+          {FORTY_COLLECTIONS.map((c, i) => <CollRow key={c} c={c} x={idx[c]} last={i === FORTY_COLLECTIONS.length - 1} onClick={() => push({ k: 'coll', c })} />)}
+        </Group>
+      </div>
     </Screen>
   );
 }
 
-const bookTitle = (b: number, en?: string) => (b === 0 ? (en ? 'Вступление' : 'Без раздела') : `Книга ${b}`);
-
-type Hit = { b: number; h: Hadith };
+type Hit = { h: Hadith };
 
 export function CollScreen({ c, q: q0 }: { c: string; q?: string }) {
   const { push } = useApp();
@@ -77,7 +87,7 @@ export function CollScreen({ c, q: q0 }: { c: string; q?: string }) {
 
   useEffect(() => void hadithIndex(c).then(setIdx), [c]);
 
-  // поиск по всему сборнику: книги читаются пачками, результаты появляются по ходу
+  // поиск по всему сборнику: файлы читаются пачками, результаты появляются по ходу
   useEffect(() => {
     if (!idx || dq.length < 3) {
       setHits([]);
@@ -88,15 +98,15 @@ export function CollScreen({ c, q: q0 }: { c: string; q?: string }) {
     const needle = norm(dq);
     const num = /^\d+$/.test(dq) ? Number(dq) : null;
     const found: Hit[] = [];
-    const books = idx.books;
+    const n = Math.max(...idx.books.flatMap((b) => b.ch)) + 1;
     setHits([]);
     (async () => {
-      for (let i = 0; i < books.length && alive; i += 6) {
-        const part = await Promise.all(books.slice(i, i + 6).map((bk) => hadithBook(c, bk.b).then((hs) => ({ b: bk.b, hs })).catch(() => ({ b: bk.b, hs: [] as Hadith[] }))));
-        for (const { b, hs } of part) for (const h of hs) if ((num !== null && h.n === num) || norm(h.ru).includes(needle)) found.push({ b, h });
+      for (let i = 0; i < n && alive; i += 4) {
+        const part = await Promise.all(Array.from({ length: Math.min(4, n - i) }, (_, j) => hadithChunk(c, i + j).catch(() => [] as Hadith[])));
+        for (const hs of part) for (const h of hs) if ((num !== null && h.n === num) || norm(h.x).includes(needle)) found.push({ h });
         if (!alive) return;
         setHits(found.slice(0, 80));
-        setProgress([Math.min(i + 6, books.length), books.length]);
+        setProgress([Math.min(i + 4, n), n]);
       }
     })();
     return () => {
@@ -108,19 +118,17 @@ export function CollScreen({ c, q: q0 }: { c: string; q?: string }) {
   return (
     <Screen title={m.ru} subtitle={`${m.author}${idx ? ` · ${fmt(idx.total)} хадисов` : ''}`} back={back}>
       <div className="space-y-4">
-        <SearchField id="hadith-search" value={q} onChange={setQ} placeholder={`Поиск по сборнику или номер`} />
+        <SearchField id="hadith-search" value={q} onChange={setQ} placeholder="Поиск по сборнику или номер" />
         {searching ? (
           <>
-            {progress && progress[0] < progress[1] && <p className="px-2 text-[13px] text-label2">Проверено книг: {progress[0]} из {progress[1]} · найдено {hits.length}</p>}
+            {progress && progress[0] < progress[1] && <p className="px-2 text-[13px] text-label2">Проверено файлов: {progress[0]} из {progress[1]} · найдено {hits.length}</p>}
             {hits.length > 0 ? (
               <Group>
-                {hits.map(({ b, h }) => (
-                  <div key={`${b}-${h.n}`}>
-                    <Row onClick={() => push({ k: 'book', c, b, n: h.n })} className="py-3">
-                      <p className="text-[12px] font-semibold text-tint">№ {h.n} · {bookTitle(b)}</p>
-                      <p className="mt-0.5 line-clamp-4 text-[15px] leading-snug">{h.ru}</p>
-                    </Row>
-                  </div>
+                {hits.map(({ h }) => (
+                  <Row key={h.n} onClick={() => push({ k: 'book', c, b: h.b, n: h.n })} className="py-3">
+                    <p className="text-[12px] font-semibold text-tint">№ {h.n} · {bookTitle(h.b, idx?.books.find((x) => x.b === h.b)?.en)}</p>
+                    <p lang={idx?.lang} className="mt-0.5 line-clamp-4 text-[15px] leading-snug">{h.x}</p>
+                  </Row>
                 ))}
               </Group>
             ) : (
@@ -130,18 +138,24 @@ export function CollScreen({ c, q: q0 }: { c: string; q?: string }) {
         ) : !idx ? (
           <Group>{Array.from({ length: 6 }, (_, i) => <div key={i} className="m-4 h-10 animate-pulse rounded-xl bg-fill" />)}</Group>
         ) : (
-          <Group header="Книги" footer={idx.about}>
-            {idx.books.map((bk, i) => (
-              <Row key={bk.b} onClick={() => push({ k: 'book', c, b: bk.b })} last={i === idx.books.length - 1}>
-                <div className="flex items-center gap-3">
-                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-tint-soft text-[14px] font-bold tabular-nums text-tint">{bk.b}</span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[17px] font-medium leading-tight">{bookTitle(bk.b, bk.en)}</p>
-                    <p className="truncate text-[13px] text-label2">{bk.en ? `${bk.en} · ` : ''}{bk.c} {plural(bk.c, 'хадис', 'хадиса', 'хадисов')}</p>
-                  </div>
-                </div>
+          <Group header={idx.books.length > 1 ? 'Книги' : 'Хадисы'} footer={idx.about}>
+            {idx.books.length === 1 ? (
+              <Row onClick={() => push({ k: 'book', c, b: idx.books[0].b })} last>
+                <p className="text-[17px] font-medium">Читать все {idx.total} хадисов</p>
               </Row>
-            ))}
+            ) : (
+              idx.books.map((bk, i) => (
+                <Row key={bk.b} onClick={() => push({ k: 'book', c, b: bk.b })} last={i === idx.books.length - 1}>
+                  <div className="flex items-center gap-3">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-full bg-tint-soft text-[14px] font-bold tabular-nums text-tint">{bk.b}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[17px] font-medium leading-tight">{bookTitle(bk.b, bk.en)}</p>
+                      <p className="truncate text-[13px] text-label2">{bk.en ? `${bk.en} · ` : ''}{bk.c} {plural(bk.c, 'хадис', 'хадиса', 'хадисов')}</p>
+                    </div>
+                  </div>
+                </Row>
+              ))
+            )}
           </Group>
         )}
       </div>
@@ -181,10 +195,11 @@ export function BookScreen({ c, b, n }: { c: string; b: number; n?: number }) {
   }, [items, n]);
 
   const en = idx?.books.find((x) => x.b === b)?.en;
+  const single = idx?.books.length === 1;
   return (
     <Screen
-      title={bookTitle(b, idx?.books.find((x) => x.b === b)?.en)}
-      subtitle={`${HADITH_NAMES[c].ru}${en ? ` · ${en}` : ''}${items ? ` · ${items.length} ${plural(items.length, 'хадис', 'хадиса', 'хадисов')}` : ''}`}
+      title={single ? HADITH_NAMES[c].ru : bookTitle(b, en)}
+      subtitle={`${single ? HADITH_NAMES[c].author : `${HADITH_NAMES[c].ru}${en ? ` · ${en}` : ''}`}${items ? ` · ${items.length} ${plural(items.length, 'хадис', 'хадиса', 'хадисов')}` : ''}`}
       back={back}
       trailing={
         <button onClick={() => setSettings({ hadithAr: !settings.hadithAr })} aria-pressed={settings.hadithAr} aria-label="Показывать арабский текст" className={`glass grid size-10 place-items-center rounded-full text-[19px] ${settings.hadithAr ? 'text-tint' : 'text-label2'}`}>
@@ -192,11 +207,11 @@ export function BookScreen({ c, b, n }: { c: string; b: number; n?: number }) {
         </button>
       }
     >
-      {!items ? (
+      {!items || !idx ? (
         <Group>{Array.from({ length: 3 }, (_, i) => <div key={i} className="m-4 h-24 animate-pulse rounded-xl bg-fill" />)}</Group>
       ) : (
         <>
-          <Group>{items.slice(0, shown).map((h) => <HadithCard key={h.n} c={c} b={b} h={h} flash={flash === h.n} />)}</Group>
+          <Group>{items.slice(0, shown).map((h) => <HadithCard key={h.n} c={c} h={h} lang={idx.lang} flash={flash === h.n} />)}</Group>
           {items.length > shown && (
             <button onClick={() => setShown((s) => s + PAGE)} className="glass mx-auto mt-6 block rounded-full px-7 py-3 text-[16px] font-semibold text-tint">
               Показать ещё · {items.length - shown}

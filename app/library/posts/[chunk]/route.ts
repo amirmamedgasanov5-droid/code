@@ -3,8 +3,8 @@ import { getPosts } from '@/lib/posts';
 export const dynamic = 'force-static';
 export const dynamicParams = false;
 
-/** Тексты публикаций пачками по 50 id: /library/posts/c80.json */
-const chunkOf = (id: number) => Math.floor(id / 50);
+/** Тексты публикаций пачками по 100 id: /library/posts/c80.json */
+const chunkOf = (id: number) => Math.floor(id / 100);
 
 
 export function generateStaticParams() {
