@@ -177,6 +177,7 @@ const HADITH_SETS = [
   { id: 'bukhari', ru: 'Сахих аль-Бухари', ar: 'صحيح البخاري', author: 'Имам аль-Бухари', lang: 'ru', filter: null, about: 'Самая достоверная книга после Книги Аллаха. Русский перевод: Абдуллах Нирша и редакторы Daura.com; показаны переведённые хадисы.' },
   { id: 'muslim', ru: 'Сахих Муслим', ar: 'صحيح مسلم', author: 'Имам Муслим', lang: 'ru', filter: null, about: 'Вторая по достоверности книга после Корана. В русском издании источника переведена только часть хадисов — показаны переведённые.' },
   { id: 'abudawud', ru: 'Сунан Абу Дауда', ar: 'سنن أبي داود', author: 'Имам Абу Дауд', lang: 'ru', filter: 'albani', about: SAHIH_NOTE },
+  { id: 'tirmidhi', ru: 'Джами ат-Тирмизи', ar: 'جامع الترمذي', author: 'Имам ат-Тирмизи', lang: 'ar', filter: 'albani', about: `${SAHIH_NOTE} Русского перевода в открытых данных нет: арабский текст; английский перевод можно включить кнопкой «EN».` },
   { id: 'nawawi', ru: 'Сорок хадисов ан-Навави', ar: 'الأربعون النووية', author: 'Имам ан-Навави', lang: 'ar', filter: null, about: 'Знаменитый сборник основ религии. Арабский текст; русского перевода в открытых данных нет (его можно добавить файлом data/translations/nawawi.json).' },
 ];
 const GRADES = { sahih: 'сахих', hasan: 'хасан', daif: 'да‘иф', "da'if": 'да‘иф' };
@@ -194,6 +195,9 @@ async function hadith() {
     } catch {}
     const ar = await download(`${RAW}/fawazahmed0/hadith-api/1/editions/ara-${set.id}.json`, `hadith/ara-${set.id}.json`);
     const arMap = new Map(ar.hadiths.map((h) => [String(h.hadithnumber), h.text]));
+    // для арабских изданий без русского перевода английский текст сохраняется отдельно (показывается по кнопке «EN»)
+    const enSrc = set.lang === 'ar' ? await download(`${RAW}/fawazahmed0/hadith-api/1/editions/eng-${set.id}.json`, `hadith/en-${set.id}.json`) : null;
+    const enMap = new Map((enSrc?.hadiths ?? []).map((h) => [String(h.hadithnumber), (h.text ?? '').trim()]));
     const ranges = Object.entries(tx.metadata.section_details ?? {})
       .map(([b, d]) => ({ b: Number(b), from: d.hadithnumber_first, to: d.hadithnumber_last }))
       .filter((r) => r.to > 0);
@@ -205,7 +209,7 @@ async function hadith() {
     const all = tx.hadiths
       .filter((h) => (h.text ?? '').trim())
       .filter((h) => !set.filter || albaniSahih(grades.get(String(h.hadithnumber))))
-      .map((h) => ({ n: h.hadithnumber, b: bookOf(h), a: (arMap.get(String(h.hadithnumber)) ?? '').trim(), x: set.lang === 'ru' ? h.text.trim() : (extra[h.hadithnumber] ?? ''), ...(set.filter ? { g: 'сахих · аль-Албани' } : {}) }))
+      .map((h) => ({ n: h.hadithnumber, b: bookOf(h), a: (arMap.get(String(h.hadithnumber)) ?? '').trim(), x: set.lang === 'ru' ? h.text.trim() : (extra[h.hadithnumber] ?? ''), ...(set.lang === 'ar' && enMap.get(String(h.hadithnumber)) ? { e: enMap.get(String(h.hadithnumber)) } : {}), ...(set.filter ? { g: 'сахих · аль-Албани' } : {}) }))
       .sort((p, q) => p.n - q.n);
     const chunks = chunkBySize(all, 700_000);
     const books = new Map();
@@ -279,8 +283,12 @@ async function azkar() {
       return { ar: x.text.trim(), n: x.count, ...(q.length ? { q } : {}) };
     }),
   }));
-  await w('azkar.json', cats);
-  console.log('Азкары:', cats.reduce((s, c) => s + c.items.length, 0), 'текстов,', cats.length, 'разделов, из них аятов с переводом', withRu);
+  // стандартный порядок разделов «Хисн аль-Муслим» (как в печатной книге) и русские названия разделов
+  const order = [3, 14, 15, 16, 17, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, ...Array.from({ length: 13 }, (_, i) => 18 + i - 0).slice(0, 11), 1, 2, ...Array.from({ length: 104 }, (_, i) => 29 + i)];
+  const meta = JSON.parse(await readFile('data/azkar-titles.json', 'utf8'));
+  const ordered = order.map((old, i) => ({ ...cats[old - 1], ru: meta.titles[i + 1] }));
+  await w('azkar.json', { groups: meta.groups.map(([t, ids]) => ({ t, ids: ids.map((x) => x - 1) })), cats: ordered });
+  console.log('Азкары:', cats.reduce((s, c) => s + c.items.length, 0), 'текстов,', cats.length, 'разделов (порядок проверен:', order.length === 132 && new Set(order).size === 132, '), из них аятов с переводом', withRu);
 }
 
 /* ——— Книги из data/books/*.md ——— */

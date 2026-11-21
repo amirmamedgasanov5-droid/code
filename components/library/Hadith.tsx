@@ -26,7 +26,7 @@ export function HadithCard({ c, h, flash }: { c: string; h: Hadith; flash?: bool
         <Actions markId={`h:${c}:${h.n}`} mark={{ id: `h:${c}:${h.n}`, kind: 'hadith', title: `${name}, № ${h.n}`, sub: h.x || h.a, route }} text={`${h.a}${h.x ? `\n\n${h.x}` : ''}\n\n— ${name}, хадис № ${h.n}`} />
       </div>
       {(settings.hadithAr || !h.x) && h.a && <p lang="ar" dir="rtl" className="quran mt-2 text-right text-[1.45rem] leading-[2.1]">{h.a}</p>}
-      {h.x ? <p className="mt-2 whitespace-pre-line text-[17px] leading-[1.5]">{h.x}</p> : <p className="mt-2 text-[14px] text-label2">Русского перевода этого текста в источниках нет.</p>}
+      {h.x ? <p className="mt-2 whitespace-pre-line text-[17px] leading-[1.5]">{h.x}</p> : settings.hadithEn && h.e ? <p lang="en" className="mt-2 whitespace-pre-line text-[15px] leading-[1.45] text-label2">{h.e}</p> : <p className="mt-2 text-[14px] text-label2">Русского перевода этого текста в источниках нет.</p>}
       <span aria-hidden className="absolute bottom-0 left-4 right-0 h-px bg-sep" />
     </motion.article>
   );
@@ -61,7 +61,7 @@ export function HadithScreen() {
         <Group header="Два «Сахиха»" footer="Самые достоверные книги после Книги Аллаха. Русский перевод есть не у всех хадисов — показаны переведённые.">
           {MAIN_COLLECTIONS.map((c, i) => <CollRow key={c} c={c} x={idx[c]} last={i === MAIN_COLLECTIONS.length - 1} onClick={() => push({ k: 'coll', c })} />)}
         </Group>
-        <Group header="Сборник «Сунан»" footer="Приводятся только хадисы, которые аль-Албани оценил как «сахих» (по данным открытого набора hadith-api); слабые хадисы намеренно не показываются. Оценки учёных могут расходиться — при сомнениях спрашивайте знающих людей.">
+        <Group header="Сборники «Сунан»" footer="Приводятся только хадисы, которые аль-Албани оценил как «сахих» (по данным открытого набора hadith-api); слабые хадисы намеренно не показываются. Абу Дауд — на русском и арабском, Тирмизи — на арабском. Оценки учёных могут расходиться: при сомнениях спрашивайте знающих людей.">
           {SUNAN_COLLECTIONS.map((c, i) => <CollRow key={c} c={c} x={idx[c]} last={i === SUNAN_COLLECTIONS.length - 1} onClick={() => push({ k: 'coll', c })} />)}
         </Group>
         <Group header="Сорок хадисов" footer="Арабский текст. Русского перевода в открытых данных нет.">
@@ -69,7 +69,7 @@ export function HadithScreen() {
         </Group>
         <Group header="Что такое «Сунан»?">
           <div className="space-y-2 p-4 text-[15px] leading-snug text-label2">
-            <p>«Сунан» — вид сборников хадисов, где хадисы расставлены по темам фикха: очищение, молитва, пост, торговля, брак и так далее. Так составлены «Сунан» Абу Дауда, ат-Тирмизи, ан-Насаи и Ибн Маджи.</p>
+            <p>«Сунан» — вид сборников хадисов, где хадисы расставлены по темам фикха: очищение, молитва, пост, торговля, брак и так далее. Так составлены «Сунан» Абу Дауда, ан-Насаи и Ибн Маджи; «Джами‘» ат-Тирмизи близок к ним по построению.</p>
             <p>Вместе с «Сахихом» аль-Бухари и «Сахихом» Муслима их называют «шестью книгами» (аль-кутуб ас-ситта). В «Сахихах» собраны только достоверные хадисы, а в «Сунанах» есть и более слабые, поэтому здесь из них берутся лишь «сахих».</p>
           </div>
         </Group>
@@ -173,7 +173,8 @@ export function BookScreen({ c, b, n }: { c: string; b: number; n?: number }) {
   const { settings, setSettings } = useApp();
   const back = useBack();
   const [items, setItems] = useState<Hadith[] | null>(null);
-  const [idx, setIdx] = useState<HadithIndex | null>(null);
+  const [idx0, setIdx] = useState<HadithIndex | null>(null);
+  const idx = idx0 ?? ({ lang: 'ru' } as HadithIndex);
   const [shown, setShown] = useState(PAGE);
   const [flash, setFlash] = useState<number | null>(null);
   const jumped = useRef(false);
@@ -199,16 +200,25 @@ export function BookScreen({ c, b, n }: { c: string; b: number; n?: number }) {
     return () => clearTimeout(t);
   }, [items, n]);
 
-  const single = idx?.books.length === 1;
+  const single = idx0?.books.length === 1;
   return (
     <Screen
       title={single ? HADITH_NAMES[c].ru : bookTitle(b)}
       subtitle={`${single ? HADITH_NAMES[c].author : HADITH_NAMES[c].ru}${items ? ` · ${items.length} ${plural(items.length, 'хадис', 'хадиса', 'хадисов')}` : ''}`}
       back={back}
       trailing={
-        <button onClick={() => setSettings({ hadithAr: !settings.hadithAr })} aria-pressed={settings.hadithAr} aria-label="Показывать арабский текст" className={`glass grid size-10 place-items-center rounded-full text-[19px] ${settings.hadithAr ? 'text-tint' : 'text-label2'}`}>
-          <span lang="ar" className="leading-none">ع</span>
-        </button>
+        <div className="flex gap-2">
+          {idx.lang === 'ar' && items?.some((h) => h.e) && (
+            <button onClick={() => setSettings({ hadithEn: !settings.hadithEn })} aria-pressed={settings.hadithEn} aria-label="Показывать английский перевод" className={`glass grid h-10 min-w-10 place-items-center rounded-full px-2 text-[14px] font-bold ${settings.hadithEn ? 'text-tint' : 'text-label2'}`}>
+              EN
+            </button>
+          )}
+          {idx.lang !== 'ar' && (
+            <button onClick={() => setSettings({ hadithAr: !settings.hadithAr })} aria-pressed={settings.hadithAr} aria-label="Показывать арабский текст" className={`glass grid size-10 place-items-center rounded-full text-[19px] ${settings.hadithAr ? 'text-tint' : 'text-label2'}`}>
+              <span lang="ar" className="leading-none">ع</span>
+            </button>
+          )}
+        </div>
       }
     >
       {!items || !idx ? (

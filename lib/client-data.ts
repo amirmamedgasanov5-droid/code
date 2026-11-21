@@ -30,10 +30,11 @@ export type QuranIndex = {
 };
 export type Sura = { n: number; a: string[]; r: string[] };
 /** n — номер, b — книга, a — арабский, x — перевод (русский или английский), g — оценка из источника */
-export type Hadith = { n: number; b: number; a: string; x: string; g?: string };
+export type Hadith = { n: number; b: number; a: string; x: string; e?: string; g?: string };
 export type HadithBook = { b: number; c: number; ch: number[] };
 export type HadithIndex = { id: string; ru: string; ar: string; author: string; about: string; lang: 'ru' | 'ar'; total: number; books: HadithBook[] };
-export type AzkarCategory = { title: string; items: { ar: string; n: number; q?: [number, number, string][] }[] };
+export type AzkarCategory = { title: string; ru: string; items: { ar: string; n: number; q?: [number, number, string][] }[] };
+export type AzkarData = { groups: { t: string; ids: number[] }[]; cats: AzkarCategory[] };
 export type NameOfAllah = { i: number; ar: string; tr: string; ru: string; q: number; refs: [number, number][]; more: number; qi: number; refsI: [number, number][] };
 export type TafsirInfo = { id: string; lang: 'ru' | 'ar'; name: string; author: string; note: string; chunkOf: number[] };
 /** [первый аят, текст]: один комментарий действует до следующего фрагмента */
@@ -57,7 +58,7 @@ export async function hadithBook(c: string, b: number): Promise<Hadith[]> {
   const parts = await Promise.all(chunks.map((k) => hadithChunk(c, k)));
   return parts.flat().filter((h) => h.b === b);
 }
-export const azkar = () => getJSON<AzkarCategory[]>('/library/azkar.json');
+export const azkar = () => getJSON<AzkarData>('/library/azkar.json');
 export const names = () => getJSON<NameOfAllah[]>('/library/names.json');
 export const postsIndex = () => getJSON<PostLite[]>('/library/posts-index.json');
 export async function postBody(id: number): Promise<Paragraph[]> {
@@ -65,7 +66,7 @@ export async function postBody(id: number): Promise<Paragraph[]> {
   return chunk[id] ?? [];
 }
 
-export const COLLECTIONS = ['bukhari', 'muslim', 'abudawud', 'nawawi'] as const;
+export const COLLECTIONS = ['bukhari', 'muslim', 'abudawud', 'tirmidhi', 'nawawi'] as const;
 
 export type BookMeta = { id: string; title: string; author: string; ch: number };
 export type BookChapter = { t: string; p: string[] };
