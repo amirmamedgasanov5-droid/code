@@ -131,9 +131,14 @@ async function quran() {
 
 /* ——— Тафсир ——— */
 const TAFSIRS = [
-  { id: 'saadi', slug: 'ru-tafseer-al-saddi', name: 'Тафсир ас-Саади', author: 'Шейх Абдуррахман ас-Саади', note: 'Классический краткий тафсир; именно его отрывки публикует канал.' },
-  { id: 'kathir', slug: 'ru-tafsir-ibne-kahtir', name: 'Тафсир Ибн Касира', author: 'Имам Исмаил ибн Касир', note: 'Подробный тафсир с хадисами и сообщениями предшественников.' },
-  { id: 'mukhtasar', slug: 'russian-mokhtasar', name: 'Аль-Мухтасар', author: 'Центр тафсира коранических исследований', note: 'Краткое и понятное разъяснение смысла аятов.' },
+  { id: 'saadi', slug: 'ru-tafseer-al-saddi', lang: 'ru', name: 'Тафсир ас-Саади', author: 'Шейх Абдуррахман ас-Саади', note: 'Классический краткий тафсир; именно его отрывки публикует канал.' },
+  { id: 'kathir', slug: 'ru-tafsir-ibne-kahtir', lang: 'ru', name: 'Тафсир Ибн Касира', author: 'Имам Исмаил ибн Касир', note: 'Подробный тафсир с хадисами и сообщениями предшественников.' },
+  { id: 'mukhtasar', slug: 'russian-mokhtasar', lang: 'ru', name: 'Аль-Мухтасар', author: 'Центр тафсира коранических исследований', note: 'Краткое и понятное разъяснение смысла аятов.' },
+  { id: 'saadi-ar', slug: 'ar-tafseer-al-saddi', lang: 'ar', name: 'Тафсир ас-Саади (оригинал)', author: 'Шейх Абдуррахман ас-Саади', note: 'Арабский текст «Тайсир аль-Карим ар-Рахман».' },
+  { id: 'muyassar', slug: 'ar-tafsir-muyassar', lang: 'ar', name: 'Аль-Муяссар', author: 'Комплекс имени короля Фахда', note: 'Краткий и ясный тафсир на арабском языке.' },
+  { id: 'mukhtasar-ar', slug: 'ar-tafsir-al-mukhtasar', lang: 'ar', name: 'Аль-Мухтасар (оригинал)', author: 'Центр тафсира коранических исследований', note: 'Арабский текст краткого тафсира.' },
+  { id: 'jazairi', slug: 'abu-bakr-jabir-al-jazairi', lang: 'ar', name: 'Айсар ат-Тафасир', author: 'Абу Бакр аль-Джазаири', note: 'Тафсир на арабском языке, составленный для широкого круга читателей.' },
+  { id: 'qayyim', slug: 'tafsir-ibn-al-qayyim', lang: 'ar', name: 'Тафсир Ибн аль-Каййима', author: 'Ибн аль-Каййим', note: 'Толкования аятов, собранные из трудов имама Ибн аль-Каййима.' },
 ];
 
 async function tafsir() {
@@ -160,7 +165,7 @@ async function tafsir() {
       }
       await w(`tafsir/${t.id}/${k}.json`, obj);
     }
-    items.push({ id: t.id, name: t.name, author: t.author, note: t.note, chunkOf });
+    items.push({ id: t.id, lang: t.lang, name: t.name, author: t.author, note: t.note, chunkOf });
     console.log(`Тафсир «${t.name}»: ${chunks.length} файлов, ${suras.flat().length} фрагментов`);
   }
   await w('tafsir/index.json', items);

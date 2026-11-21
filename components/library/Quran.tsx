@@ -148,7 +148,15 @@ function TafsirSheet({ n, ayah, onChange, onClose, data, tr }: { n: number; ayah
     <Sheet open={ayah !== null} onClose={onClose} labelledBy="taf-title" header={<h2 id="taf-title" className="truncate text-[17px] font-semibold">Тафсир · {n}:{ayah}</h2>}>
       {ayah !== null && (
         <div className="space-y-4 pt-1">
-          <Segmented value={info?.id ?? settings.tafsirId} onChange={(id) => setSettings({ tafsirId: id })} options={(infos.length ? infos : [{ id: 'saadi', name: 'Ас-Саади' }]).map((i) => ({ value: i.id, label: i.name.replace('Тафсир ', '') }))} />
+          <div className="no-scrollbar -mx-5 overflow-x-auto px-5 sm:-mx-8 sm:px-8" role="group" aria-label="Тафсир">
+            <div className="flex w-max gap-1.5">
+              {infos.map((i) => (
+                <button key={i.id} onClick={() => setSettings({ tafsirId: i.id })} aria-pressed={info?.id === i.id} className={`whitespace-nowrap rounded-full px-4 py-2 text-[14px] font-semibold transition-colors ${info?.id === i.id ? 'bg-tint text-tint-ink' : 'bg-surface text-label2'}`}>
+                  {i.name}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="rounded-[20px] bg-surface p-4">
             <p lang="ar" dir="rtl" className="quran text-right text-[1.5rem] leading-[2.1]">{data.a[ayah - 1]}</p>
             <p className="mt-2 text-[16px] leading-snug text-label2">{tr[ayah - 1]}</p>
@@ -157,7 +165,7 @@ function TafsirSheet({ n, ayah, onChange, onClose, data, tr }: { n: number; ayah
           {range && <p className="px-1 text-[13px] font-semibold text-tint">{range}</p>}
           {err && <p className="text-label2">Не удалось загрузить тафсир. Проверьте соединение.</p>}
           {!entries && !err && <div className="space-y-3">{[95, 100, 88, 70].map((w, i) => <div key={i} className="h-4 animate-pulse rounded-full bg-fill" style={{ width: `${w}%` }} />)}</div>}
-          {entries && <div className="whitespace-pre-line text-[17px] leading-[1.6]">{text || 'К этому аяту в данном тафсире нет отдельного комментария.'}</div>}
+          {entries && (text ? (info?.lang === 'ar' ? <div lang="ar" dir="rtl" className="whitespace-pre-line text-right text-[1.35rem] leading-[2]">{text}</div> : <div className="whitespace-pre-line text-[17px] leading-[1.6]">{text}</div>) : <p className="text-label2">К этому аяту в данном тафсире нет отдельного комментария.</p>)}
           <div className="flex justify-between gap-3 pt-2">
             <button disabled={ayah <= 1} onClick={() => onChange(ayah - 1)} className="rounded-full bg-surface px-5 py-3 text-[15px] font-semibold text-tint disabled:opacity-35">‹ Аят {ayah - 1}</button>
             <button disabled={ayah >= data.a.length} onClick={() => onChange(ayah + 1)} className="rounded-full bg-surface px-5 py-3 text-[15px] font-semibold text-tint disabled:opacity-35">Аят {ayah + 1} ›</button>

@@ -8,7 +8,6 @@ import { useApp } from '../AppProvider';
 import { Screen } from '../Screen';
 import { Group, Row } from '../ui';
 import { Actions } from './Cards';
-import { ALL_BOOKS } from './Books';
 import { useBack } from './nav';
 
 const AR = /[؀-ۿ]/g;
@@ -22,9 +21,8 @@ export function BookReadScreen({ id, ch }: { id: string; ch?: number }) {
   const [source, setSource] = useState<'site' | 'local'>('site');
   const [err, setErr] = useState(false);
   const [pos, setPos] = useStored<Record<string, number>>('hidaya-bookpos', {});
-  const meta = ALL_BOOKS.find((b) => b.id === id);
-  const [title, setTitle] = useState(meta?.t ?? 'Книга');
-  const [author, setAuthor] = useState(meta?.a ?? '');
+  const [title, setTitle] = useState('Книга');
+  const [author, setAuthor] = useState('');
   const [open, setOpen] = useState<number | null>(ch ?? null);
 
   useEffect(() => {
@@ -47,6 +45,7 @@ export function BookReadScreen({ id, ch }: { id: string; ch?: number }) {
         }
         const l = await localGet(id);
         if (l && alive) {
+          setTitle(l.title);
           setChapters(l.chapters);
           setSource('local');
         } else if (alive) setErr(true);

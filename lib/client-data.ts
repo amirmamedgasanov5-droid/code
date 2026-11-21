@@ -35,7 +35,7 @@ export type HadithBook = { b: number; c: number; ch: number[] };
 export type HadithIndex = { id: string; ru: string; ar: string; author: string; about: string; lang: 'ru' | 'ar'; total: number; books: HadithBook[] };
 export type AzkarCategory = { title: string; items: { ar: string; n: number; q?: [number, number, string][] }[] };
 export type NameOfAllah = { i: number; ar: string; tr: string; ru: string; q: number; refs: [number, number][]; more: number; qi: number; refsI: [number, number][] };
-export type TafsirInfo = { id: string; name: string; author: string; note: string; chunkOf: number[] };
+export type TafsirInfo = { id: string; lang: 'ru' | 'ar'; name: string; author: string; note: string; chunkOf: number[] };
 /** [первый аят, текст]: один комментарий действует до следующего фрагмента */
 export type TafsirSura = [number, string][];
 

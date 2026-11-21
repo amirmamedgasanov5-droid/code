@@ -20,7 +20,7 @@ export function routeLabel(r?: Route): string {
     case 'quizzes':
       return 'Викторины';
     case 'books':
-      return 'Путь знаний';
+      return 'Книги';
     case 'bookread':
       return 'Книга';
     case 'tafsirs':

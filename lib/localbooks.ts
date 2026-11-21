@@ -2,7 +2,7 @@
 import type { BookChapter } from './client-data';
 
 /** Книги, добавленные пользователем из файла, хранятся только на его устройстве (IndexedDB). */
-export type LocalBook = { id: string; chapters: BookChapter[]; added: number };
+export type LocalBook = { id: string; title: string; chapters: BookChapter[]; added: number };
 
 function db(): Promise<IDBDatabase> {
   return new Promise((res, rej) => {
@@ -28,6 +28,13 @@ export const localIds = async () => {
   }
 };
 export const localGet = (id: string) => tx<LocalBook | undefined>('readonly', (s) => s.get(id));
+export const localAll = async () => {
+  try {
+    return (await tx('readonly', (s) => s.getAll())) as LocalBook[];
+  } catch {
+    return [] as LocalBook[];
+  }
+};
 export const localPut = (b: LocalBook) => tx('readwrite', (s) => s.put(b));
 export const localDelete = (id: string) => tx('readwrite', (s) => s.delete(id));
 

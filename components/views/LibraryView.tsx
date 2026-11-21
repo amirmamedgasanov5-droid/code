@@ -157,7 +157,7 @@ function Root() {
               </Row>
             </Group>
 
-            <Group header="Учиться и проверять себя">
+            <Group header="Книги, проверка знаний, указатели">
               <Row onClick={() => push({ k: 'quizzes' })}>
                 <div className="flex items-center gap-3"><Tile Icon={Trophy} color="#d9822b" /><div><p className="text-[17px]">Викторины</p><p className="text-[13px] text-label2">7 видов вопросов по Корану и именам Аллаха</p></div></div>
               </Row>
@@ -165,7 +165,7 @@ function Root() {
                 <div className="flex items-center gap-3"><Tile Icon={ListTree} color="#2b6e8f" /><div><p className="text-[17px]">Указатели</p><p className="text-[13px] text-label2">Страницы мусхафа, хизбы, манзили, саджды</p></div></div>
               </Row>
               <Row onClick={() => push({ k: 'books' })} last>
-                <div className="flex items-center gap-3"><Tile Icon={BookMarked} color="#7a5c45" /><div><p className="text-[17px]">Путь знаний</p><p className="text-[13px] text-label2">Основные труды учёных ахлю-сунны</p></div></div>
+                <div className="flex items-center gap-3"><Tile Icon={BookMarked} color="#7a5c45" /><div><p className="text-[17px]">Книги</p><p className="text-[13px] text-label2">Всё, что можно читать здесь, в одном списке</p></div></div>
               </Row>
             </Group>
 

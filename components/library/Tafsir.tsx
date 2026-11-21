@@ -17,17 +17,23 @@ export function TafsirsScreen() {
   useEffect(() => void tafsirIndex().then(setItems), []);
   return (
     <Screen title="Тафсир" subtitle="Толкование всего Корана на русском языке: аят за аятом." back={back}>
-      <Group footer="Тексты — из открытого набора данных (QUL, tarteel.ai). Тафсир — это толкование, а не перевод; при вопросах обращайтесь к печатным изданиям и знающим людям.">
-        {!items
-          ? Array.from({ length: 3 }, (_, i) => <div key={i} className="m-4 h-12 animate-pulse rounded-xl bg-fill" />)
-          : items.map((t, i) => (
-              <Row key={t.id} onClick={() => push({ k: 'tafsir', id: t.id })} last={i === items.length - 1}>
-                <p className="text-[17px] font-medium leading-tight">{t.name}</p>
-                <p className="text-[13px] text-label2">{t.author}</p>
-                <p className="mt-0.5 text-[13px] leading-snug text-label2">{t.note}</p>
-              </Row>
-            ))}
-      </Group>
+      <div className="space-y-6">
+        {!items && <Group>{Array.from({ length: 3 }, (_, i) => <div key={i} className="m-4 h-12 animate-pulse rounded-xl bg-fill" />)}</Group>}
+        {items && (['ru', 'ar'] as const).map((lang) => {
+          const list = items.filter((t) => t.lang === lang);
+          return (
+            <Group key={lang} header={lang === 'ru' ? 'На русском языке' : 'На арабском языке (оригинал)'} footer={lang === 'ar' ? 'Тексты — из открытого набора данных (QUL, tarteel.ai). Тафсир — это толкование, а не перевод; при вопросах обращайтесь к печатным изданиям и знающим людям.' : undefined}>
+              {list.map((t, i) => (
+                <Row key={t.id} onClick={() => push({ k: 'tafsir', id: t.id })} last={i === list.length - 1}>
+                  <p className="text-[17px] font-medium leading-tight">{t.name}</p>
+                  <p className="text-[13px] text-label2">{t.author}</p>
+                  <p className="mt-0.5 text-[13px] leading-snug text-label2">{t.note}</p>
+                </Row>
+              ))}
+            </Group>
+          );
+        })}
+      </div>
     </Screen>
   );
 }
@@ -189,7 +195,7 @@ export function TafsirSuraScreen({ id, n, a }: { id: string; n: number; a?: numb
                   ))}
                   {to - from > 5 && <p className="mt-2 text-[13px] text-label2">…и ещё {to - from - 5} {to - from - 5 === 1 ? 'аят' : 'аятов'} — полностью в суре.</p>}
                 </div>
-                <div className="space-y-3 whitespace-pre-line px-4 pb-4 pt-3 text-[17px] leading-[1.6]">{text}</div>
+                <div lang={info?.lang} dir={info?.lang === 'ar' ? 'rtl' : undefined} className={`space-y-3 whitespace-pre-line px-4 pb-4 pt-3 ${info?.lang === 'ar' ? 'text-right text-[1.3rem] leading-[2]' : 'text-[17px] leading-[1.6]'}`}>{text}</div>
               </motion.section>
             );
           })}
