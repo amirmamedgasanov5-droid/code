@@ -13,6 +13,7 @@ import { IndexScreen, IndexesScreen } from '../library/Indexes';
 import { NameScreen, NamesScreen } from '../library/Names';
 import { QuizScreen, QuizzesScreen } from '../library/Quiz';
 import { BooksScreen } from '../library/Books';
+import { BookReadScreen } from '../library/BookReader';
 import { SourcesScreen } from '../library/Sources';
 import { TafsirScreen, TafsirsScreen, TafsirSuraScreen } from '../library/Tafsir';
 import { SearchField } from '../library/Cards';
@@ -227,6 +228,8 @@ function render(r: Route | undefined) {
       return <QuizScreen mode={r.mode} />;
     case 'books':
       return <BooksScreen />;
+    case 'bookread':
+      return <BookReadScreen id={r.id} ch={r.ch} />;
     case 'sources':
       return <SourcesScreen />;
   }

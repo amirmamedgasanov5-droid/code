@@ -21,6 +21,8 @@ export function routeLabel(r?: Route): string {
       return 'Викторины';
     case 'books':
       return 'Путь знаний';
+    case 'bookread':
+      return 'Книга';
     case 'tafsirs':
       return 'Тафсир';
     case 'tafsir':

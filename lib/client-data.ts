@@ -66,3 +66,8 @@ export async function postBody(id: number): Promise<Paragraph[]> {
 }
 
 export const COLLECTIONS = ['bukhari', 'muslim', 'abudawud', 'nawawi'] as const;
+
+export type BookMeta = { id: string; title: string; author: string; ch: number };
+export type BookChapter = { t: string; p: string[] };
+export const bookIndex = () => getJSON<BookMeta[]>('/library/books/index.json').catch(() => [] as BookMeta[]);
+export const bookData = (id: string) => getJSON<{ id: string; chapters: BookChapter[] }>(`/library/books/${id}.json`);

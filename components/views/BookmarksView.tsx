@@ -15,7 +15,7 @@ const KINDS: { value: BKind | 'all'; label: string }[] = [
   { value: 'dua', label: 'Азкары' },
   { value: 'post', label: 'Лента' },
 ];
-const ICON_LABEL: Record<BKind, string> = { quran: 'Коран', hadith: 'Хадис', dua: 'Азкар', name: 'Имя Аллаха', post: 'Публикация' };
+const ICON_LABEL: Record<BKind, string> = { quran: 'Коран', hadith: 'Хадис', dua: 'Азкар', name: 'Имя Аллаха', post: 'Публикация', book: 'Книга' };
 
 export function BookmarksView() {
   const { bookmarks, removeMark, openRoute, open, lastRead, go } = useApp();
@@ -23,7 +23,7 @@ export function BookmarksView() {
   const [q, setQ] = useState('');
   const list = useMemo(() => {
     const s = norm(q.trim());
-    return bookmarks.filter((b) => (kind === 'all' || b.kind === kind || (kind === 'dua' && b.kind === 'name')) && (!s || norm(`${b.title} ${b.sub ?? ''}`).includes(s)));
+    return bookmarks.filter((b) => (kind === 'all' || b.kind === kind || (kind === 'dua' && b.kind === 'name') || (kind === 'post' && b.kind === 'book')) && (!s || norm(`${b.title} ${b.sub ?? ''}`).includes(s)));
   }, [bookmarks, kind, q]);
 
   return (

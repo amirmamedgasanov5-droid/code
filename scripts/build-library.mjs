@@ -278,6 +278,34 @@ async function azkar() {
   console.log('Азкары:', cats.reduce((s, c) => s + c.items.length, 0), 'текстов,', cats.length, 'разделов, из них аятов с переводом', withRu);
 }
 
+/* ——— Книги из data/books/*.md ——— */
+async function books() {
+  const { readdir } = await import('node:fs/promises');
+  let files = [];
+  try {
+    files = (await readdir('data/books')).filter((f) => f.endsWith('.md') && f !== 'README.md');
+  } catch {}
+  const index = [];
+  for (const f of files) {
+    const raw = await readFile(`data/books/${f}`, 'utf8');
+    const m = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+    const head = Object.fromEntries((m?.[1] ?? '').split('\n').map((l) => l.split(/:\s*/, 2)).filter((x) => x[1]));
+    const body = m?.[2] ?? raw;
+    const id = head.id || f.replace(/\.md$/, '');
+    const chapters = [];
+    for (const part of body.split(/^# /m)) {
+      const [title, ...rest] = part.split('\n');
+      const paras = rest.join('\n').split(/\n\s*\n/).map((x) => x.trim()).filter(Boolean);
+      if (!paras.length) continue;
+      chapters.push({ t: title.trim() || `Часть ${chapters.length + 1}`, p: paras });
+    }
+    await w(`books/${id}.json`, { id, chapters });
+    index.push({ id, title: head.title || id, author: head.author || '', ch: chapters.length });
+  }
+  await w('books/index.json', index);
+  console.log('Книги из data/books:', index.length);
+}
+
 /* ——— 99 имён Аллаха: места упоминания в Коране считаются по тексту ——— */
 async function names() {
   const list = JSON.parse(await readFile('data/names-of-allah.json', 'utf8'));
@@ -321,3 +349,4 @@ await tafsir();
 await hadith();
 await azkar();
 await names();
+await books();

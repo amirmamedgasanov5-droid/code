@@ -1,7 +1,9 @@
 'use client';
 
-import { BookOpenCheck, Check } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { BookOpenCheck, Check, Circle, Clock, Upload } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { bookIndex } from '@/lib/client-data';
+import { localIds, localPut, parseBook } from '@/lib/localbooks';
 import { useStored } from '@/lib/hooks';
 import { norm } from '@/lib/library-meta';
 import { useApp, type Route } from '../AppProvider';
@@ -128,24 +130,57 @@ const SECTIONS: Section[] = [
   },
 ];
 
-const ALL = SECTIONS.flatMap((s) => s.items);
+export const ALL_BOOKS = SECTIONS.flatMap((s) => s.items);
+const ALL = ALL_BOOKS;
+
+const NEXT: Record<Status, Status> = { none: 'want', want: 'reading', reading: 'done', done: 'none' };
 
 export function BooksScreen() {
-  const { openRoute } = useApp();
+  const { openRoute, push, toast } = useApp();
   const back = useBack();
   const [status, setStatus] = useStored<Record<string, Status>>('hidaya-books', {});
   const [lvl, setLvl] = useState<'all' | '1' | '2' | '3'>('all');
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<Book | null>(null);
+  const [builtIn, setBuiltIn] = useState<Set<string>>(new Set());
+  const [local, setLocal] = useState<Set<string>>(new Set());
+  const file = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    bookIndex().then((l) => setBuiltIn(new Set(l.map((x) => x.id))));
+    localIds().then((l) => setLocal(new Set(l)));
+  }, []);
+
+  const hasText = (b: Book) => !!b.app || builtIn.has(b.id) || local.has(b.id);
   const match = (b: Book) => (lvl === 'all' || String(b.lvl) === lvl) && (!q.trim() || norm(`${b.t} ${b.a}`).includes(norm(q.trim())));
   const sections = useMemo(() => SECTIONS.map((s) => ({ ...s, items: s.items.filter(match) })).filter((s) => s.items.length), [lvl, q]); // eslint-disable-line react-hooks/exhaustive-deps
   const count = (st: Status) => ALL.filter((b) => status[b.id] === st).length;
-  const inApp = ALL.filter((b) => b.app).length;
-  const set = (b: Book, v: Status) => setStatus({ ...status, [b.id]: v });
+  const readable = ALL.filter(hasText).length;
+
+  const openBook = (b: Book) => {
+    if (b.app) return openRoute(b.app);
+    if (builtIn.has(b.id) || local.has(b.id)) return push({ k: 'bookread', id: b.id });
+    setOpen(b);
+  };
+
+  const importFile = async (f: File, b: Book) => {
+    try {
+      const chapters = parseBook(await f.text());
+      if (!chapters.length) return toast('В файле нет текста');
+      await localPut({ id: b.id, chapters, added: Date.now() });
+      setLocal(new Set([...local, b.id]));
+      setOpen(null);
+      toast('Книга добавлена на это устройство');
+      push({ k: 'bookread', id: b.id });
+    } catch {
+      toast('Не удалось прочитать файл');
+    }
+  };
+
+  const icon = (st: Status) => (st === 'done' ? <Check size={15} strokeWidth={3} /> : st === 'reading' ? <Clock size={15} strokeWidth={2.6} /> : st === 'want' ? <Circle size={15} strokeWidth={2.6} /> : null);
 
   return (
-    <Screen title="Путь знаний" subtitle={`${ALL.length} трудов учёных ахлю-сунны по порядку изучения. ${inApp} из них можно читать прямо здесь.`} back={back}>
+    <Screen title="Путь знаний" subtitle={`${ALL.length} трудов учёных ахлю-сунны по порядку изучения. Читать здесь можно: ${readable}.`} back={back}>
       <div className="space-y-5">
         <SearchField id="books-search" value={q} onChange={setQ} placeholder="Название или автор" />
         <Segmented value={lvl} onChange={setLvl} options={[{ value: 'all', label: 'Все' }, { value: '1', label: 'Начальный' }, { value: '2', label: 'Средний' }, { value: '3', label: 'Продвинутый' }]} />
@@ -159,28 +194,40 @@ export function BooksScreen() {
         {sections.length === 0 && <Group><p className="p-5 text-center text-label2">Ничего не найдено</p></Group>}
         {sections.map((sec) => (
           <Group key={sec.h} header={sec.h}>
-            {sec.items.map((b, i) => (
-              <Row key={b.id} onClick={() => setOpen(b)} last={i === sec.items.length - 1}>
-                <div className="flex items-start gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[17px] font-medium leading-tight">{b.t}</p>
-                    <p className="mt-0.5 text-[14px] text-label2">{b.a}</p>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[12px] font-semibold">
-                      <span className="rounded-full bg-fill px-2 py-0.5 text-label2">{LEVELS[b.lvl]}</span>
-                      {b.app && <span className="inline-flex items-center gap-1 rounded-full bg-tint-soft px-2 py-0.5 text-tint"><BookOpenCheck size={12} /> читать здесь</span>}
-                      {status[b.id] === 'done' && <span className="inline-flex items-center gap-1 rounded-full bg-tint px-2 py-0.5 text-tint-ink"><Check size={12} strokeWidth={3} /> прочитано</span>}
-                      {status[b.id] === 'reading' && <span className="rounded-full bg-fill px-2 py-0.5 text-label2">читаю</span>}
-                      {status[b.id] === 'want' && <span className="rounded-full bg-fill px-2 py-0.5 text-label2">хочу прочитать</span>}
+            {sec.items.map((b, i) => {
+              const st = status[b.id] ?? 'none';
+              return (
+                <Row key={b.id} onClick={() => openBook(b)} last={i === sec.items.length - 1}>
+                  <div className="flex items-center gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[17px] font-medium leading-tight">{b.t}</p>
+                      <p className="mt-0.5 text-[14px] text-label2">{b.a}</p>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[12px] font-semibold">
+                        <span className="rounded-full bg-fill px-2 py-0.5 text-label2">{LEVELS[b.lvl]}</span>
+                        {hasText(b) ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-tint-soft px-2 py-0.5 text-tint"><BookOpenCheck size={12} /> читать здесь</span>
+                        ) : (
+                          <span className="rounded-full bg-fill px-2 py-0.5 text-label3">текст не добавлен</span>
+                        )}
+                      </div>
                     </div>
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Отметка: ${STATUS.find((x) => x.value === st)!.label}. Нажмите, чтобы сменить`}
+                      onClick={(e) => { e.stopPropagation(); setStatus({ ...status, [b.id]: NEXT[st] }); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setStatus({ ...status, [b.id]: NEXT[st] }); } }}
+                      className={`grid h-8 min-w-8 shrink-0 place-items-center gap-1 rounded-full px-2 text-[12px] font-semibold ${st === 'done' ? 'bg-tint text-tint-ink' : st === 'none' ? 'border border-sep text-label3' : 'bg-fill text-label2'}`}
+                    >
+                      {st === 'none' ? '＋' : <span className="flex items-center gap-1">{icon(st)}{st === 'want' ? 'Хочу' : st === 'reading' ? 'Читаю' : ''}</span>}
+                    </span>
                   </div>
-                </div>
-              </Row>
-            ))}
+                </Row>
+              );
+            })}
           </Group>
         ))}
-        <p className="px-4 text-[13px] leading-snug text-label2">
-          Перечень составлен по традиционному порядку изучения; уровни — ориентир. Читайте у знающих людей: {count('done') + count('reading') + count('want') === 0 ? 'отметьте книги, которые хотите прочитать, и следите за прогрессом.' : `в списке ${ALL.length} ${plural(ALL.length, 'книга', 'книги', 'книг')}.`}
-        </p>
+        <p className="px-4 text-[13px] leading-snug text-label2">Кнопка справа меняет отметку: хочу → читаю → прочитал. Перечень составлен по традиционному порядку изучения, уровни — ориентир.</p>
       </div>
 
       <Sheet open={!!open} onClose={() => setOpen(null)} size="medium" labelledBy="book-title" header={<span className="truncate text-[15px] font-semibold text-label2">{open ? LEVELS[open.lvl] : ''}</span>}>
@@ -191,20 +238,14 @@ export function BooksScreen() {
               <p className="mt-1 text-[16px] font-medium text-tint">{open.a}</p>
               <p className="mt-2 text-[16px] leading-snug text-label2">{open.d}</p>
             </div>
-            <div>
-              <p className="mb-1.5 px-1 text-[13px] text-label2">Моя отметка</p>
-              <Segmented value={status[open.id] ?? 'none'} onChange={(v) => set(open, v)} options={STATUS.map((s) => ({ value: s.value, label: s.label }))} />
+            <div className="rounded-[14px] bg-surface p-4 text-[15px] leading-snug text-label2">
+              Текста этой книги в приложении пока нет: в открытых источниках на русском его не нашлось, а сочинять или править религиозный текст приложение не берётся.
+              Если у вас есть своя электронная копия (файл .txt или .md), добавьте её — книга откроется в читалке, а файл останется только на этом устройстве.
             </div>
-            {open.app ? (
-              <button onClick={() => { const r = open.app!; setOpen(null); openRoute(r); }} className="w-full rounded-full bg-tint py-3.5 text-[17px] font-semibold text-tint-ink">
-                Читать здесь
-              </button>
-            ) : (
-              <a href={`https://yandex.ru/search/?text=${encodeURIComponent(`${open.t} ${open.a} читать`)}`} target="_blank" rel="noopener noreferrer" className="block w-full rounded-full bg-tint py-3.5 text-center text-[17px] font-semibold text-tint-ink">
-                Найти в интернете
-              </a>
-            )}
-            {!open.app && <p className="px-1 text-[13px] leading-snug text-label2">Текст этой книги в открытых данных на русском не найден, поэтому здесь её нет. Ищите проверенное издание.</p>}
+            <input ref={file} type="file" accept=".txt,.md,text/plain,text/markdown" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) importFile(f, open); e.target.value = ''; }} />
+            <button onClick={() => file.current?.click()} className="flex w-full items-center justify-center gap-2 rounded-full bg-tint py-3.5 text-[17px] font-semibold text-tint-ink">
+              <Upload size={19} strokeWidth={2.4} /> Добавить текст из файла
+            </button>
           </div>
         )}
       </Sheet>
