@@ -1,0 +1,1 @@
+{"name":"hidayah-video","private":true,"scripts":{"render":"remotion render src/index.ts Main out/hidayah.mp4 --browser-executable=/opt/pw-browsers/chromium"},"dependencies":{"@fontsource/amiri":"^5.3.0","@fontsource/rubik":"^5.3.0","@remotion/cli":"^4.0.545","@types/react":"^19.3.0","react":"^18.3.1","react-dom":"^18.3.1","remotion":"^4.0.545","typescript":"^7.0.2"}}
