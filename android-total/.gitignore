@@ -2,3 +2,4 @@ local.properties
 build/
 .gradle/
 *.iml
+app/src/test/snapshots/
