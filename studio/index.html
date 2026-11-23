@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#000000">
+  <title>Noodle Studio</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/studio.css">
+</head>
+<body>
+  <div id="app" class="app">
+    <header class="titlebar" id="titlebar"></header>
+    <div class="main" id="main">
+      <nav class="activity" id="activity" aria-label="Панели"></nav>
+      <aside class="sidebar" id="sidebar"></aside>
+      <div class="split" id="split-side" role="separator" aria-orientation="vertical"></div>
+      <section class="workbench" id="workbench">
+        <div class="editor-col" id="editor-col">
+          <div class="tabs" id="tabs" role="tablist"></div>
+          <div class="crumbs" id="crumbs"></div>
+          <div class="editor-host" id="editor-host"></div>
+          <div class="bottom" id="bottom"></div>
+        </div>
+        <div class="split" id="split-prev" role="separator" aria-orientation="vertical"></div>
+        <div class="preview-col" id="preview-col"></div>
+      </section>
+    </div>
+    <footer class="statusbar" id="statusbar"></footer>
+  </div>
+  <div id="overlay"></div>
+  <noscript>Noodle Studio требует JavaScript.</noscript>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

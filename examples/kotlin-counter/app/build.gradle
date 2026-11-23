@@ -1,0 +1,25 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+// id, версия и versionCode берутся из manifest.json — единый источник правды.
+def nm = new groovy.json.JsonSlurper().parse(file('../manifest.json'))
+
+android {
+    namespace 'noodle.app'
+    compileSdk 34
+    defaultConfig {
+        applicationId nm.id
+        minSdk 26
+        targetSdk 34
+        versionCode nm.versionCode
+        versionName nm.version
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions { jvmTarget = '17' }
+    lint { abortOnError false }
+}

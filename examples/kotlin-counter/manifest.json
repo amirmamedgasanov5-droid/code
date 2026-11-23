@@ -1,0 +1,9 @@
+{
+  "format": 1,
+  "id": "dev.noodle.examples.kotlin",
+  "name": "Kotlin Counter",
+  "version": "1.0.0",
+  "versionCode": 1,
+  "stack": "kotlin",
+  "permissions": []
+}

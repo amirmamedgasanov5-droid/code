@@ -1,0 +1,36 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: 8.7 }
+      # на ubuntu-latest Android SDK уже установлен (ANDROID_HOME)
+      - run: node tools/nob.mjs apk studio -o build/noodle-studio.apk
+      - run: node tools/nob.mjs apk examples/nui-tasks -o build/nui-tasks.apk
+      - run: node tools/nob.mjs apk examples/kotlin-counter -o build/kotlin-counter.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: build/*.apk

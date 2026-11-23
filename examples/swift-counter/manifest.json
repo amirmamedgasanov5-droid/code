@@ -1,0 +1,9 @@
+{
+  "format": 1,
+  "id": "dev.noodle.examples.swift",
+  "name": "Swift Counter",
+  "version": "1.0.0",
+  "versionCode": 1,
+  "stack": "swift",
+  "permissions": []
+}

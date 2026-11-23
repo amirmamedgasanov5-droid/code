@@ -1,0 +1,17 @@
+{
+  "name": "noodle-os-tools",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Noodle Studio — IDE и сборщик пакетов .nob для Noodle.OS",
+  "bin": { "nob": "tools/nob.mjs" },
+  "scripts": {
+    "studio": "node tools/serve.mjs studio 8080",
+    "test": "node --test tests/core.test.mjs",
+    "test:e2e": "node tests/e2e.mjs",
+    "nob": "node tools/nob.mjs",
+    "studio:apk": "node tools/nob.mjs apk studio -o build/noodle-studio.apk"
+  },
+  "engines": { "node": ">=20" },
+  "devDependencies": { "playwright": "^1.45.0" }
+}

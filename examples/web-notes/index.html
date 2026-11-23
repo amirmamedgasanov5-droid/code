@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Notes</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <button id="back" hidden aria-label="Назад">←</button>
+    <span id="title">NOTES</span>
+    <button id="add" aria-label="Новая заметка">+</button>
+  </header>
+  <ul id="list"></ul>
+  <section id="editor" hidden>
+    <input id="note-title" placeholder="Заголовок" maxlength="60">
+    <textarea id="note-body" placeholder="Текст"></textarea>
+    <button id="del" class="ghost">Удалить</button>
+  </section>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "id": "dev.noodle.studio",
+  "name": "Noodle Studio",
+  "version": "1.0.0",
+  "versionCode": 1,
+  "entry": "index.html",
+  "icon": "icon.svg",
+  "permissions": ["network"],
+  "window": {
+    "orientation": "auto",
+    "background": "#000000",
+    "statusBar": "light"
+  }
+}

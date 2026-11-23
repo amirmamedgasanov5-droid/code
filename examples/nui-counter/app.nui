@@ -1,0 +1,19 @@
+// Noodle UI: интерфейс описывается деревом элементов, логика — функциями на JavaScript.
+app "Counter"
+
+state count = 0 persist
+
+fn inc() { count += 1; noodle.vibrate(15) }
+fn dec() { count -= 1; noodle.vibrate(15) }
+
+screen main {
+  column grow center gap=32 {
+    text "COUNTER" caps dim
+    text "{count}" size=120 weight=200
+    row gap=16 {
+      button "−" on=dec width=84 height=84 size=32
+      button "+" on=inc width=84 height=84 size=32
+    }
+    button "Сбросить" ghost on={ count = 0; toast("Сброшено") }
+  }
+}
