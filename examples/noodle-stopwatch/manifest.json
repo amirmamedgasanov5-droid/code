@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "id": "dev.noodle.examples.stopwatch",
+  "name": "stopwatch",
+  "version": "1.0.0",
+  "versionCode": 1,
+  "stack": "noodle",
+  "entry": "app.nui",
+  "icon": "icon.svg",
+  "permissions": [
+    "vibrate"
+  ],
+  "window": {
+    "orientation": "portrait",
+    "background": "#000000",
+    "statusBar": "light"
+  }
+}

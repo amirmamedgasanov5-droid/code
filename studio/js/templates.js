@@ -250,16 +250,18 @@ showList();
 };
 
 export const TEMPLATES = { ...NATIVE_TEMPLATES, ...WEB_TEMPLATES };
+export const DEFAULT_TEMPLATE = 'noodle-counter';
 
 /** Файлы шаблона вместе с manifest.json (строки). Для CLI и Studio. */
 export function templateFiles(key, over = {}) {
   const t = TEMPLATES[key];
   if (!t) throw new Error('нет такого шаблона: ' + key);
   const native = ['kotlin', 'flutter', 'swift'].includes(t.stack);
+  const web = t.stack === 'web';
   const m = { format: 1, ...t.manifest, ...over };
   const ordered = { format: 1, id: m.id, name: m.name, version: m.version, versionCode: m.versionCode, stack: t.stack };
   if (!native) {
-    ordered.entry = m.entry || 'index.html';
+    ordered.entry = m.entry || (web ? 'index.html' : 'app.nui');
     ordered.icon = 'icon.svg';
   }
   ordered.permissions = m.permissions || [];

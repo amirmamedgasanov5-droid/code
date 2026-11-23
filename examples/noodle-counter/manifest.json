@@ -1,10 +1,10 @@
 {
   "format": 1,
   "id": "dev.noodle.examples.counter",
-  "name": "Counter",
+  "name": "counter",
   "version": "1.0.0",
   "versionCode": 1,
-  "stack": "nui",
+  "stack": "noodle",
   "entry": "app.nui",
   "icon": "icon.svg",
   "permissions": [

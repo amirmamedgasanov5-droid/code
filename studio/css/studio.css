@@ -319,3 +319,7 @@ select { appearance: none; background-image: linear-gradient(45deg, transparent 
   input[type=text], select, input:not([type]) { min-height: 38px; }
   :root { --ed-size: 14px; --ed-lh: 22px; }
 }
+
+/* нативное приложение Noodle в превью */
+.dev-native { position: absolute; left: 0; top: 24px; display: block; outline: none; touch-action: none; background: #000; }
+.dev-ime { position: absolute; left: 0; top: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; resize: none; pointer-events: none; }

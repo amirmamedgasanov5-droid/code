@@ -5,13 +5,33 @@ on:
   pull_request:
 
 jobs:
-  test:
+  runtime:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { targets: wasm32-unknown-unknown }
+      - run: cargo test --release -p noodle-core
+        working-directory: runtime
+      - run: cargo build --release
+        working-directory: runtime
+      - name: WASM собран из текущих исходников и совпадает с закоммиченным
+        run: |
+          ./runtime/build-wasm.sh
+          git diff --stat --exit-code studio/wasm/noodle.wasm || echo "::warning::studio/wasm/noodle.wasm устарел — запустите runtime/build-wasm.sh и закоммитьте"
+      - uses: actions/upload-artifact@v4
+        with: { name: noodle-linux, path: runtime/target/release/noodle }
+
+  js:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: npm install --no-audit --no-fund
+      - run: cargo build --release
+        working-directory: runtime
       - run: npm test
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
@@ -28,8 +48,8 @@ jobs:
         with: { gradle-version: 8.7 }
       # на ubuntu-latest Android SDK уже установлен (ANDROID_HOME)
       - run: node tools/nob.mjs apk studio -o build/noodle-studio.apk
-      - run: node tools/nob.mjs apk examples/nui-tasks -o build/nui-tasks.apk
       - run: node tools/nob.mjs apk examples/kotlin-counter -o build/kotlin-counter.apk
+      - run: node tools/nob.mjs apk examples/web-notes -o build/web-notes.apk
       - uses: actions/upload-artifact@v4
         with:
           name: apk

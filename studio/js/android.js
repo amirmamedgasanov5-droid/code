@@ -3,7 +3,6 @@
 // Используется и в Studio (кнопка «Android-проект»), и в CLI (`nob apk`).
 
 import { utf8, injectHead } from './nob.js';
-import { prepareForRun } from './nui.js';
 
 export const AGP_VERSION = '8.5.2';
 
@@ -20,15 +19,10 @@ function hexToJava(hex) {
  * @param runtimeSource   текст noodle-runtime.js
  * @returns { 'app/build.gradle': string|Uint8Array, … }
  */
-export function androidProject(srcManifest, srcFiles, runtimeSource, nuiEngineSource) {
-  let manifest = srcManifest;
-  let files = srcFiles;
-  if (srcManifest.stack === 'nui') {
-    const r = prepareForRun(srcManifest, srcFiles, nuiEngineSource, 'file');
-    if (r.errors?.length) throw new Error('ошибки Noodle UI:\n  • ' + r.errors.map((e) => `${e.file}:${e.line} ${e.message}`).join('\n  • '));
-    manifest = r.manifest;
-    files = r.files;
-  }
+export function androidProject(srcManifest, srcFiles, runtimeSource) {
+  if ((srcManifest.stack || 'noodle') !== 'web') throw new Error(`Android-обёртка (WebView) нужна только веб-приложениям; стек «${srcManifest.stack}» исполняется нативным рантаймом Noodle`);
+  const manifest = srcManifest;
+  const files = srcFiles;
   // Android (aapt) молча выбрасывает из assets папки, начинающиеся с «_», и файлы/папки, начинающиеся с «.»
   for (const p of Object.keys(srcFiles)) {
     const segs = p.split('/');

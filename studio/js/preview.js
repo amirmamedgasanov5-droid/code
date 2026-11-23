@@ -2,18 +2,20 @@
 import { h, icon } from './util.js';
 import { utf8, injectHead, mimeOf, fromUtf8, b64encode } from './nob.js';
 import { store } from './store.js';
-import { prepareForRun } from './nui.js';
+import { NoodleWasm } from './noodle-wasm.js';
 import { NATIVE_STACKS, STACKS } from './nob.js';
 
-let runtimeSrc = null;
-let engineSrc = null;
+let runtimeSrcCache = null;
 export async function loadRuntime() {
-  if (!runtimeSrc) runtimeSrc = await (await fetch(new URL('./noodle-runtime.js', import.meta.url))).text();
-  return runtimeSrc;
+  if (!runtimeSrcCache) runtimeSrcCache = await (await fetch(new URL('./noodle-runtime.js', import.meta.url))).text();
+  return runtimeSrcCache;
 }
-export async function loadEngine() {
-  if (!engineSrc) engineSrc = await (await fetch(new URL('./nui-engine.js', import.meta.url))).text();
-  return engineSrc;
+
+let wasmP = null;
+/** Общий экземпляр нативного ядра Noodle (компилятор + рантайм). */
+export function sharedWasm() {
+  wasmP ||= NoodleWasm.load(new URL('../wasm/noodle.wasm', import.meta.url).href);
+  return wasmP;
 }
 
 const bytesOf = (v) => (typeof v === 'string' ? utf8(v) : v);
@@ -135,7 +137,8 @@ export const PROFILES = [
 ];
 
 export class Device {
-  constructor({ onConsole, onState }) {
+  constructor({ onConsole, onState, onDiagnostics }) {
+    this.onDiagnostics = onDiagnostics;
     this.onConsole = onConsole || (() => {});
     this.onState = onState || (() => {});
     this.profile = PROFILES[0];
@@ -182,6 +185,7 @@ export class Device {
     this.device.style.height = h + 'px';
     this.device.classList.toggle('landscape', this.landscape);
     this.fit();
+    if (this.native && this.current) this.launch(this.current);
   }
   setProfile(id) {
     this.profile = PROFILES.find((p) => p.id === id) || PROFILES[0];
@@ -202,9 +206,11 @@ export class Device {
     this.scaler.style.width = (w + extra) * sc + 'px';
     this.scaler.style.height = (h + 44 + extra) * sc + 'px';
     this.scale = sc;
+    this.updateNativeScale();
   }
 
   clear() {
+    this.stopNative();
     this.urls.forEach((u) => URL.revokeObjectURL(u));
     this.urls = [];
     this.screen.replaceChildren();
@@ -219,26 +225,23 @@ export class Device {
   /** Запустить приложение. source: { manifest, files: Map<path,string|Uint8Array>, label } */
   async launch(source) {
     this.current = source;
-    if (NATIVE_STACKS.includes(source.manifest.stack)) {
+    const stack = source.manifest.stack || 'noodle';
+    if (NATIVE_STACKS.includes(stack)) {
       this.clear();
       this.device.classList.remove('in-app');
       this.screen.style.background = '#000';
-      this.screen.append(h('div.dev-error', h('b', `Нативный проект: ${STACKS[source.manifest.stack]}`), h('p', 'Браузер не умеет запускать нативный код, поэтому живого превью нет.'), h('p', source.manifest.stack === 'swift' ? 'Соберите проект в Xcode на macOS.' : 'Соберите APK (панель «Пакет» или команда nob apk) и поставьте на телефон или эмулятор.')));
+      this.screen.append(h('div.dev-error', h('b', `Нативный проект: ${STACKS[stack]}`), h('p', 'Этот стек собирается своим тулчейном и в превью Studio не запускается.'), h('p', stack === 'swift' ? 'Соберите проект в Xcode на macOS.' : 'Соберите APK командой nob apk и поставьте на устройство или эмулятор.')));
       this.onState({ running: false });
       return;
     }
+    if (stack === 'noodle') return this.launchNative(source);
     const runtime = await loadRuntime();
-    let run = source; // что реально запускаем (для Noodle UI — с хост-страницей)
-    if (source.manifest.stack === 'nui') {
-      const prep = prepareForRun(source.manifest, source.files, await loadEngine(), 'inline');
-      (prep.errors || []).forEach((e) => this.onConsole({ level: 'error', text: `${e.file}:${e.line} ${e.message}`, source: 'nui' }));
-      run = { ...source, manifest: prep.manifest, files: prep.files };
-    }
+    const run = source;
     const storage = await this.storageFor(source.manifest.id);
     this.clear();
     let built;
     try {
-      built = buildPreviewDoc(run.files, run.manifest, { storage: await storage, runtime });
+      built = buildPreviewDoc(run.files, run.manifest, { storage, runtime });
     } catch (e) {
       this.screen.append(h('div.dev-error', h('b', 'Не удалось запустить'), h('pre', e.message)));
       this.onConsole({ level: 'error', text: 'Запуск: ' + e.message, source: 'studio' });
@@ -259,6 +262,173 @@ export class Device {
     this.screen.append(this.frame);
     this.device.classList.add('in-app');
     this.onState({ running: true, name: source.manifest.name });
+  }
+
+
+  // ───────────── нативные приложения Noodle (WebAssembly-ядро + canvas) ─────────────
+
+  stopNative() {
+    const n = this.native;
+    if (!n) return;
+    cancelAnimationFrame(n.raf);
+    n.ime.remove();
+    n.canvas.remove();
+    this.native = null;
+  }
+
+  /** Область приложения в логических пикселях (экран минус статус-бар). */
+  appArea() {
+    const { w, h } = this.size;
+    return { w, h: h - 24 - 48 };
+  }
+  renderScale() {
+    return Math.min(3, Math.max(1, Math.round((window.devicePixelRatio || 1) * (this.scale || 1) * 2) / 2));
+  }
+  updateNativeScale() {
+    const n = this.native;
+    if (!n) return;
+    const rs = this.renderScale();
+    if (rs === n.rs) return;
+    const { w: aw, h: ah } = this.appArea();
+    n.rs = rs;
+    n.canvas.width = Math.round(aw * rs);
+    n.canvas.height = Math.round(ah * rs);
+    n.wasm.resize(aw, ah, rs);
+    n.ctx = n.canvas.getContext('2d');
+  }
+
+  async launchNative(source) {
+    this.clear();
+    const wasm = await sharedWasm();
+    let nbc = source.nbc;
+    if (!nbc) {
+      const entry = source.manifest.entry;
+      const names = [...source.files.keys()].filter((p) => /\.(nui|ns)$/.test(p)).sort((a, b) => (a === entry ? -1 : b === entry ? 1 : 0));
+      const srcs = names.map((p) => [p, typeof source.files.get(p) === 'string' ? source.files.get(p) : new TextDecoder().decode(source.files.get(p))]);
+      const r = wasm.compile(srcs);
+      this.onDiagnostics && this.onDiagnostics(r.ok ? [] : r.diags);
+      if (!r.ok) {
+        this.device.classList.remove('in-app');
+        this.screen.style.background = '#000';
+        this.screen.append(h('div.dev-error', h('b', `Ошибки в коде: ${r.diags.length}`), h('pre', r.diags.slice(0, 8).map((d) => `${d.file}:${d.line}:${d.col}\n${d.msg}`).join('\n\n'))));
+        r.diags.forEach((d) => this.onConsole({ level: 'error', text: `${d.file}:${d.line}:${d.col}  ${d.msg}`, source: 'nui' }));
+        this.onState({ running: false });
+        return;
+      }
+      nbc = r.bytes;
+      this.lastNbc = nbc;
+    } else this.onDiagnostics && this.onDiagnostics([]);
+
+    const id = source.manifest.id;
+    const storage = (await store.get('nstorage:' + id)) || {};
+    const { w: aw, h: ah } = this.appArea();
+    const rs = this.renderScale();
+    const err = wasm.load(nbc, { w: aw, h: ah, scale: rs, storage });
+    if (err) {
+      this.screen.append(h('div.dev-error', h('b', 'Не удалось запустить'), h('pre', err)));
+      this.onConsole({ level: 'error', text: 'Запуск: ' + err, source: 'studio' });
+      this.onState({ running: false });
+      return;
+    }
+    const canvas = h('canvas.dev-native', { width: Math.round(aw * rs), height: Math.round(ah * rs), tabindex: '0', 'aria-label': source.manifest.name });
+    canvas.style.width = aw + 'px';
+    canvas.style.height = ah + 'px';
+    const ime = h('textarea.dev-ime', { 'aria-hidden': 'true', autocapitalize: 'off', autocomplete: 'off', autocorrect: 'off', spellcheck: false, tabindex: '-1' });
+    this.screen.append(canvas, ime);
+    const bg = source.manifest.window?.background || '#000';
+    this.screen.style.background = bg;
+    this.device.dataset.status = source.manifest.window?.statusBar === 'dark' ? 'dark' : 'light';
+    this.device.classList.add('in-app');
+    const n = (this.native = { wasm, canvas, ime, ctx: canvas.getContext('2d'), rs, id, raf: 0, wantsText: false, lastLog: 0, store });
+    this.wireNativeInput(n);
+    const loop = () => {
+      if (this.native !== n) return;
+      const now = Date.now();
+      wasm.tick(now);
+      if (wasm.render()) {
+        const px = wasm.pixels();
+        n.ctx.putImageData(new ImageData(new Uint8ClampedArray(px.buffer), n.canvas.width, n.canvas.height), 0, 0);
+      }
+      const st = wasm.status();
+      if (st.storageDirty) store.set('nstorage:' + id, wasm.storage());
+      if (st.wantsText !== n.wantsText) {
+        n.wantsText = st.wantsText;
+        if (st.wantsText) ime.focus({ preventScroll: true });
+        else if (document.activeElement === ime) canvas.focus({ preventScroll: true });
+      }
+      if (st.exit) return this.home();
+      if (now - n.lastLog > 100) {
+        n.lastLog = now;
+        for (const l of wasm.logs()) this.onConsole({ level: l.level === 'error' ? 'error' : 'log', text: l.text, source: 'app' });
+        const vib = wasm.vibrations();
+        if (vib.length && source.manifest.permissions?.includes('vibrate') && navigator.vibrate) navigator.vibrate(vib[vib.length - 1]);
+      }
+      n.raf = requestAnimationFrame(loop);
+    };
+    n.raf = requestAnimationFrame(loop);
+    this.onState({ running: true, name: source.manifest.name });
+  }
+
+  wireNativeInput(n) {
+    const { canvas, ime, wasm } = n;
+    const pos = (e) => {
+      const r = canvas.getBoundingClientRect();
+      return [(e.clientX - r.left) * (canvas.width / r.width), (e.clientY - r.top) * (canvas.height / r.height)];
+    };
+    canvas.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      canvas.setPointerCapture(e.pointerId);
+      canvas.focus({ preventScroll: true });
+      wasm.pointer('down', ...pos(e));
+    });
+    canvas.addEventListener('pointermove', (e) => wasm.pointer('move', ...pos(e)));
+    const up = (e) => {
+      wasm.pointer('up', ...pos(e));
+      // фокус на скрытое поле — в обработчике жеста, чтобы открылась экранная клавиатура
+      if (wasm.status().wantsText) {
+        n.wantsText = true;
+        ime.focus({ preventScroll: true });
+      }
+    };
+    canvas.addEventListener('pointerup', up);
+    canvas.addEventListener('pointercancel', up);
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const [x, y] = pos(e);
+      wasm.wheel(x, y, e.deltaY * (canvas.width / canvas.getBoundingClientRect().width));
+    }, { passive: false });
+    const KEYMAP = { Backspace: 'backspace', Delete: 'delete', ArrowLeft: 'left', ArrowRight: 'right', Home: 'home', End: 'end', Enter: 'enter', Escape: 'escape', Tab: 'tab' };
+    const onKey = (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const k = KEYMAP[e.key];
+      if (k === 'escape' && !wasm.status().wantsText) {
+        e.preventDefault();
+        return this.back();
+      }
+      if (k) {
+        if (k === 'tab' && !wasm.status().wantsText) return;
+        e.preventDefault();
+        wasm.key(k);
+      } else if (e.target === canvas && e.key.length === 1) {
+        e.preventDefault();
+        wasm.text(e.key);
+      }
+    };
+    canvas.addEventListener('keydown', onKey);
+    ime.addEventListener('keydown', onKey);
+    ime.addEventListener('beforeinput', (e) => {
+      if (e.inputType === 'deleteContentBackward') {
+        e.preventDefault();
+        wasm.key('backspace');
+      } else if (e.inputType === 'insertLineBreak' || e.inputType === 'insertParagraph') {
+        e.preventDefault();
+        wasm.key('enter');
+      }
+    });
+    ime.addEventListener('input', () => {
+      if (ime.value) wasm.text(ime.value);
+      ime.value = '';
+    });
   }
 
   reload() {
@@ -294,6 +464,10 @@ export class Device {
   }
 
   back() {
+    if (this.native) {
+      if (!this.native.wasm.back()) this.home();
+      return;
+    }
     if (!this.frame) return;
     this._backTimer = setTimeout(() => this.home(), 400);
     this.frame.contentWindow.postMessage({ noodle: true, type: 'back' }, '*');

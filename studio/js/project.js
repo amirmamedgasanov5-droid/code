@@ -1,6 +1,6 @@
 // Модель проекта: набор файлов (текст или бинарь) + список пустых папок.
 import { store, prefs } from './store.js';
-import { templateFiles, TEMPLATES } from './templates.js';
+import { templateFiles, TEMPLATES, DEFAULT_TEMPLATE } from './templates.js';
 import { utf8, fromUtf8, safePath, validateManifest, b64encode, b64decode } from './nob.js';
 import { isTextPath } from './util.js';
 
@@ -192,7 +192,7 @@ export class Workspace {
     this.currentId = prefs.get('current', null);
     if (!this.projects.has(this.currentId)) this.currentId = this.projects.keys().next().value || null;
     if (!this.current) {
-      const p = Project.fromTemplate('nui-counter');
+      const p = Project.fromTemplate(DEFAULT_TEMPLATE);
       this.add(p);
     }
   }
@@ -219,7 +219,7 @@ export class Workspace {
     await store.del('project:' + id);
     if (this.currentId === id) {
       this.currentId = this.projects.keys().next().value || null;
-      if (!this.currentId) this.add(Project.fromTemplate('nui-counter'));
+      if (!this.currentId) this.add(Project.fromTemplate(DEFAULT_TEMPLATE));
       else this.switch(this.currentId);
     }
     await this.saveNow();

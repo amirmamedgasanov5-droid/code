@@ -1,81 +1,81 @@
-# Noodle Studio — IDE и сборщик приложений для Noodle.OS
+# Noodle — нативные приложения для Noodle.OS
 
-Чёрно-белая IDE в духе VS Code, которая собирает приложения в установочный пакет **`.nob`**
-(Noodle Bundle — аналог `.apk`) и, при необходимости, в настоящий Android **APK**.
+* **Noodle UI + Noodle Script** — собственные языки для приложений Noodle.OS. Не веб, не Android, не iOS.
+* **Нативный рантайм на Rust** (`runtime/`): компилятор → байткод → виртуальная машина → собственная раскладка и отрисовка.
+  Один бинарник ≈ 2 МБ, шрифты внутри. Одно и то же ядро работает в окне ОС, в тестах без окна и в WebAssembly.
+* **Noodle Studio** — IDE (чёрно-белая, как VS Code): редактор, проводник, проверка кода на лету, **превью на настоящем
+  рантайме**, ИИ-агент (любой OpenAI-совместимый API или Claude), сборка подписанных пакетов **`.nob`**.
+* **`.nob`** — установочный пакет Noodle.OS: ZIP + байткод `main.nbc` + подпись ECDSA.
 
-* редактор с вкладками, подсветкой, проводником, поиском по проекту, палитрой команд (`Ctrl+P`, `Ctrl+Shift+P`)
-* **живое превью** в «устройстве Noodle.OS»: приложение кликабельно, есть консоль, «Назад», домашний экран, поворот
-* **ИИ-агент**: подключите любой OpenAI-совместимый API (OpenAI, Gemini, OpenRouter, DeepSeek, Groq, Ollama…)
-  или Claude — агент читает/правит файлы, запускает превью, смотрит ошибки консоли; изменения можно откатить
-* сборка **`.nob`**: подписанный ECDSA, с проверкой хэшей; установка в симулятор
-* экспорт Android-проекта / сборка APK одной командой; открытие `.nob` и собранных нами `.apk` обратно в проект
-* работает и в браузере, и как Android-приложение (сам Studio собирается в APK)
+```nui
+state count = 0 persist
+fn inc() { count += 1 }
+
+screen main {
+  column grow center gap=32 {
+    text "{count}" size=120 weight=200
+    button "+" primary on=inc
+  }
+}
+```
 
 ## Быстрый старт
 
 ```bash
-npm run studio                      # http://localhost:8080  (только Node 20+, зависимостей нет)
+npm run studio                                   # IDE: http://localhost:8080 (Node 20+, без зависимостей)
 
-node tools/nob.mjs init my-app      # новый проект на Noodle UI
-node tools/nob.mjs build my-app     # → my-app/<id>-<версия>.nob  (подписан)
-node tools/nob.mjs verify my-app/*.nob
-ANDROID_HOME=~/Android/Sdk node tools/nob.mjs apk my-app     # → APK (нужны JDK 17+, Gradle, Android SDK 34)
+node tools/nob.mjs init my-app                   # новый проект (Noodle)
+node tools/nob.mjs check my-app                  # ошибки с файлом:строкой:колонкой
+node tools/nob.mjs build my-app                  # → my-app/<id>-<версия>.nob (байткод + подпись)
+
+cd runtime && cargo build --release              # нативный рантайм (Rust)
+runtime/target/release/noodle run my-app         # окно; также принимает .nob
+runtime/target/release/noodle shot my-app -o shot.png --steps "tap:+;tap:+"   # скриншот без окна
 ```
 
-APK самого Studio: `node tools/nob.mjs apk studio -o build/noodle-studio.apk`
-(то же делает CI — `.github/workflows/ci.yml`).
+## Стеки
 
-## Языки и стеки
+| Стек | Язык | Исполняется |
+|---|---|---|
+| **`noodle`** (основной) | Noodle UI + Noodle Script | **нативным рантаймом Noodle** |
+| `web` | HTML + CSS + JS | песочница (WebView/iframe) — режим совместимости |
+| `kotlin`, `flutter`, `swift` | Kotlin / Dart / Swift | как приложения Android / iOS (мост) |
 
-| Стек | Язык | Превью | `.nob` | APK |
-|---|---|---|---|---|
-| **Noodle UI** | `.nui` — декларативный UI + JS | да | да | да |
-| **HTML+CSS+JS** | + WebAssembly (Rust, C, Zig, Go…) | да | да | да |
-| **Kotlin** | Kotlin, Android Views | нет | — | да |
-| **Flutter** | Dart | нет | — | да, нужен Flutter SDK |
-| **Swift** | SwiftUI | нет | — | только Xcode/macOS |
-
-Подробно, с примерами и справочником по Noodle UI: [`docs/STACKS.md`](docs/STACKS.md).
-Формат пакета, подпись, манифест, API рантайма `noodle.*`: [`docs/NOB-FORMAT.md`](docs/NOB-FORMAT.md).
-
-## Готовые примеры
-
-`examples/` — проекты всех стеков и собранные подписанные пакеты `nui-counter.nob`, `nui-tasks.nob`, `web-notes.nob`.
-Откройте `.nob` в Studio (меню проекта → «Открыть .nob / .apk / .zip») — он превратится в редактируемый проект.
+Документация: [язык](docs/NOODLE-LANG.md) · [рантайм и производительность](docs/RUNTIME.md) · [формат `.nob`](docs/NOB-FORMAT.md) · [стеки](docs/STACKS.md).
+Готовые примеры и подписанные `.nob`: `examples/`.
 
 ## Что проверено
 
-Автоматически (`npm test` — 24 теста, `npm run test:e2e` — 56 проверок в настоящем Chromium):
-сборка и подпись пакетов, обнаружение подмены файлов/хэшей/zip-slip, парсер Noodle UI, клики в превью,
-редактор (автоскобки, отмена), живое обновление, консоль приложения, блокировка сети без разрешения,
-«Назад», сохранение данных, установка в симулятор и запуск с домашнего экрана, ИИ-агент против мок-серверов
-OpenAI и Anthropic (инструменты, ошибки, откат), мобильная раскладка.
+* **Ядро Rust** — 22 теста языка и рантайма (замыкания, циклы, коллекции, ввод, навигация, таймеры, сохранение, ошибки, бесконечные циклы).
+* **JS** — `npm test`: 25 проверок (формат пакета, подпись, подмена, zip-slip, WASM-компилятор, CLI, Android-обёртка web-стека).
+* **E2E** — `npm run test:e2e`: 60 проверок в настоящем Chromium: клики мышью по canvas-превью, ввод с клавиатуры,
+  живое обновление, ошибки кода, сборка `.nob`, установка в симулятор, ИИ-агент (против моков OpenAI и Anthropic), мобильная раскладка.
+  Ключевая: **байткод, скомпилированный в Studio (WASM), запускается нативным бинарником**.
+* **Нативное окно** запускалось под Xvfb (X11): отрисовка, клики мышью и ввод с клавиатуры через X-события.
+* **Измерения** (release): запуск → первый кадр ≈ 10 мс, ≈ 13 МБ памяти, кадр со списком из 300 строк ≈ 3,5 мс.
+  Чистые вычисления в Noodle Script — интерпретатор, он медленнее JIT браузера (подробнее в `docs/RUNTIME.md`).
 
-Реально собраны (Android SDK 34, Gradle, AGP 8.5): APK на Noodle UI, на HTML/JS, на Kotlin и APK самого Studio;
-`aapt2`/`apksigner` подтвердили package, версию, разрешения и подпись.
-
-**Не проверялось** (нет среды): запуск APK на физическом устройстве/эмуляторе, Flutter-сборка, Swift/Xcode,
-работа с реальными API OpenAI/Anthropic/Gemini (только мок-серверы того же протокола).
+**Не проверялось:** окно на Windows/macOS/Wayland, запуск внутри самой Noodle.OS (её ещё нет — рантайм встраивается через `noodle_core::App`),
+Flutter и Swift-сборки, реальные API OpenAI/Anthropic (только моки того же протокола).
 
 ## Устройство репозитория
 
 ```
-studio/        Noodle Studio (статический веб-сайт, без сборки): index.html, css/, js/
-  js/nob.js        формат .nob: zip, подпись, проверка (браузер и Node)
-  js/nui.js        парсер Noodle UI;  js/nui-engine.js — его рендерер
-  js/noodle-runtime.js   объект noodle.* внутри приложений
-  js/android.js    генератор Gradle/WebView-проекта
-  js/ai.js         агент и адаптеры провайдеров
-tools/nob.mjs  CLI;  tools/serve.mjs — статический сервер
-examples/      примеры и готовые .nob
-docs/          спецификации и руководства
-tests/         core.test.mjs (node:test), e2e.mjs (Playwright)
+runtime/        нативное ядро и CLI на Rust (core/, cli/, fonts/)
+studio/         Noodle Studio: статический сайт (index.html, css/, js/, wasm/noodle.wasm)
+tools/nob.mjs   CLI: init / check / build / verify / inspect / unpack / run / android / apk
+examples/       проекты всех стеков + собранные .nob
+docs/           спецификации
+tests/          core.test.mjs (node:test), e2e.mjs (Playwright)
 ```
+
+Studio — это статический сайт: его можно выложить на любой хостинг как есть (архив `noodle-studio-edgeone.zip`).
+Studio можно собрать и в Android-приложение (оболочка WebView): `node tools/nob.mjs apk studio -o build/noodle-studio.apk`.
+Приложения Noodle при этом остаются нативными для Noodle.OS и в APK не упаковываются.
 
 ## Безопасность
 
-* Приложения исполняются в `<iframe sandbox>` без доступа к данным Studio; сеть без `network` режется CSP.
+* Веб-стек исполняется в `<iframe sandbox>`; сеть без разрешения `network` режется CSP.
 * Ключ ИИ хранится в `localStorage` устройства и отправляется только выбранному провайдеру.
-  Не используйте на общем компьютере.
-* Подпись `.nob` проверяется при установке и при открытии; приватный ключ разработчика не покидает браузер/`~/.noodle`.
-* APK собирается с отладочной подписью — для публикации подпишите его своим ключом (`apksigner`).
+* Подпись `.nob` проверяется при установке и открытии; приватный ключ разработчика не покидает браузер/`~/.noodle`.
+* APK собирается с отладочной подписью — для публикации подпишите своим ключом (`apksigner`).

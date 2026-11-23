@@ -1,0 +1,51 @@
+app "Stopwatch"
+
+state ms = 0
+state running = false
+state timer = 0
+state laps = []
+
+fn pad2(n) { return pad_start(str(n), 2, "0") }
+fn fmt(t) {
+  let s = floor(t / 1000)
+  return pad2(floor(s / 60)) + ":" + pad2(s % 60) + "." + pad2(floor(t % 1000 / 10))
+}
+fn start() {
+  if running { return }
+  running = true
+  let last = now()
+  timer = every(30, fn() {
+    let t = now()
+    ms += t - last
+    last = t
+  })
+}
+fn stop() {
+  cancel(timer)
+  running = false
+}
+fn toggle_run() { if running { stop() } else { start() }; vibrate(20) }
+fn lap() { laps = [fmt(ms), ...laps] }
+fn reset() { stop(); ms = 0; laps = [] }
+
+screen main {
+  bar "Stopwatch"
+  column grow padding=24 gap=24 {
+    text "{fmt(ms)}" size=64 weight=200 center
+    row gap=12 {
+      button "{running ? 'Стоп' : 'Старт'}" primary grow on=toggle_run
+      button "Круг" grow disabled={!running} on=lap
+      button "Сброс" ghost grow on=reset
+    }
+    scroll grow {
+      each laps as l, i {
+        row padding=10 {
+          text "#{laps.len - i}" dim
+          spacer
+          text "{l}" mono
+        }
+        divider
+      }
+    }
+  }
+}

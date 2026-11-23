@@ -88,7 +88,7 @@ export const isTextPath = (p) => TEXT_EXT.test(p) || !/\.[a-z0-9]+$/i.test(p);
 
 export function langOf(path) {
   const ext = (path.split('.').pop() || '').toLowerCase();
-  return { js: 'js', mjs: 'js', ts: 'js', jsx: 'js', tsx: 'js', json: 'json', webmanifest: 'json', css: 'css', html: 'html', htm: 'html', svg: 'html', xml: 'html', md: 'md', nui: 'nui', kt: 'kt', kts: 'kt', gradle: 'kt', swift: 'swift', dart: 'dart', yml: 'yaml', yaml: 'yaml' }[ext] || 'text';
+  return { js: 'js', mjs: 'js', ts: 'js', jsx: 'js', tsx: 'js', json: 'json', webmanifest: 'json', css: 'css', html: 'html', htm: 'html', svg: 'html', xml: 'html', md: 'md', nui: 'nui', ns: 'nui', kt: 'kt', kts: 'kt', gradle: 'kt', swift: 'swift', dart: 'dart', yml: 'yaml', yaml: 'yaml' }[ext] || 'text';
 }
 
 // ── иконки (24×24, stroke 1.5, currentColor) ───────────────────────────

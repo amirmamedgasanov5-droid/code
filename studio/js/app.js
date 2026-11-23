@@ -4,13 +4,12 @@ import { store, prefs } from './store.js';
 import { Project, Workspace } from './project.js';
 import { TEMPLATES } from './templates.js';
 import { CodeEditor } from './editor.js';
-import { Device, PROFILES, loadRuntime, loadEngine } from './preview.js';
+import { Device, PROFILES, loadRuntime, sharedWasm } from './preview.js';
 import { toast, prompt, confirm, alertBox, palette, menu } from './ui.js';
 import { PROVIDERS, runAgent, listModels } from './ai.js';
 import { androidProject } from './android.js';
-import { compileNui } from './nui.js';
 import {
-  buildNob, readNob, zipRead, zipWrite, generateKey, fromUtf8, utf8, validateManifest, PERMISSIONS, ORIENTATIONS, STACKS, NATIVE_STACKS, stripInjected, mimeOf, sha256,
+  buildNob, readNob, zipRead, zipWrite, generateKey, fromUtf8, utf8, validateManifest, PERMISSIONS, ORIENTATIONS, STACKS, NATIVE_STACKS, NOODLE_BYTECODE, stripInjected, mimeOf, sha256,
 } from './nob.js';
 
 const $ = (id) => document.getElementById(id);
@@ -32,6 +31,7 @@ const S = {
   searchQ: '',
   searchCase: false,
   running: false,
+  diags: [],
   agentSnap: null,
   agentBusy: false,
 };
@@ -52,6 +52,25 @@ function logOut(text, kind = 'info') {
   if (S.output.length > 300) S.output.shift();
   renderBottom();
 }
+
+// ───────────────────────────── проверка кода Noodle ─────────────────────────────
+
+const stackOf = () => project().manifest().value?.stack || 'noodle';
+
+/** Компилирует .nui/.ns проекта нативным ядром. Возвращает { ok, bytes?, diags } и обновляет «Проблемы». */
+async function compileProject() {
+  const p = project();
+  const m = p.manifest().value;
+  if (!m || stackOf() !== 'noodle') return { ok: true, diags: [], bytes: null };
+  const names = p.paths().filter((f) => /\.(nui|ns)$/.test(f)).sort((a, b) => (a === m.entry ? -1 : b === m.entry ? 1 : 0));
+  const wasm = await sharedWasm();
+  const r = wasm.compile(names.map((f) => [f, p.readText(f) ?? '']));
+  S.diags = r.ok ? [] : r.diags;
+  renderBottom();
+  updateStatus();
+  return r.ok ? { ok: true, bytes: r.bytes, diags: [] } : { ok: false, diags: r.diags };
+}
+const recheck = debounce(() => { compileProject().catch(() => {}); }, 450);
 
 // ───────────────────────────── каркас ─────────────────────────────
 
@@ -238,6 +257,7 @@ function bindProject() {
     }
     scheduleExplorer();
     updateStatus();
+    recheck();
     live();
     if (S.view === 'package') schedulePackage();
   });
@@ -299,6 +319,7 @@ async function importBytes(bytes, filename) {
     if (!r.manifest) throw new Error(r.errors.join('; '));
     if (!r.ok && !(await confirm('Пакет не прошёл проверку', r.errors.slice(0, 4).join('\n') + '\n\nОткрыть как проект без проверки?', { ok: 'Открыть' }))) return;
     files = r.files;
+    delete files[NOODLE_BYTECODE]; // байткод — производный файл, пересоберётся из исходников
     manifest = r.manifest;
   } else if (names.has('assets/www/noodle-system/manifest.json')) {
     manifest = JSON.parse(fromUtf8(entries.find((e) => e.path === 'assets/www/noodle-system/manifest.json').data));
@@ -309,8 +330,6 @@ async function importBytes(bytes, filename) {
       if (e.path.endsWith('.html')) d = utf8(stripInjected(fromUtf8(d)));
       files[e.path.slice('assets/www/'.length)] = d;
     }
-    delete files['noodle-nui/index.html'];
-    delete files['noodle-nui/engine.js'];
   } else if (names.has('manifest.json')) {
     files = {};
     for (const e of entries) files[e.path] = e.data;
@@ -617,7 +636,7 @@ function showWelcome() {
 function renderBottom() {
   const box = $('bottom');
   if (!box) return;
-  const probs = project().problems();
+  const probs = allProblems();
   const errs = S.logs.filter((l) => l.level === 'error').length;
   const tab = (id, label, n) => h('button.bot-tab' + (S.bottomTab === id ? '.on' : ''), { onclick: () => setBottom(id) }, label, n ? h('span.n', n) : null);
   const list = S.bottomTab === 'console' ? S.logs : S.bottomTab === 'output' ? S.output : null;
@@ -627,7 +646,7 @@ function renderBottom() {
     for (const l of list) body.append(h('div.log.' + l.level, h('span.lv', { 'aria-hidden': 'true' }, { error: 'ERR', warn: 'WARN', info: 'INFO', log: 'LOG', debug: 'DBG' }[l.level] || 'LOG'), h('span', l.text)));
   } else {
     if (!probs.length) body.append(h('div.bot-empty', 'Проблем не найдено.'));
-    for (const x of probs) body.append(h('div.log.click.' + (x.severity === 'error' ? 'error' : 'warn'), { onclick: () => openFile(x.path) }, h('span.lv', x.severity === 'error' ? 'ERR' : 'WARN'), h('span', x.text), h('span.src', x.path)));
+    for (const x of probs) body.append(h('div.log.click.' + (x.severity === 'error' ? 'error' : 'warn'), { onclick: () => openFile(x.path, x.line, x.col) }, h('span.lv', x.severity === 'error' ? 'ERR' : 'WARN'), h('span', x.text), h('span.src', x.path)));
   }
   box.replaceChildren(
     h('div.bot-tabs', tab('console', 'Консоль', errs), tab('output', 'Журнал'), tab('problems', 'Проблемы', probs.filter((x) => x.severity === 'error').length),
@@ -640,13 +659,19 @@ function renderBottom() {
   body.scrollTop = body.scrollHeight;
 }
 
+function allProblems() {
+  const out = project().problems();
+  for (const d of S.diags) out.push({ path: d.file, severity: 'error', text: `${d.line}:${d.col}  ${d.msg}`, line: d.line, col: d.col });
+  return out;
+}
+
 function updateStatus() {
   const p = project();
   if (!p || !$('proj-btn')) return;
   $('proj-btn').firstChild.textContent = p.name;
   const m = p.manifest().value;
-  $('sb-proj').textContent = `${p.name} · ${STACKS[m?.stack || 'web'] || 'web'}`;
-  const pr = p.problems();
+  $('sb-proj').textContent = `${p.name} · ${STACKS[m?.stack || 'noodle'] || m?.stack}`;
+  const pr = allProblems();
   const e = pr.filter((x) => x.severity === 'error').length;
   const w = pr.length - e;
   $('sb-prob').textContent = `✕ ${e}  ! ${w}`;
@@ -703,6 +728,17 @@ async function buildPackage() {
     return null;
   }
   const files = project().buildFiles();
+  if ((m.stack || 'noodle') === 'noodle') {
+    const c = await compileProject();
+    if (!c.ok) {
+      c.diags.forEach((d) => logOut(`${d.file}:${d.line}:${d.col}  ${d.msg}`, 'error'));
+      setBottom('problems', true);
+      toast(`Сборка остановлена: ошибок в коде — ${c.diags.length}`, 'err');
+      return null;
+    }
+    files[NOODLE_BYTECODE] = c.bytes;
+    logOut(`компиляция: ${names0(files)} файл(ов) → ${NOODLE_BYTECODE} (${fmtBytes(c.bytes.length)})`);
+  }
   const key = await getKey();
   try {
     const { bytes, report } = await buildNob(m, files, key);
@@ -717,6 +753,8 @@ async function buildPackage() {
     return null;
   }
 }
+
+const names0 = (files) => Object.keys(files).filter((f) => /\.(nui|ns)$/.test(f)).length;
 
 async function buildAction() {
   const b = await buildPackage();
@@ -766,7 +804,7 @@ async function refreshInstalled() {
       keyId: r.keyId,
       bytes: rec.bytes,
       iconUrl: ic ? URL.createObjectURL(new Blob([ic], { type: mimeOf(r.manifest.icon) })) : null,
-      launch: () => device.launch({ manifest: r.manifest, files }),
+      launch: () => device.launch({ manifest: r.manifest, files, nbc: r.files[NOODLE_BYTECODE] }),
     };
     list.push(app);
   }
@@ -778,9 +816,9 @@ async function refreshInstalled() {
 async function exportAndroid() {
   const m = manifestOrFail();
   if (!m) return;
-  if (NATIVE_STACKS.includes(m.stack)) return exportSource();
+  if ((m.stack || 'noodle') !== 'web') return exportSource();
   try {
-    const proj = androidProject(m, project().buildFiles(), await loadRuntime(), await loadEngine());
+    const proj = androidProject(m, project().buildFiles(), await loadRuntime());
     const entries = Object.keys(proj).sort().map((path) => ({ path, data: typeof proj[path] === 'string' ? utf8(proj[path]) : proj[path] }));
     const bytes = await zipWrite(entries);
     const where = download(`${m.id}-android-project.zip`, bytes, 'application/zip');
@@ -828,7 +866,7 @@ function viewPackage() {
     return out;
   }
   const native = NATIVE_STACKS.includes(m.stack);
-  const stack = m.stack || 'web';
+  const stack = m.stack || 'noodle';
   const field = (label, el, hint) => h('div.field', h('label', label), el, hint ? h('div.hint', hint) : null);
   const inp = (key, type = 'text', conv = (v) => v) => h('input', { type, value: String(m[key] ?? ''), spellcheck: false, onchange: (e) => writeManifest((x) => { x[key] = conv(e.target.value); }) });
 
@@ -839,7 +877,7 @@ function viewPackage() {
     h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' } }, field('Версия', inp('version')), field('versionCode', inp('versionCode', 'number', (v) => parseInt(v, 10) || 1))),
   );
   if (!native) {
-    const ext = stack === 'nui' ? /\.nui$/ : /\.html?$/;
+    const ext = stack === 'noodle' ? /\.nui$/ : /\.html?$/;
     form.append(
       field('Точка входа', h('select', { onchange: (e) => writeManifest((x) => { x.entry = e.target.value; }) }, p.paths().filter((f) => ext.test(f)).map((f) => h('option', { value: f, selected: f === m.entry }, f)))),
       field('Иконка', h('select', { onchange: (e) => writeManifest((x) => { if (e.target.value) x.icon = e.target.value; else delete x.icon; }) }, [h('option', { value: '' }, '(по умолчанию)'), ...p.paths().filter((f) => /\.(svg|png)$/i.test(f)).map((f) => h('option', { value: f, selected: f === m.icon }, f))])),
@@ -861,7 +899,7 @@ function viewPackage() {
       h('div.btn-row', { style: { marginBottom: '8px' } },
         h('button.btn.primary', { onclick: buildAction }, icon('download', 14), 'Собрать .nob'),
         h('button.btn', { onclick: installAction }, icon('app', 14), 'Установить в симулятор')),
-      h('div.btn-row', h('button.btn', { onclick: exportAndroid }, 'Android-проект (.zip)'), h('button.btn', { onclick: exportSource }, 'Исходники (.zip)')),
+      h('div.btn-row', stack === 'web' ? h('button.btn', { onclick: exportAndroid }, 'Android-проект (.zip)') : null, h('button.btn', { onclick: exportSource }, 'Исходники (.zip)')),
     );
   } else {
     build.append(h('div.btn-row', h('button.btn.primary', { onclick: exportSource }, icon('download', 14), 'Исходники проекта (.zip)')));
@@ -873,8 +911,8 @@ function viewPackage() {
   body.append(h('div.sec', h('div.sec-h', 'Сборка'), build));
 
   const cli = {
+    noodle: ['node tools/nob.mjs init my-app --template noodle-counter', 'node tools/nob.mjs check my-app', 'node tools/nob.mjs build my-app      # → .nob с байткодом', 'noodle run my-app                  # нативное окно (runtime/)'],
     web: ['node tools/nob.mjs init my-app --template counter', 'node tools/nob.mjs build my-app', 'node tools/nob.mjs apk my-app'],
-    nui: ['node tools/nob.mjs init my-app --template nui-counter', 'node tools/nob.mjs build my-app', 'node tools/nob.mjs apk my-app'],
     kotlin: ['node tools/nob.mjs init my-app --template kotlin', 'ANDROID_HOME=~/Android/Sdk node tools/nob.mjs apk my-app'],
     flutter: ['node tools/nob.mjs init my-app --template flutter', 'node tools/nob.mjs apk my-app   # нужен Flutter SDK'],
     swift: ['brew install xcodegen', 'xcodegen generate', 'xcodebuild -scheme NoodleSwift build'],
@@ -918,7 +956,7 @@ async function changeStack(stack) {
   if (!(await confirm('Сменить стек?', `Изменится поле stack в manifest.json на «${STACKS[stack]}». Файлы проекта не меняются — для нового стека обычно нужен другой шаблон (меню проектов → Новый проект).`, { ok: 'Сменить' }))) return renderSidebar();
   writeManifest((m) => {
     m.stack = stack;
-    if (stack === 'nui' && !String(m.entry).endsWith('.nui')) m.entry = project().paths().find((f) => f.endsWith('.nui')) || 'app.nui';
+    if (stack === 'noodle' && !String(m.entry).endsWith('.nui')) m.entry = project().paths().find((f) => f.endsWith('.nui')) || 'app.nui';
     if (stack === 'web' && !String(m.entry).endsWith('.html')) m.entry = project().paths().find((f) => f.endsWith('.html')) || 'index.html';
   });
   renderSidebar();
@@ -1061,6 +1099,11 @@ async function sendAgent(textOverride) {
       cfg: { kind: pr.kind, base: cfg.base, key: cfg.key, model: cfg.model },
       host: {
         project: project(),
+        check: async () => {
+          const c = await compileProject();
+          const pr = allProblems().filter((x) => x.severity === 'error');
+          return c.ok && !pr.length ? 'ok: ошибок нет, пакет можно собирать' : pr.map((x) => `error ${x.path}: ${x.text}`).join('\n');
+        },
         runPreview: async () => {
           const mark = S.logs.length;
           await run({ quiet: false });
@@ -1184,6 +1227,7 @@ async function main() {
   host.project = project();
   device = new Device({
     onConsole: logConsole,
+    onDiagnostics: (d) => { S.diags = d; renderBottom(); updateStatus(); },
     onState: (s) => {
       S.running = s.running;
       if (typeof updateStatus === 'function' && project()) updateStatus();
@@ -1203,11 +1247,12 @@ async function main() {
   const first = m?.entry && project().has(m.entry) ? m.entry : project().paths()[0];
   if (first) openFile(first);
   renderAll();
+  compileProject().catch(() => {});
   setTimeout(() => device.fit(), 50);
   narrow.addEventListener('change', () => device.fit());
   window.addEventListener('resize', () => device.fit());
   // отладочный доступ (тесты, консоль браузера)
-  window.studio = { ws, S, get project() { return project(); }, get device() { return device; }, run, openFile, buildPackage, installBytes, refreshInstalled, importBytes, sendAgent, setView, getKey, exportAndroid };
+  window.studio = { ws, S, compileProject, get project() { return project(); }, get device() { return device; }, run, openFile, buildPackage, installBytes, refreshInstalled, importBytes, sendAgent, setView, getKey, exportAndroid };
   // системная «Назад» в Android-обёртке: сначала закрываем превью/боковую панель, потом выходим
   window.noodle && window.noodle.onBack(() => {
     if (narrow.matches && !document.body.classList.contains('prev-off')) { togglePreview(false); return true; }
@@ -1222,7 +1267,6 @@ main().catch((e) => {
   console.error(e);
 });
 
-void compileNui;
 void alertBox;
 void validateManifest;
 void sha256;

@@ -209,9 +209,12 @@ export const PERMISSIONS = {
   vibrate: 'Вибрация',
 };
 export const ORIENTATIONS = ['portrait', 'landscape', 'auto'];
-/** Стеки: web — HTML/CSS/JS, nui — Noodle UI; остальные собираются своими тулчейнами в APK/IPA. */
-export const STACKS = { web: 'HTML + CSS + JS', nui: 'Noodle UI', kotlin: 'Kotlin (Android)', flutter: 'Flutter (Dart)', swift: 'Swift (iOS)' };
+/** Стеки: noodle — нативные приложения Noodle (Noodle UI + Noodle Script); web — веб-приложения (режим совместимости). */
+export const STACKS = { noodle: 'Noodle (нативный)', web: 'HTML + CSS + JS (совместимость)', kotlin: 'Kotlin (Android)', flutter: 'Flutter (Dart)', swift: 'Swift (iOS)' };
+/** Стеки, которые собираются сторонними тулчейнами в APK/IPA, а не в .nob */
 export const NATIVE_STACKS = ['kotlin', 'flutter', 'swift'];
+/** Нативный стек Noodle: исходники .nui/.ns компилируются в байткод main.nbc */
+export const NOODLE_BYTECODE = 'main.nbc';
 
 const JAVA_RESERVED = new Set(
   'abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public return short static strictfp super switch synchronized this throw throws transient try void volatile while true false null'.split(' '),
@@ -233,11 +236,11 @@ export function validateManifest(m, files) {
   if (typeof m.name !== 'string' || !m.name.trim() || m.name.length > 40) errors.push('name: строка 1–40 символов');
   if (typeof m.version !== 'string' || !/^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/.test(m.version)) errors.push('version: семвер, например 1.0.0');
   if (!Number.isInteger(m.versionCode) || m.versionCode < 1) errors.push('versionCode: целое число ≥ 1');
-  const stack = m.stack === undefined ? 'web' : m.stack;
+  const stack = m.stack === undefined ? 'noodle' : m.stack;
   if (!(stack in STACKS)) errors.push(`stack: ${Object.keys(STACKS).join(' | ')}`);
   const native = NATIVE_STACKS.includes(stack);
   if (!native) {
-    const ext = stack === 'nui' ? '.nui' : '.html';
+    const ext = stack === 'noodle' ? '.nui' : '.html';
     if (typeof m.entry !== 'string' || !m.entry.endsWith(ext)) errors.push(`entry: путь к ${ext} файлу`);
     else if (files && !has(m.entry)) errors.push(`entry: файл «${m.entry}» не найден`);
   }
@@ -271,7 +274,8 @@ export function defaultManifest(over = {}) {
     name: 'My App',
     version: '1.0.0',
     versionCode: 1,
-    entry: 'index.html',
+    stack: 'noodle',
+    entry: 'app.nui',
     icon: 'icon.svg',
     permissions: [],
     window: { orientation: 'portrait', background: '#000000', statusBar: 'light' },
@@ -315,6 +319,9 @@ export async function buildNob(manifest, files, key) {
   const { errors } = validateManifest(manifest, files);
   if (errors.length) throw new Error('манифест не прошёл проверку:\n  • ' + errors.join('\n  • '));
   if (NATIVE_STACKS.includes(manifest.stack)) throw new Error(`стек «${manifest.stack}» собирается в APK/IPA, а не в .nob (nob apk)`);
+  if ((manifest.stack || 'noodle') === 'noodle') {
+    if (!files[NOODLE_BYTECODE]) throw new Error('нет байткода main.nbc: сначала скомпилируйте проект (nob build / Studio делают это сами)');
+  }
   const paths = Object.keys(files).sort();
   for (const p of paths) {
     safePath(p);

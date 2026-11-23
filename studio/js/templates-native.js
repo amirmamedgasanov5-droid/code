@@ -8,19 +8,19 @@ const ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
 `;
 
 export const NATIVE_TEMPLATES = {
-  'nui-counter': {
-    stack: 'nui',
-    title: 'Noodle UI — счётчик',
-    description: 'Декларативный язык интерфейсов Noodle.OS: state, fn, screen. Без HTML.',
+  'noodle-counter': {
+    stack: 'noodle',
+    title: 'Noodle — счётчик',
+    description: 'Нативное приложение: Noodle UI + Noodle Script. Состояние сохраняется между запусками.',
     manifest: { id: 'dev.noodle.counter', name: 'Counter', version: '1.0.0', versionCode: 1, permissions: ['vibrate'], entry: 'app.nui' },
     files: {
-      'app.nui': `// Noodle UI: интерфейс описывается деревом элементов, логика — функциями на JavaScript.
+      'app.nui': `// Noodle UI: интерфейс — дерево элементов. Логика — Noodle Script (fn, state, if, for…).
 app "Counter"
 
-state count = 0 persist
+state count = 0 persist          // persist — значение переживает перезапуск
 
-fn inc() { count += 1; noodle.vibrate(15) }
-fn dec() { count -= 1; noodle.vibrate(15) }
+fn inc() { count += 1; vibrate(15) }
+fn dec() { count -= 1; vibrate(15) }
 
 screen main {
   column grow center gap=32 {
@@ -38,9 +38,9 @@ screen main {
     },
   },
 
-  'nui-todo': {
-    stack: 'nui',
-    title: 'Noodle UI — задачи',
+  'noodle-tasks': {
+    stack: 'noodle',
+    title: 'Noodle — задачи',
     description: 'Списки (each), условия (if), поля ввода, переключатели, два экрана и навигация.',
     manifest: { id: 'dev.noodle.tasks', name: 'Tasks', version: '1.0.0', versionCode: 1, permissions: [], entry: 'app.nui' },
     files: {
@@ -50,13 +50,13 @@ state items = [] persist
 state draft = ""
 
 fn add() {
-  const t = draft.trim()
-  if (!t) return
-  items = [...items, { id: Date.now(), text: t, done: false }]
+  let t = draft.trim()
+  if t == "" { return }
+  items = [...items, { id: now(), text: t, done: false }]
   draft = ""
 }
-fn remove(id) { items = items.filter(i => i.id !== id) }
-fn left() { return items.filter(i => !i.done).length }
+fn remove(id) { items = items.filter(fn(i) => i.id != id) }
+fn left() { return items.filter(fn(i) => !i.done).len }
 
 screen main {
   bar "Tasks" {
@@ -64,23 +64,18 @@ screen main {
   }
   column grow padding=16 gap=12 {
     row gap=8 {
-      input bind=draft placeholder="Новая задача" grow
+      input bind=draft placeholder="Новая задача" grow on_submit=add
       button "+" primary on=add
     }
-    text "Осталось: {left()} из {items.length}" dim size=13
+    text "Осталось: {left()} из {items.len}" dim size=13
     scroll grow {
-      if items.length == 0 {
+      if items.len == 0 {
         text "Пока пусто" dim center padding=40
       }
       each items as item {
         row gap=12 padding=12 border {
           toggle bind=item.done
-          if item.done {
-            text "{item.text}" grow dim
-          }
-          if !item.done {
-            text "{item.text}" grow
-          }
+          text "{item.text}" grow dim={item.done}
           button "×" ghost on={ remove(item.id) }
         }
       }
@@ -92,7 +87,120 @@ screen about {
   bar "О приложении"
   column grow center gap=8 padding=24 {
     text "Tasks" size=32 weight=200
-    text "Написано на Noodle UI" dim
+    text "Нативное приложение Noodle" dim
+  }
+}
+`,
+      'icon.svg': ICON,
+    },
+  },
+
+  'noodle-notes': {
+    stack: 'noodle',
+    title: 'Noodle — заметки',
+    description: 'Список и редактор заметок: многострочное поле, привязка к вложенным данным, сохранение.',
+    manifest: { id: 'dev.noodle.notes', name: 'Notes', version: '1.0.0', versionCode: 1, permissions: [], entry: 'app.nui' },
+    files: {
+      'app.nui': `app "Notes"
+
+state notes = [] persist
+state cur = 0
+
+fn create() {
+  notes = [{ title: "", body: "" }, ...notes]
+  cur = 0
+  goto("edit")
+}
+fn open(i) { cur = i; goto("edit") }
+fn drop() {
+  notes.remove(cur)
+  toast("Удалено")
+  back()
+}
+fn title_of(n) { return n.title == "" ? "Без названия" : n.title }
+
+screen main {
+  bar "Notes" {
+    button "+" ghost on=create
+  }
+  scroll grow {
+    if notes.len == 0 {
+      text "Нажмите +, чтобы создать заметку" dim center padding=48
+    }
+    each notes as n, i {
+      button "{title_of(n)}" ghost full on={ open(i) }
+    }
+  }
+}
+
+screen edit {
+  bar "Заметка"
+  column grow padding=16 gap=12 {
+    input bind=notes[cur].title placeholder="Заголовок" size=22 weight=600
+    area bind=notes[cur].body placeholder="Текст заметки" grow
+    button "Удалить" ghost on=drop
+  }
+}
+`,
+      'icon.svg': ICON,
+    },
+  },
+
+  'noodle-stopwatch': {
+    stack: 'noodle',
+    title: 'Noodle — секундомер',
+    description: 'Таймеры (every / cancel), замыкания, форматирование времени, круги.',
+    manifest: { id: 'dev.noodle.stopwatch', name: 'Stopwatch', version: '1.0.0', versionCode: 1, permissions: ['vibrate'], entry: 'app.nui' },
+    files: {
+      'app.nui': `app "Stopwatch"
+
+state ms = 0
+state running = false
+state timer = 0
+state laps = []
+
+fn pad2(n) { return pad_start(str(n), 2, "0") }
+fn fmt(t) {
+  let s = floor(t / 1000)
+  return pad2(floor(s / 60)) + ":" + pad2(s % 60) + "." + pad2(floor(t % 1000 / 10))
+}
+fn start() {
+  if running { return }
+  running = true
+  let last = now()
+  timer = every(30, fn() {
+    let t = now()
+    ms += t - last
+    last = t
+  })
+}
+fn stop() {
+  cancel(timer)
+  running = false
+}
+fn toggle_run() { if running { stop() } else { start() }; vibrate(20) }
+fn lap() { laps = [fmt(ms), ...laps] }
+fn reset() { stop(); ms = 0; laps = [] }
+
+screen main {
+  bar "Stopwatch"
+  column grow padding=24 gap=24 {
+    text "{fmt(ms)}" size=64 weight=200 center
+    row gap=12 {
+      button "{running ? 'Стоп' : 'Старт'}" primary grow on=toggle_run
+      button "Круг" grow disabled={!running} on=lap
+      button "Сброс" ghost grow on=reset
+    }
+    scroll grow {
+      each laps as l, i {
+        row padding=10 {
+          text "#{laps.len - i}" dim
+          spacer
+          text "{l}" mono
+        }
+        divider
+      }
+    }
   }
 }
 `,

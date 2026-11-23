@@ -10,22 +10,26 @@ import { fileURLToPath } from 'node:url';
 import { buildNob, readNob, generateKey, validateManifest, defaultManifest, sha256, utf8 } from '../studio/js/nob.js';
 import { androidProject } from '../studio/js/android.js';
 import { TEMPLATES, templateFiles } from '../studio/js/templates.js';
-import { NATIVE_STACKS, STACKS } from '../studio/js/nob.js';
+import { NATIVE_STACKS, STACKS, NOODLE_BYTECODE } from '../studio/js/nob.js';
+import { NoodleWasm } from '../studio/js/noodle-wasm.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const RUNTIME = path.join(here, '../studio/js/noodle-runtime.js');
-const NUI_ENGINE = path.join(here, '../studio/js/nui-engine.js');
+const WASM = path.join(here, '../studio/wasm/noodle.wasm');
+const NATIVE_BIN = path.join(here, '../runtime/target/release/noodle');
 const IGNORE = new Set(['.git', 'node_modules', '.DS_Store', '.gitkeep', 'build', 'dist']);
 
 const HELP = `nob — инструмент Noodle.OS
 
-  nob init <папка> [--template nui-counter|nui-todo|counter|notes|blank|kotlin|flutter|swift] [--id com.me.app] [--name "Имя"]
-  nob build [папка=.] [-o файл.nob] [--key ключ.json]   собрать и подписать .nob
+  nob init <папка> [--template noodle-counter|noodle-tasks|noodle-notes|noodle-stopwatch|kotlin|flutter|swift|counter|notes|blank] [--id com.me.app] [--name "Имя"]
+  nob check [папка=.]                                    проверить исходники Noodle (.nui/.ns), без сборки
+  nob build [папка=.] [-o файл.nob] [--key ключ.json]   скомпилировать в байткод и собрать подписанный .nob
+  nob run   [папка|.nob] [--size 390x844]                запустить в нативном окне (нужен собранный runtime/, см. docs)
   nob inspect <файл.nob>                                 показать манифест, файлы, ключ
   nob verify  <файл.nob>                                 проверить подпись и хэши (код выхода 0/1)
   nob unpack  <файл.nob> <папка>                         распаковать в проект
-  nob android [папка|.nob] [-o папка]                    сгенерировать Android-проект (Gradle)
-  nob apk     [папка|.nob] [-o файл.apk]                 собрать отладочный APK (нужны JDK 17+, Gradle, Android SDK)
+  nob android [папка|.nob] [-o папка]                    Android-проект для веб-приложений (stack web)
+  nob apk     [папка|.nob] [-o файл.apk]                 APK: веб-приложение, Kotlin или Flutter (нужны JDK 17+, Gradle, Android SDK)
   nob keygen  [файл.json]                                создать ключ подписи
 
 Ключ по умолчанию: $NOODLE_KEY или ~/.noodle/dev-key.json (создаётся автоматически).
@@ -48,6 +52,28 @@ const die = (m) => {
   process.exit(1);
 };
 const fmt = (n) => (n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(1) + ' KB' : (n / 1048576).toFixed(2) + ' MB');
+
+let wasmP = null;
+async function wasm() {
+  wasmP ||= NoodleWasm.load(fs.readFileSync(WASM));
+  return wasmP;
+}
+
+/** Компилирует исходники .nui/.ns проекта. Возвращает байткод или завершает процесс с диагностикой. */
+async function compileNoodle(manifest, files, { json = false } = {}) {
+  const names = Object.keys(files).filter((p) => /\.(nui|ns)$/.test(p)).sort();
+  names.sort((a, b) => (a === manifest.entry ? -1 : b === manifest.entry ? 1 : 0));
+  if (!names.length) die('в проекте нет файлов .nui/.ns');
+  const w = await wasm();
+  const r = w.compile(names.map((p) => [p, new TextDecoder().decode(files[p])]));
+  if (r.ok) return { bytes: r.bytes, files: names.length };
+  if (json) console.log(JSON.stringify(r.diags));
+  else {
+    for (const d of r.diags) console.error(`${d.file}:${d.line}:${d.col}: ${d.msg}`);
+    console.error(`\nошибок: ${r.diags.length}`);
+  }
+  process.exit(1);
+}
 
 function walk(dir, base = dir, out = {}) {
   for (const name of fs.readdirSync(dir)) {
@@ -126,7 +152,7 @@ const commands = {
   async init({ pos, opt }) {
     const dir = pos[0];
     if (!dir) die('укажите папку: nob init my-app');
-    const tpl = opt.template || 'nui-counter';
+    const tpl = opt.template || 'noodle-counter';
     if (!TEMPLATES[tpl]) die(`шаблоны: ${Object.keys(TEMPLATES).join(', ')}`);
     if (fs.existsSync(dir) && fs.readdirSync(dir).length) die(`папка «${dir}» не пуста`);
     const over = {};
@@ -147,11 +173,31 @@ const commands = {
     const dir = pos[0] || '.';
     const { manifest, files } = loadProject(dir);
     if (NATIVE_STACKS.includes(manifest.stack)) die(`стек «${manifest.stack}» не собирается в .nob — используйте: nob apk ${dir}`);
+    if ((manifest.stack || 'noodle') === 'noodle') {
+      const r = await compileNoodle(manifest, files);
+      files[NOODLE_BYTECODE] = r.bytes;
+      console.log(`компиляция: ${r.files} файл(ов) → ${NOODLE_BYTECODE} (${fmt(r.bytes.length)})`);
+    }
     const key = await loadKey(opt.key);
     const { bytes, report } = await buildNob(manifest, files, key);
     const out = opt.o || path.join(dir, `${manifest.id}-${manifest.version}.nob`);
     fs.writeFileSync(out, bytes);
     console.log(`✔ ${out}\n  файлов: ${report.files}, ${fmt(report.rawSize)} → ${fmt(report.size)}\n  sha256: ${report.sha256}\n  ключ:   ${report.keyId}`);
+  },
+
+  async check({ pos, opt }) {
+    const { manifest, files } = loadProject(pos[0] || '.');
+    if ((manifest.stack || 'noodle') !== 'noodle') die('check работает только для стека noodle');
+    const r = await compileNoodle(manifest, files, { json: !!opt.json });
+    console.log(`ok: файлов ${r.files}, байткод ${fmt(r.bytes.length)}`);
+  },
+
+  async run({ pos, opt }) {
+    if (!fs.existsSync(NATIVE_BIN)) die(`нативный рантайм не собран: cd runtime && cargo build --release  (ожидается ${NATIVE_BIN})`);
+    const args = ['run', pos[0] || '.'];
+    if (opt.size) args.push('--size', opt.size);
+    const r = spawnSync(NATIVE_BIN, args, { stdio: 'inherit' });
+    process.exit(r.status ?? 1);
   },
 
   async inspect({ pos }) {
@@ -192,7 +238,7 @@ const commands = {
     if (NATIVE_STACKS.includes(manifest.stack)) die(`«${manifest.stack}» — нативный проект, генерация WebView-обёртки не нужна: nob apk`);
     let proj;
     try {
-      proj = androidProject(manifest, files, fs.readFileSync(RUNTIME, 'utf8'), fs.readFileSync(NUI_ENGINE, 'utf8'));
+      proj = androidProject(manifest, files, fs.readFileSync(RUNTIME, 'utf8'));
     } catch (e) {
       die(e.message);
     }
@@ -210,6 +256,7 @@ const commands = {
     const src = pos[0] || '.';
     if (fs.statSync(src).isDirectory() && fs.existsSync(path.join(src, 'manifest.json'))) {
       const m = JSON.parse(fs.readFileSync(path.join(src, 'manifest.json'), 'utf8'));
+      if ((m.stack || 'noodle') === 'noodle') die('приложения Noodle — нативные для Noodle.OS и не собираются в APK. Соберите пакет: nob build');
       if (NATIVE_STACKS.includes(m.stack)) return nativeApk(src, m, opt);
     }
     const { out, manifest } = await commands.android({ pos: [src], opt: { o: opt.o && !opt.o.endsWith('.apk') ? opt.o : undefined } });

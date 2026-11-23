@@ -25,10 +25,10 @@ const RULES = {
   nui: [
     ['c', '\\/\\/[^\\n]*|\\/\\*[\\s\\S]*?(?:\\*\\/|$)'],
     ['s', STR],
-    ['n', '-?\\b\\d+(?:\\.\\d+)?\\b'],
-    ['k', '\\b(?:app|state|fn|async|screen|persist|if|each|as)\\b'],
-    ['f', '\\b(?:column|row|box|scroll|text|button|input|area|toggle|image|spacer|divider|bar)\\b'],
-    ['a', '[A-Za-z_][\\w-]*(?==)'],
+    ['n', '\\b\\d+(?:\\.\\d+)?\\b'],
+    ['k', '\\b(?:app|state|let|var|fn|screen|persist|if|else|each|for|in|while|return|break|continue|as|true|false|null)\\b'],
+    ['f', '\\b(?:column|row|box|scroll|text|button|input|area|toggle|slider|image|spacer|divider|bar|progress)\\b'],
+    ['a', '[A-Za-z_][\\w]*(?==)'],
     ['p', '[{}()\\[\\];,.<>=+\\-*/%&|^!?:~]+'],
   ],
   yaml: [

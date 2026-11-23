@@ -4,13 +4,13 @@ state items = [] persist
 state draft = ""
 
 fn add() {
-  const t = draft.trim()
-  if (!t) return
-  items = [...items, { id: Date.now(), text: t, done: false }]
+  let t = draft.trim()
+  if t == "" { return }
+  items = [...items, { id: now(), text: t, done: false }]
   draft = ""
 }
-fn remove(id) { items = items.filter(i => i.id !== id) }
-fn left() { return items.filter(i => !i.done).length }
+fn remove(id) { items = items.filter(fn(i) => i.id != id) }
+fn left() { return items.filter(fn(i) => !i.done).len }
 
 screen main {
   bar "Tasks" {
@@ -18,23 +18,18 @@ screen main {
   }
   column grow padding=16 gap=12 {
     row gap=8 {
-      input bind=draft placeholder="Новая задача" grow
+      input bind=draft placeholder="Новая задача" grow on_submit=add
       button "+" primary on=add
     }
-    text "Осталось: {left()} из {items.length}" dim size=13
+    text "Осталось: {left()} из {items.len}" dim size=13
     scroll grow {
-      if items.length == 0 {
+      if items.len == 0 {
         text "Пока пусто" dim center padding=40
       }
       each items as item {
         row gap=12 padding=12 border {
           toggle bind=item.done
-          if item.done {
-            text "{item.text}" grow dim
-          }
-          if !item.done {
-            text "{item.text}" grow
-          }
+          text "{item.text}" grow dim={item.done}
           button "×" ghost on={ remove(item.id) }
         }
       }
@@ -46,6 +41,6 @@ screen about {
   bar "О приложении"
   column grow center gap=8 padding=24 {
     text "Tasks" size=32 weight=200
-    text "Написано на Noodle UI" dim
+    text "Нативное приложение Noodle" dim
   }
 }

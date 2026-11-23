@@ -1,10 +1,10 @@
 {
   "format": 1,
-  "id": "dev.noodle.examples.tasks",
-  "name": "Tasks",
+  "id": "dev.noodle.examples.notes",
+  "name": "notes",
   "version": "1.0.0",
   "versionCode": 1,
-  "stack": "nui",
+  "stack": "noodle",
   "entry": "app.nui",
   "icon": "icon.svg",
   "permissions": [],

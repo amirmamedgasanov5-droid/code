@@ -1,0 +1,40 @@
+app "Notes"
+
+state notes = [] persist
+state cur = 0
+
+fn create() {
+  notes = [{ title: "", body: "" }, ...notes]
+  cur = 0
+  goto("edit")
+}
+fn open(i) { cur = i; goto("edit") }
+fn drop() {
+  notes.remove(cur)
+  toast("Удалено")
+  back()
+}
+fn title_of(n) { return n.title == "" ? "Без названия" : n.title }
+
+screen main {
+  bar "Notes" {
+    button "+" ghost on=create
+  }
+  scroll grow {
+    if notes.len == 0 {
+      text "Нажмите +, чтобы создать заметку" dim center padding=48
+    }
+    each notes as n, i {
+      button "{title_of(n)}" ghost full on={ open(i) }
+    }
+  }
+}
+
+screen edit {
+  bar "Заметка"
+  column grow padding=16 gap=12 {
+    input bind=notes[cur].title placeholder="Заголовок" size=22 weight=600
+    area bind=notes[cur].body placeholder="Текст заметки" grow
+    button "Удалить" ghost on=drop
+  }
+}

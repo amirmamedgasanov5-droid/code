@@ -94,28 +94,43 @@ async function newProjectViaUI(label, name) {
   await sleep(400);
 }
 
+const nodes = () => ev(() => studio.device.native.wasm.dump().nodes);
+const ntexts = async () => (await nodes()).filter((n) => n.kind === 'text').map((n) => n.text);
+/** Настоящий клик мышью по canvas в центре элемента с таким текстом (кнопка/поле). */
+async function clickNode(label) {
+  const n = (await nodes()).find((x) => x.text === label || x.placeholder === label);
+  if (!n) throw new Error('нет элемента «' + label + '»: ' + JSON.stringify((await nodes()).map((x) => x.text || x.placeholder)));
+  const box = await page.locator('canvas.dev-native').boundingBox();
+  const k = box.width / (await ev(() => studio.device.appArea().w));
+  await page.mouse.click(box.x + (n.x + n.w / 2) * k, box.y + (n.y + n.h / 2) * k);
+  await sleep(120);
+}
+
 try {
   console.log('\n— запуск Studio');
   await page.goto(URL_, { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('body[data-ready="1"]');
   check('Studio загрузилась', true);
+  check('по умолчанию проект на нативном стеке Noodle', (await ev(() => studio.project.manifest().value.stack)) === 'noodle');
   check('открыт app.nui', (await ev(() => studio.S.active)) === 'app.nui');
   check('подсветка синтаксиса есть', (await page.locator('.ed:not([hidden]) .t-k').count()) > 3);
 
-  console.log('\n— Noodle UI: запуск и клики');
+  console.log('\n— нативное превью: запуск и настоящие клики');
   await page.click('#btn-run');
-  await page.waitForSelector('iframe.dev-app');
-  await sleep(900);
-  let fr = frameOf();
-  const texts = async () => (await fr.locator('.n-text').allTextContents()).join('|');
-  check('превью показывает счётчик', (await texts()) === 'COUNTER|0', await texts());
-  await fr.locator('button', { hasText: '+' }).click();
-  await fr.locator('button', { hasText: '+' }).click();
-  await fr.locator('button', { hasText: '−' }).click();
-  check('клики меняют состояние (0+1+1−1=1)', (await texts()) === 'COUNTER|1', await texts());
-  await shot('01-nui-counter');
+  await page.waitForSelector('canvas.dev-native');
+  await sleep(500);
+  check('приложение нарисовано на canvas, а не в DOM/iframe', (await page.locator('iframe.dev-app').count()) === 0 && (await page.locator('canvas.dev-native').count()) === 1);
+  check('экран счётчика', (await ntexts()).join('|') === 'COUNTER|0', (await ntexts()).join('|'));
+  const canvasHasPixels = await ev(() => { const c = document.querySelector('canvas.dev-native'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] > 100) n++; return n; });
+  check('на canvas есть светлые пиксели (текст и рамки)', canvasHasPixels > 2000, String(canvasHasPixels));
+  await clickNode('+');
+  await clickNode('+');
+  await clickNode('+');
+  await clickNode('−');
+  check('клики мышью меняют состояние (0+1+1+1−1=2)', (await ntexts()).join('|') === 'COUNTER|2', (await ntexts()).join('|'));
+  await shot('01-native-counter');
 
-  console.log('\n— редактор');
+  console.log('\n— редактор и живое обновление');
   const ta = page.locator('.ed:not([hidden]) textarea');
   await ta.click();
   await page.keyboard.press('Control+End');
@@ -130,117 +145,133 @@ try {
   await page.keyboard.press('Control+z');
   await sleep(100);
   check('Ctrl+Z работает', !(await ev(() => studio.project.readText('app.nui'))).includes('fn x() {\n  \n}'));
-  // живое обновление (после отмены в файле мог остаться недописанный фрагмент — восстанавливаем исходник)
-  await ev(() => studio.project.write('app.nui', `screen main {\n  column grow center {\n    text "LIVE" caps dim\n  }\n}\n`));
+  await ev(() => studio.project.write('app.nui', 'screen main {\n  column grow center {\n    text "LIVE" caps dim\n  }\n}\n'));
   await sleep(2000);
-  fr = frameOf();
-  check('автообновление превью после правки', (await texts()).startsWith('LIVE'), await texts());
+  check('автообновление превью после правки', (await ntexts()).join('|') === 'LIVE', (await ntexts()).join('|'));
 
-  console.log('\n— ошибки Noodle UI видны в консоли и «Проблемах»');
-  await ev(() => studio.project.write('app.nui', 'screen main {\n  blah "x"\n}\n'));
-  await sleep(1800);
-  const consoleText = await ev(() => studio.S.logs.map((l) => l.text).join('\n'));
-  check('ошибка NUI попала в консоль', /неизвестный элемент/.test(consoleText), consoleText.slice(-200));
-  await ev(() => studio.project.write('app.nui', 'screen main {\n  text "ok {1+1}"\n}\n'));
+  console.log('\n— ошибки компиляции: проблемы, превью, исправление');
+  await ev(() => studio.project.write('app.nui', 'screen main {\n  column {\n    blah "x"\n    text "{нет_такого}"\n  }\n}\n'));
   await sleep(1500);
-  fr = frameOf();
-  check('интерполяция выражений', (await texts()) === 'ok 2', await texts());
+  const probs = await ev(() => studio.S.diags.map((d) => d.line + ':' + d.msg));
+  check('ошибка показана с номером строки', probs.some((p) => p.startsWith('3:') && p.includes('неизвестный элемент')), probs.join(' | '));
+  check('экран превью показывает ошибки', (await page.locator('.dev-error').innerText()).includes('неизвестный элемент'));
+  await page.click('#sb-prob');
+  check('ошибки видны в панели «Проблемы»', (await page.locator('.bot-body .log.error').count()) >= 1);
+  await page.locator('.bot-body .log.error').first().click();
+  check('клик по проблеме открывает файл на строке', (await ev(() => studio.S.active)) === 'app.nui');
+  await ev(() => studio.project.write('app.nui', 'screen main {\n  text "ok {1 + 1}"\n}\n'));
+  await sleep(1500);
+  check('после исправления приложение снова работает', (await ntexts()).join('|') === 'ok 2');
+  const bt = await page.evaluate(() => studio.buildPackage().then((b) => !!b));
+  check('сборка проходит после исправления', bt);
 
-  console.log('\n— веб-шаблон «Заметки» (HTML+JS): ввод, сохранение, «Назад»');
+  console.log('\n— консоль приложения: print() и ошибки времени выполнения');
+  await ev(() => studio.project.write('app.nui', 'fn boom() { print("hello-log", 1 + 1)\n return 1 / 0 }\nscreen main {\n  button "go" on=boom\n}\n'));
+  await sleep(1600);
+  await clickNode('go');
+  await sleep(400);
+  const logs = await ev(() => studio.S.logs.map((l) => l.level + ':' + l.text));
+  check('print() виден в консоли Studio', logs.some((l) => l === 'log:hello-log 2'), logs.join(' | ').slice(-200));
+  check('ошибка выполнения с трассировкой в консоли', logs.some((l) => l.startsWith('error:') && l.includes('деление на ноль') && l.includes('boom')), logs.join(' | ').slice(-300));
+
+  console.log('\n— Noodle «Задачи»: ввод с клавиатуры, список, переключатели, навигация, «Назад»');
+  await newProjectViaUI('Noodle — задачи', 'Tasks');
+  check('создан проект Noodle', (await ev(() => studio.project.manifest().value.stack)) === 'noodle');
+  await page.click('#btn-run');
+  await page.waitForSelector('canvas.dev-native');
+  await sleep(600);
+  await clickNode('Новая задача');
+  await page.keyboard.type('Купить хлеб');
+  await page.keyboard.press('Enter');
+  await clickNode('Новая задача');
+  await page.keyboard.type('Позвонить');
+  await clickNode('+');
+  let t = await ntexts();
+  check('ввод с клавиатуры и добавление', t.includes('Купить хлеб') && t.includes('Позвонить') && t.includes('Осталось: 2 из 2'), t.join('|'));
+  const tg = (await nodes()).find((n) => n.kind === 'toggle');
+  const box = await page.locator('canvas.dev-native').boundingBox();
+  const k = box.width / 390;
+  await page.mouse.click(box.x + (tg.x + tg.w / 2) * k, box.y + (tg.y + tg.h / 2) * k);
+  await sleep(150);
+  check('переключатель меняет данные', (await ntexts()).includes('Осталось: 1 из 2'));
+  await clickNode('×');
+  check('удаление работает', (await ntexts()).some((x) => x.includes('из 1')));
+  await clickNode('i');
+  check('goto() открывает второй экран', (await ntexts()).includes('Нативное приложение Noodle'));
+  await page.click('.dev-nav-btn[title="Назад"]');
+  await sleep(200);
+  check('кнопка «Назад» устройства возвращает на первый экран', (await ntexts()).some((x) => x.startsWith('Осталось')));
+  await page.click('.dev-nav-btn[title="Назад"]');
+  await sleep(300);
+  check('«Назад» на корне закрывает приложение (домашний экран)', (await page.locator('.home').count()) === 1);
+  await page.click('#btn-run');
+  await page.waitForSelector('canvas.dev-native');
+  await sleep(500);
+  check('state persist пережил перезапуск', (await ntexts()).some((x) => x === 'Купить хлеб' || x === 'Позвонить'), (await ntexts()).join('|'));
+  await shot('02-native-tasks');
+
+  console.log('\n— веб-шаблон «Заметки» (режим совместимости)');
   await newProjectViaUI('Заметки', 'Мои заметки');
   check('создан проект на web-стеке', (await ev(() => studio.project.manifest().value.stack)) === 'web');
-  check('id сгенерирован', (await ev(() => studio.project.manifest().value.id)) === 'dev.noodle.моизаметки'.replace(/[^\x00-\x7f]/g, '') || /^dev\.noodle\.app/.test(await ev(() => studio.project.manifest().value.id)));
   await page.click('#btn-run');
   await page.waitForSelector('iframe.dev-app');
   await sleep(900);
-  fr = frameOf();
+  let fr = frameOf();
   await fr.locator('#add').click();
   await fr.locator('#note-title').fill('Первая');
-  await fr.locator('#note-body').fill('Текст заметки');
   await sleep(200);
-  await page.click('.dev-nav-btn[title="Назад"]'); // системная «Назад» → из редактора в список
-  await sleep(700);
-  check('«Назад» вернул в список, приложение не закрылось', (await page.locator('iframe.dev-app').count()) === 1 && (await fr.locator('li b').first().textContent()) === 'Первая');
-  await page.click('.dev-nav-btn[title="Назад"]'); // из списка → домой
-  await sleep(700);
-  check('«Назад» из списка закрыл приложение (домашний экран)', (await page.locator('.home').count()) === 1);
-  // перезапуск — данные сохранены
-  await page.click('#btn-run');
-  await sleep(1000);
-  fr = frameOf();
-  check('данные noodle.storage пережили перезапуск', (await fr.locator('li b').first().textContent()) === 'Первая');
-  await shot('02-notes');
-
-  console.log('\n— консоль приложения и разрешения');
-  await ev(() => studio.project.write('app.js', studio.project.readText('app.js') + "\nconsole.log('hello-log'); console.error('boom-err'); noodle.vibrate(10); fetch('https://example.com/x').catch(e=>console.warn('net-blocked'));"));
-  await sleep(2200);
-  const logs = await ev(() => studio.S.logs.map((l) => l.level + ':' + l.text));
-  check('console.log приложения виден в Studio', logs.some((l) => l === 'log:hello-log'));
-  check('console.error виден как ошибка', logs.some((l) => l === 'error:boom-err'));
-  check('vibrate без разрешения предупреждает', logs.some((l) => l.startsWith('warn:noodle.vibrate')));
-  check('сеть без разрешения "network" заблокирована', logs.some((l) => l === 'warn:net-blocked'), logs.join(' | ').slice(-300));
-
-  console.log('\n— Noodle UI «Задачи»: списки, ввод, переключатели, экраны');
-  await newProjectViaUI('Noodle UI — задачи', 'Tasks');
-  await page.click('#btn-run');
-  await page.waitForSelector('iframe.dev-app');
-  await sleep(900);
-  fr = frameOf();
-  await fr.locator('input.n-input').fill('Купить хлеб');
-  await fr.locator('button', { hasText: '+' }).click();
-  await fr.locator('input.n-input').fill('Позвонить');
-  await fr.locator('button', { hasText: '+' }).click();
-  check('задачи добавляются, фокус и ввод работают', (await fr.locator('.n-row.n-row, .n-row').filter({ hasText: 'Купить хлеб' }).count()) >= 1 && (await fr.locator('.n-text', { hasText: 'Осталось: 2 из 2' }).count()) === 1);
-  await fr.locator('input[type=checkbox]').first().check();
-  await sleep(150);
-  check('переключатель меняет данные', (await fr.locator('.n-text', { hasText: 'Осталось: 1 из 2' }).count()) === 1);
-  await fr.locator('button', { hasText: '×' }).first().click();
-  check('удаление работает', (await fr.locator('.n-text', { hasText: 'из 1' }).count()) === 1);
-  await fr.locator('button', { hasText: 'i' }).click();
-  check('goto() открывает второй экран', (await fr.locator('.n-text', { hasText: 'Написано на Noodle UI' }).count()) === 1);
   await page.click('.dev-nav-btn[title="Назад"]');
-  await sleep(500);
-  check('системная «Назад» возвращает на первый экран', (await fr.locator('.n-text', { hasText: 'Осталось' }).count()) === 1);
-  await shot('03-tasks');
+  await sleep(700);
+  check('web: «Назад» вернул в список', (await fr.locator('li b').first().textContent()) === 'Первая');
 
-  console.log('\n— сборка .nob, установка, запуск с «домашнего экрана»');
+  console.log('\n— сборка .nob в Studio → проверка в CLI → запуск нативным бинарником');
+  await newProjectViaUI('Noodle — счётчик', 'Counter2');
   const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#btn-build')]);
   const nobPath = '/tmp/e2e-' + dl.suggestedFilename();
   await dl.saveAs(nobPath);
   check('файл .nob скачан', dl.suggestedFilename().endsWith('.nob'), dl.suggestedFilename());
-  const bytes = fs.readFileSync(nobPath);
-  check('внутри ZIP-сигнатура', bytes[0] === 0x50 && bytes[1] === 0x4b);
-  const cli = spawn('node', [path.join(root, 'tools/nob.mjs'), 'verify', nobPath], { stdio: 'pipe' });
-  const code = await new Promise((r) => cli.on('close', r));
-  check('пакет из Studio проходит `nob verify` в CLI', code === 0);
+  const verify = spawn('node', [path.join(root, 'tools/nob.mjs'), 'verify', nobPath], { stdio: 'pipe' });
+  check('пакет из Studio проходит `nob verify` в CLI', (await new Promise((r) => verify.on('close', r))) === 0);
+  const inspect = spawn('node', [path.join(root, 'tools/nob.mjs'), 'inspect', nobPath], { stdio: 'pipe' });
+  let insp = '';
+  inspect.stdout.on('data', (d) => (insp += d));
+  await new Promise((r) => inspect.on('close', r));
+  check('в пакете есть байткод main.nbc и исходники', insp.includes('main.nbc') && insp.includes('app.nui'));
+  const nativeBin = path.join(root, 'runtime/target/release/noodle');
+  if (fs.existsSync(nativeBin)) {
+    const nt = spawn(nativeBin, ['test', nobPath, '--steps', 'tap:+;tap:+;tap:+', '--expect', '3'], { stdio: 'pipe' });
+    let ntOut = '';
+    nt.stdout.on('data', (d) => (ntOut += d));
+    nt.stderr.on('data', (d) => (ntOut += d));
+    check('байткод, скомпилированный в Studio (WASM), исполняется нативным бинарником', (await new Promise((r) => nt.on('close', r))) === 0, ntOut);
+  } else console.log('  skip нативный бинарник не собран (cd runtime && cargo build --release)');
+
+  console.log('\n— установка в симулятор и запуск с домашнего экрана');
   await page.click('#act-package');
   await page.click('button:has-text("Установить в симулятор")');
   await sleep(1200);
-  check('приложение появилось на домашнем экране', (await page.locator('.home-app .home-name', { hasText: 'Tasks' }).count()) === 1);
-  await page.locator('.home-app', { hasText: 'Tasks' }).click();
-  await sleep(1000);
-  fr = frameOf();
-  check('установленное приложение запускается из пакета', fr && (await fr.locator('.n-text', { hasText: 'Осталось' }).count()) === 1);
+  check('приложение появилось на домашнем экране', (await page.locator('.home-app .home-name', { hasText: 'Counter2' }).count()) === 1);
+  await page.locator('.home-app', { hasText: 'Counter2' }).click();
+  await page.waitForSelector('canvas.dev-native');
+  await sleep(500);
+  await clickNode('+');
+  check('установленное приложение запускается из байткода пакета', (await ntexts()).join('|') === 'COUNTER|1');
   check('иконка приложения отображается', (await ev(() => studio.device.installed.some((a) => a.iconUrl))) === true);
   await page.click('.dev-nav-btn[title="Домой"]');
-  await shot('04-home');
+  await shot('03-home');
 
-  console.log('\n— импорт собранного .nob обратно в проект (правка пакета)');
+  console.log('\n— импорт собранного .nob обратно в проект');
   const before = await ev(() => studio.ws.projects.size);
-  await ev(async (b64) => { const bin = atob(b64); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); await studio.importBytes(u, 'x.nob'); }, bytes.toString('base64'));
+  await ev(async (b64) => { const bin = atob(b64); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); await studio.importBytes(u, 'x.nob'); }, fs.readFileSync(nobPath).toString('base64'));
   check('.nob открывается как проект', (await ev(() => studio.ws.projects.size)) === before + 1);
-  check('файлы восстановлены', (await ev(() => studio.project.has('app.nui'))) === true);
-  // подделанный пакет
-  const bad = Buffer.from(bytes);
-  const at = bad.indexOf(Buffer.from('Осталось'));
-  check('нашли строку для подмены', at < 0 || true);
+  check('исходники восстановлены, байткод не попал в проект', (await ev(() => studio.project.has('app.nui') && !studio.project.has('main.nbc'))) === true);
 
   console.log('\n— проблемы: сломанный manifest');
   await ev(() => studio.project.write('manifest.json', '{ broken'));
   await sleep(300);
   await page.click('#sb-prob');
   check('ошибка манифеста показана в «Проблемах»', (await page.locator('.bot-body .log.error').count()) >= 1);
-  await ev(() => studio.project.write('manifest.json', JSON.stringify({ format: 1, id: 'dev.noodle.fixed', name: 'Fixed', version: '1.0.0', versionCode: 1, stack: 'nui', entry: 'app.nui', permissions: [], window: { orientation: 'auto', background: '#000000' } }, null, 2)));
+  await ev(() => studio.project.write('manifest.json', JSON.stringify({ format: 1, id: 'dev.noodle.fixed', name: 'Fixed', version: '1.0.0', versionCode: 1, stack: 'noodle', entry: 'app.nui', permissions: [], window: { orientation: 'auto', background: '#000000' } }, null, 2)));
 
   console.log('\n— ИИ-агент (OpenAI-совместимый мок)');
   await ev(() => localStorage.setItem('nstudio.ai', JSON.stringify({ provider: 'custom', base: 'http://localhost:8792/v1', key: 'secret', model: 'mock-model', extra: 'отвечай кратко' })));
@@ -254,15 +285,15 @@ try {
   check('ошибочный edit_file показан как ошибка и не сломал цикл', (await page.locator('.tool.err').count()) === 1);
   check('в чате видны вызовы инструментов', (await page.locator('.tool').count()) === 5);
   const first = aiLog.find((l) => l.url === '/v1/chat/completions');
-  check('системный промпт содержит файлы и инструкции пользователя', first.b.messages[0].content.includes('app.nui') && first.b.messages[0].content.includes('отвечай кратко'));
+  const sys = first.b.messages[0].content;
+  check('системный промпт описывает язык Noodle и содержит файлы и инструкции', sys.includes('Noodle Script') && sys.includes('screen имя') && sys.includes('app.nui') && sys.includes('отвечай кратко'));
   check('ключ ушёл в заголовок Authorization', first.auth === 'Bearer secret');
   check('инструменты переданы провайдеру', first.b.tools.length === 8);
   const last = aiLog.filter((l) => l.url === '/v1/chat/completions').at(-1);
   check('результаты инструментов вернулись модели', last.b.messages.some((m) => m.role === 'tool' && m.content.includes('Ошибка')));
   await sleep(600);
-  fr = frameOf();
-  check('run_preview запустил превью, правка видна', fr && (await fr.locator('.n-text', { hasText: 'ПРИВЕТ ОТ ИИ' }).count()) === 1);
-  await shot('05-agent');
+  check('run_preview запустил превью, правка видна', (await ntexts()).includes('ПРИВЕТ ОТ ИИ'));
+  await shot('04-agent');
   await page.click('#agent-revert');
   await sleep(200);
   check('откат возвращает файлы', (await ev(() => studio.project.readText('app.nui'))).includes('"COUNTER"') && !(await ev(() => studio.project.has('notes.md'))));
@@ -289,17 +320,6 @@ try {
   await page.waitForFunction(() => document.body.innerText.includes('Моделей: 2'));
   check('кнопка «Получить модели» работает', true);
 
-  console.log('\n— экспорт Android-проекта');
-  await page.click('#act-package');
-  const [dl2] = await Promise.all([page.waitForEvent('download'), page.click('button:has-text("Android-проект")')]);
-  const zp = '/tmp/e2e-android.zip';
-  await dl2.saveAs(zp);
-  const unzip = spawn('unzip', ['-l', zp], { stdio: 'pipe' });
-  let out = '';
-  unzip.stdout.on('data', (d) => (out += d));
-  await new Promise((r) => unzip.on('close', r));
-  check('в zip есть gradle-проект и ассеты', /MainActivity\.java/.test(out) && /assets\/www\/noodle-nui\/engine\.js/.test(out), out.slice(0, 300));
-
   console.log('\n— поиск и быстрое открытие');
   await ev(() => studio.setView('search'));
   await page.fill('#search-q', 'COUNTER');
@@ -315,19 +335,17 @@ try {
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForSelector('body[data-ready="1"]');
   await sleep(500);
-  const overflow = await ev(() => document.documentElement.scrollWidth > window.innerWidth + 1);
-  check('нет горизонтальной прокрутки на 390px', !overflow);
-  await shot('06-mobile-editor');
+  check('нет горизонтальной прокрутки на 390px', !(await ev(() => document.documentElement.scrollWidth > window.innerWidth + 1)));
+  await shot('05-mobile-editor');
   await page.click('#act-files');
   await sleep(200);
   check('боковая панель открывается поверх редактора', await page.locator('.sidebar').isVisible());
-  await shot('07-mobile-files');
   await page.click('#act-files');
   await page.click('#btn-run');
-  await page.waitForSelector('iframe.dev-app', { timeout: 8000 });
-  await sleep(900);
+  await page.waitForSelector('canvas.dev-native', { timeout: 8000 });
+  await sleep(700);
   check('на телефоне превью занимает экран', (await page.locator('.preview-col').boundingBox()).width > 380);
-  await shot('08-mobile-preview');
+  await shot('06-mobile-preview');
 
   check('нет ошибок в консоли браузера Studio', errors.length === 0, errors.join(' | ').slice(0, 400));
 } catch (e) {

@@ -1,10 +1,10 @@
-// Noodle UI: интерфейс описывается деревом элементов, логика — функциями на JavaScript.
+// Noodle UI: интерфейс — дерево элементов. Логика — Noodle Script (fn, state, if, for…).
 app "Counter"
 
-state count = 0 persist
+state count = 0 persist          // persist — значение переживает перезапуск
 
-fn inc() { count += 1; noodle.vibrate(15) }
-fn dec() { count -= 1; noodle.vibrate(15) }
+fn inc() { count += 1; vibrate(15) }
+fn dec() { count -= 1; vibrate(15) }
 
 screen main {
   column grow center gap=32 {
