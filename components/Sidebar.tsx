@@ -53,14 +53,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, onLogout, collapsed, onT
 
       {/* Floating rail */}
       <aside
-        className={`${hideDesktop ? 'lg:hidden' : ''} fixed top-0 bottom-0 left-0 ${collapsed ? 'lg:w-[72px]' : 'lg:w-[248px]'} w-64 bg-surface border-r border-border flex flex-col z-[110] transition-[width,transform] duration-300 ease-[var(--ease-out-expo)] lg:translate-x-0 ${
+        className={`${hideDesktop ? 'lg:hidden' : ''} fixed top-0 bottom-0 left-0 ${collapsed ? 'lg:w-[72px]' : 'lg:w-[248px]'} w-64 glass border-r border-black/5 flex flex-col z-[110] transition-[width,transform] duration-500 ease-[var(--ease-out-expo)] lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className={`h-20 flex items-center ${collapsed ? 'lg:justify-center' : ''} px-5 gap-3 shrink-0 border-b border-border`}>
+        <div className={`h-20 flex items-center ${collapsed ? 'lg:justify-center' : ''} px-5 gap-3 shrink-0`}>
           <Logo className="w-10 h-10" />
           <div className={`leading-tight ${collapsed ? 'lg:hidden' : ''}`}>
-            <div className="text-[15px] font-bold tracking-[0.08em] text-brand-800">ИСНАД</div>
+            <div className="text-[17px] font-bold tracking-wide text-brand-800">ИСНАД</div>
             <div className="text-[11px] text-muted mt-0.5">онлайн-медресе</div>
           </div>
         </div>
@@ -82,17 +82,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, onLogout, collapsed, onT
                 end={item.to === '/'}
                 title={item.label}
                 className={({ isActive }) =>
-                  `relative flex items-center gap-3 ${collapsed ? 'lg:justify-center lg:px-0' : ''} px-3 h-9 rounded text-[13px] font-medium transition-colors ${
+                  `relative flex items-center gap-3 ${collapsed ? 'lg:justify-center lg:px-0' : ''} px-3 h-10 rounded-xl text-[14px] font-medium transition-all duration-300 ${
                     isActive
-                      ? 'bg-brand-50 dark:bg-brand-950/40 text-brand-800 dark:text-brand-300 font-semibold'
-                      : 'text-neutral-600 dark:text-neutral-400 hover:text-text hover:bg-neutral-100/70 dark:hover:bg-neutral-800/60'
+                      ? 'bg-brand-600 text-white font-semibold'
+                      : 'text-neutral-700 dark:text-neutral-300 hover:bg-black/[0.05] dark:hover:bg-white/10'
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
-                    {isActive && <span className="absolute -left-3 top-1 bottom-1 w-[3px] bg-brand-600" />}
-                    <item.icon className="w-[17px] h-[17px] shrink-0" />
+                                        <item.icon className="w-[17px] h-[17px] shrink-0" />
                     <span className={`truncate ${collapsed ? 'lg:hidden' : ''}`}>{item.label}</span>
                   </>
                 )}
@@ -101,7 +100,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, onLogout, collapsed, onT
           ))}
         </nav>
 
-        <div className="p-2.5 border-t border-border shrink-0">
+        <div className="p-3 shrink-0">
                     <div className={`flex items-center ${collapsed ? 'lg:flex-col lg:gap-2' : ''} justify-between gap-2 p-1.5`}>
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-9 h-9 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden">

@@ -122,25 +122,6 @@ export const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen flex bg-background text-text">
-      {/* Left brand panel */}
-      <div className="hidden lg:flex w-[46%] relative overflow-hidden bg-[#ebe6d6] border-r border-border p-14 flex-col justify-between">
-        <img src="/logo.png" alt="" aria-hidden className="absolute -right-24 -bottom-24 w-[560px] h-[560px] object-contain opacity-[0.16] select-none pointer-events-none" />
-        <div className="relative flex items-center gap-3">
-          <Logo className="w-11 h-11" />
-          <div className="leading-tight">
-            <div className="text-[15px] font-bold tracking-[0.08em] text-brand-800">ИСНАД</div>
-            <div className="text-xs text-neutral-600">онлайн-медресе</div>
-          </div>
-        </div>
-        <div className="relative max-w-md space-y-5">
-          <div className="h-px w-12 bg-brand-700" />
-          <h2 className="text-[34px] font-semibold tracking-tight leading-[1.15] text-brand-950">Учёба, знания и передача знаний — в одном месте</h2>
-          <p className="text-sm text-neutral-700 leading-relaxed">
-            Расписание, журнал, задания и библиотека медресе. Войдите, чтобы продолжить обучение.
-          </p>
-        </div>
-      </div>
-
       <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
       <Toast 
         isVisible={toast.visible} 
@@ -154,7 +135,7 @@ export const Login: React.FC = () => {
         
         {/* Minimal Academic Brand Header */}
         <div className="text-center space-y-2">
-          <Logo className="w-14 h-14 mx-auto mb-1 lg:hidden" />
+          <Logo className="w-20 h-20 mx-auto mb-2" />
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
               İsnad Mədrəsəsi
@@ -166,7 +147,7 @@ export const Login: React.FC = () => {
         </div>
 
         {/* Clean Card */}
-        <div className="bg-white dark:bg-[#111214] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-6 sm:p-7  space-y-5">
+        <div className="bg-white dark:bg-[#111214] rounded-3xl shadow-md p-7 sm:p-8  space-y-5">
           
           {/* Segmented Auth Switcher */}
           <div className="flex bg-neutral-100 dark:bg-neutral-900/90 p-1 rounded-xl border border-neutral-200/50 dark:border-neutral-800/80">

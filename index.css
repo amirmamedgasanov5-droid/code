@@ -25,41 +25,42 @@
   --color-brand-950: #0b150a;
   --color-accent: #a8140a;
 
-  --color-surface: #fffefb;
-  --color-background: #f4f1e9;
-  --color-text: #1b1f17;
-  --color-muted: #6c6b61;
-  --color-border: #ddd8ca;
+  --color-surface: #ffffff;
+  --color-background: #f2f2f7;
+  --color-text: #1c1c1e;
+  --color-muted: #8a8a8e;
+  --color-border: #e5e5ea;
 
   /* Calmer, tighter corner radii (replaces the oversized default rounding) */
-  --radius-sm: 2px;
-  --radius-md: 3px;
-  --radius-lg: 4px;
-  --radius-xl: 4px;
-  --radius-2xl: 6px;
-  --radius-3xl: 6px;
-  --radius-huge: 6px;
-  --radius-large: 4px;
-  --radius-medium: 3px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 26px;
+  --radius-huge: 20px;
+  --radius-large: 16px;
+  --radius-medium: 12px;
 
   /* Shadows: soft, neutral, low-opacity (floating layers only) */
-  --shadow-xs: none;
-  --shadow-sm: none;
-  --shadow-md: 0 8px 24px -12px rgb(27 31 23 / 0.22);
-  --shadow-lg: 0 16px 40px -16px rgb(27 31 23 / 0.28);
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.05), 0 1px 2px rgb(0 0 0 / 0.03);
+  --shadow-md: 0 8px 28px -6px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.04);
+  --shadow-lg: 0 24px 60px -12px rgb(0 0 0 / 0.22), 0 4px 12px rgb(0 0 0 / 0.05);
 
   /* Motion */
-  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out-expo: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring: linear(0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.723 12.9%, 0.938 16.7%, 1.017 19.4%, 1.067 22.4%, 1.082 25.3%, 1.071 28.6%, 1.033 33.4%, 1.008 38.7%, 0.998 47%, 1)
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --animate-fade-in: fade-in 0.2s var(--ease-out-quart) both;
-  --animate-reveal: modal-in 0.28s var(--ease-out-expo) both;
-  --animate-rise: rise 0.4s var(--ease-out-expo) both;
+  --animate-fade-in: fade-in 0.3s var(--ease-out-quart) both;
+  --animate-reveal: modal-in 0.5s var(--ease-out-expo) both;
+  --animate-rise: rise 0.55s var(--ease-out-expo) both;
 }
 
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-@keyframes modal-in { from { opacity: 0; transform: translateY(10px) scale(0.985); } to { opacity: 1; transform: none; } }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes modal-in { from { opacity: 0; transform: translateY(24px) scale(0.96); } to { opacity: 1; transform: none; } }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 @keyframes spin-soft { to { transform: rotate(360deg); } }
 
@@ -75,10 +76,11 @@
   }
   html, body { overflow-x: hidden; max-width: 100vw; }
   body {
-    @apply bg-background text-text antialiased font-normal text-[13px] selection:bg-brand-200 selection:text-brand-950;
+    @apply bg-background text-text antialiased font-normal text-[14px] selection:bg-brand-200 selection:text-brand-950;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
     font-feature-settings: "cv11", "calt", "kern";
+    -webkit-font-smoothing: antialiased;
     font-variant-numeric: tabular-nums;
     text-rendering: optimizeLegibility;
   }
@@ -89,10 +91,10 @@
   /* Interaction: consistent, quick, never decorative */
   button, a, [role="button"], input, select, textarea {
     transition-property: color, background-color, border-color, opacity, box-shadow, transform;
-    transition-duration: 150ms;
+    transition-duration: 220ms;
     transition-timing-function: var(--ease-out-quart);
   }
-  button:not(:disabled):active, [role="button"]:active { transform: scale(0.98); }
+  button:not(:disabled):active, [role="button"]:active { transform: scale(0.96); transition-duration: 90ms; }
   button:disabled { cursor: not-allowed; opacity: 0.55; }
   :focus-visible { outline: 2px solid var(--color-brand-500); outline-offset: 2px; }
   input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; }
@@ -152,19 +154,19 @@
 
 /* Enterprise Minimal Buttons */
 .btn-primary {
-  @apply bg-brand-600 hover:bg-brand-500 text-white font-medium rounded px-4 h-9 text-[13px] transition-colors flex items-center justify-center gap-2 cursor-pointer;
+  @apply bg-brand-600 hover:bg-brand-500 text-white font-medium rounded-xl px-5 h-11 text-[14px] font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer;
 }
 
 .btn-secondary {
-  @apply bg-surface border border-border hover:bg-neutral-50 dark:hover:bg-neutral-800 text-text font-medium rounded px-4 h-9 text-[13px] transition-colors flex items-center justify-center gap-2 cursor-pointer;
+  @apply bg-surface border border-border hover:bg-neutral-50 dark:hover:bg-neutral-800 text-text font-medium rounded-xl px-5 h-11 text-[14px] font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer;
 }
 
 .btn-brand {
-  @apply bg-brand-600 hover:bg-brand-500 text-white font-medium rounded px-4 h-9 text-[13px] transition-colors flex items-center justify-center gap-2 cursor-pointer;
+  @apply bg-brand-600 hover:bg-brand-500 text-white font-medium rounded-xl px-5 h-11 text-[14px] font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer;
 }
 
 .btn-amber {
-  @apply bg-amber-600 hover:bg-amber-500 text-white font-medium rounded px-4 h-9 text-[13px] transition-colors flex items-center justify-center gap-2 cursor-pointer;
+  @apply bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-xl px-5 h-11 text-[14px] font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer;
 }
 
 .btn-surface {
@@ -219,11 +221,11 @@ html[data-theme="minimal"] .btn-surface:hover { background: #ebebed; }
 /* ========== DARK: command-center, flat, compact, green accent ========== */
 html[data-theme="dark"] {
   color-scheme: dark;
-  --color-background: #0b0b0d;
-  --color-surface: #141417;
+  --color-background: #000000;
+  --color-surface: #1c1c1e;
   --color-text: #ececef;
   --color-muted: #8c8c97;
-  --color-border: #26262c;
+  --color-border: #2c2c2e;
   --color-brand: #7a9c3c;
   --color-brand-dark: #5f8a2e;
   --radius-xl: 0.75rem;
@@ -283,18 +285,11 @@ html[data-theme="dark"] body { font-size: 13px; }
   }
 }
 
-/* ───────── İsnad design language ─────────
-   Warm paper ground, hairline rules instead of shadows, small radii,
-   no tinted icon tiles, no pill-everything, no gradients or glow. */
-div:has(> svg:only-child)[class*="rounded"][class*="bg-"][class*="-50"],
-div:has(> svg:only-child)[class*="rounded"][class*="bg-"][class*="-100"] {
-  background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-}
-span.rounded-full[class*="px-"][class*="py-"],
-div.rounded-full[class*="px-"][class*="py-"] { border-radius: 4px; }
-button.rounded-full[class*="px-"] { border-radius: 4px; }
-h1 { font-size: 1.5rem; line-height: 1.2; font-weight: 600; letter-spacing: -0.02em; }
-.card, [class*="border-border"][class*="rounded"] { box-shadow: none; }
-table { border-collapse: collapse; }
+/* ───────── İsnad · iOS-style design language ─────────
+   Grouped grey ground, white rounded surfaces, translucent bars,
+   one tint colour (brand green), spring motion. */
+.glass { background: color-mix(in srgb, var(--color-surface) 78%, transparent); -webkit-backdrop-filter: saturate(180%) blur(22px); backdrop-filter: saturate(180%) blur(22px); }
+.card { box-shadow: var(--shadow-xs); border-color: transparent; }
+.tap { transition: transform 0.35s var(--ease-spring); }
+.tap:active { transform: scale(0.96); }
+::-webkit-scrollbar { width: 8px; height: 8px; }

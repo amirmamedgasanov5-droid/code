@@ -495,7 +495,7 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
                   <motion.span
                     layoutId="complaints-filter-pill"
                     className="absolute inset-0 bg-white dark:bg-neutral-900 rounded-xl  border border-neutral-200/80 dark:border-neutral-800"
-                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.45, ease: [0.32, 0.72, 0, 1] }}
                   />
                 )}
                 <span className="relative z-10 flex items-center gap-1">
@@ -531,7 +531,7 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.16, ease: [0.32, 0.72, 0, 1] }}
             className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 overflow-hidden divide-y divide-neutral-200/60 dark:divide-neutral-800/60 "
           >
             {filteredComplaints.map((c) => {
@@ -637,7 +637,7 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
               initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.98, opacity: 0 }}
-              transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.16, ease: [0.32, 0.72, 0, 1] }}
               className="bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 w-full max-w-xl rounded-2xl shadow-md overflow-hidden my-auto"
             >
               {/* Modal Header */}

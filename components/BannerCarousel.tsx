@@ -91,7 +91,7 @@ export const BannerCarousel: React.FC<Props> = ({ banners }) => {
           initial="enter"
           animate="center"
           exit="exit"
-          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
           drag={count > 1 ? 'x' : false}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.2}

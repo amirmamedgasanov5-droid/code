@@ -145,7 +145,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ user }) => {
                         <motion.span
                           layoutId="schedule-lang-pill"
                           className="absolute inset-0 bg-white dark:bg-neutral-900 rounded-xl  border border-neutral-200/80 dark:border-neutral-800"
-                          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                          transition={{ duration: 0.45, ease: [0.32, 0.72, 0, 1] }}
                         />
                       )}
                       <span className="relative z-10">{l.label}</span>
@@ -208,7 +208,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ user }) => {
                 initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
                 animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
                 exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
               >
                 <form onSubmit={handleAddLesson} className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 space-y-4 ">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -320,7 +320,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ user }) => {
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.16, ease: [0.32, 0.72, 0, 1] }}
               className="space-y-6"
             >
               {t.days.map((dayName, index) => {

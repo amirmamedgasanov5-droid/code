@@ -153,7 +153,7 @@ export const DiplomaGeneratorModal: React.FC<DiplomaGeneratorModalProps> = ({
           initial={{ opacity: 0, scale: 0.98, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.98, y: 12 }}
-          transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
           className="relative w-full max-w-5xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 rounded-2xl shadow-md p-5 sm:p-8 space-y-6 my-auto max-h-[92vh] overflow-y-auto custom-scrollbar"
         >
           {/* Header */}

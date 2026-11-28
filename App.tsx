@@ -302,9 +302,9 @@ function AnimatedRoutes({ user }: { user: User }) {
     <>
       <motion.div
         key={location.pathname}
-        initial={{ opacity: 0, y: 6 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ type: 'spring', stiffness: 260, damping: 28, mass: 0.9 }}
         className="w-full page-stagger"
       >
         {isParentUser(user) ? (

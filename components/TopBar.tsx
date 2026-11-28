@@ -10,7 +10,7 @@ export const TopBar: React.FC<{ user: User }> = ({ user }) => {
   const today = formatTodayAz();
 
   return (
-    <header className="hidden lg:flex items-center justify-between h-14 mb-6 -mx-10 px-10 border-b border-border bg-background/95 sticky top-0 z-30">
+    <header className="hidden lg:flex items-center justify-between h-16 mb-6 -mx-10 px-10 glass border-b border-black/5 sticky top-0 z-30">
       <div className="text-xs text-muted">{today}</div>
       <div className="flex items-center gap-4">
         <NotificationBell user={user} />

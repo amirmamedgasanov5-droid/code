@@ -148,7 +148,7 @@ export const Surveys: React.FC<SurveysProps> = ({ user }) => {
             initial={{ opacity: 0, height: 0, overflow: 'hidden' }} 
             animate={{ opacity: 1, height: 'auto', overflow: 'visible' }} 
             exit={{ opacity: 0, height: 0, overflow: 'hidden' }} 
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
             className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 space-y-4 "
           >
             <div className="space-y-3">
@@ -399,7 +399,7 @@ export const Surveys: React.FC<SurveysProps> = ({ user }) => {
                         initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
                         animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
                         exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                        transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                        transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
                         className="mt-4 pt-4 border-t border-neutral-200/60 dark:border-neutral-800/60 space-y-3"
                       >
                         <div className="flex items-center justify-between">

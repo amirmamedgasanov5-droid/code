@@ -6,13 +6,13 @@ export const SplashScreen: React.FC = () => (
   <motion.div
     initial={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    transition={{ duration: 0.3, ease: [0.25, 1, 0.5, 1] }}
+    transition={{ duration: 0.45, ease: [0.32, 0.72, 0, 1] }}
     className="fixed inset-0 z-[1000] bg-background flex flex-col items-center justify-center p-6 text-text"
   >
     <motion.div
       initial={{ opacity: 0, y: 8, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
       className="flex flex-col items-center gap-4"
     >
       <Logo className="w-16 h-16" />
