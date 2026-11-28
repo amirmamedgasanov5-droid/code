@@ -43,7 +43,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
       try {
         const parsed = JSON.parse(this.state.error?.message || "");
         if (parsed.error) {
-          errorMessage = `Firestore Xətası: ${parsed.error} (${parsed.operationType} @ ${parsed.path})`;
+          errorMessage = `Ошибка Firestore: ${parsed.error} (${parsed.operationType} @ ${parsed.path})`;
         }
       } catch (e) {
         // Not a JSON error

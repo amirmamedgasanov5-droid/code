@@ -204,7 +204,7 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
       try {
         await addDoc(collection(db, 'notifications'), {
           userId: student.id || student.uid,
-          title: isBlocking ? "Hesabınız bloklandı" : `İntizam Xəbərdarlığı: ${title.trim()}`,
+          title: isBlocking ? "Hesabınız bloklandı" : `Дисциплинарное предупреждение: ${title.trim()}`,
           message: description.trim(),
           type: 'warning',
           read: false,
@@ -226,7 +226,7 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
       setCustomDays(5);
     } catch (err: any) {
       console.error("Error creating complaint:", err);
-      showToast(`Xəta: ${err.message || 'Məlumat yadda saxlanılmadı'}`, "error");
+      showToast(`Ошибка: ${err.message || 'Не удалось сохранить данные'}`, "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -234,7 +234,7 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
 
   const handleUnblockStudent = async (complaint: Complaint) => {
     if (!isAdmin) return;
-    if (!window.confirm(`${complaint.studentName} üçün tətbiq olunmuş bloku ləğv etmək istəyirsiniz?`)) {
+    if (!window.confirm(`Отменить блокировку для ${complaint.studentName}?`)) {
       return;
     }
 
@@ -264,10 +264,10 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
         console.warn("Unblock notif err:", e);
       }
 
-      showToast(`${complaint.studentName} üçün blok ləğv edildi`, "success");
+      showToast(`Блокировка для ${complaint.studentName} отменена`, "success");
     } catch (err: any) {
       console.error("Error unblocking student:", err);
-      showToast(`Xəta: ${err.message || 'Ləğv etmək mümkün olmadı'}`, "error");
+      showToast(`Ошибка: ${err.message || 'Не удалось отменить'}`, "error");
     }
   };
 
@@ -573,7 +573,7 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
                           <Clock className="w-3 h-3" />
                           <span>
                             {c.blockedUntil 
-                              ? `Blok: ${formatDate(c.blockedUntil)} tarixinədək` 
+                              ? `Блокировка до ${formatDate(c.blockedUntil)}` 
                               : "Blok: Müddətsiz"}
                           </span>
                         </div>

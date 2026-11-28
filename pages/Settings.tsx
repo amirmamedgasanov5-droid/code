@@ -118,7 +118,7 @@ export const Settings: React.FC<SettingsProps> = ({ user }) => {
                 <h2 className="text-xl font-semibold text-text tracking-tight">{t.language}</h2>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                {languages.map((lang) => (
+                {languages.filter(l => l.id === 'ru').map((lang) => (
                     <button
                         key={lang.id}
                         onClick={() => { setUiLang(lang.id === 'ru' ? 'ru' : null); updatePreference({ language: lang.id }); }}

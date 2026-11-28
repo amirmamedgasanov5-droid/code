@@ -631,7 +631,7 @@ export const Homework: React.FC<HomeworkProps> = ({ user }) => {
               const hasDeadline = typeof e.expiresAtMs === 'number';
               const closed = hasDeadline && examNow > (e.expiresAtMs as number);
               const mins = hasDeadline ? Math.max(0, Math.floor(((e.expiresAtMs as number) - examNow) / 60000)) : 0;
-              const left = mins >= 1440 ? `${Math.floor(mins / 1440)} gün ${Math.floor((mins % 1440) / 60)} saat` : mins >= 60 ? `${Math.floor(mins / 60)} saat ${mins % 60} dəq` : `${mins} dəq`;
+              const left = mins >= 1440 ? `${Math.floor(mins / 1440)} дн. ${Math.floor((mins % 1440) / 60)} ч` : mins >= 60 ? `${Math.floor(mins / 60)} ч ${mins % 60} мин` : `${mins} мин`;
               return (
                 <div key={e.id} className="card space-y-3">
                   <div>
@@ -644,7 +644,7 @@ export const Homework: React.FC<HomeworkProps> = ({ user }) => {
                       {hasDeadline && !closed && <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Qalıb: {left}</span>}
                     </div>
                     {submitted ? (
-                      <span className="text-xs font-medium text-green-600 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Tamamlanıb{mySub?.gradeMark ? ` · Qiymət: ${mySub.gradeMark}` : ''}</span>
+                      <span className="text-xs font-medium text-green-600 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Tamamlanıb{mySub?.gradeMark ? ` · Оценка: ${mySub.gradeMark}` : ''}</span>
                     ) : closed ? (
                       <span className="text-xs font-medium text-red-500">Müddət bitib</span>
                     ) : (

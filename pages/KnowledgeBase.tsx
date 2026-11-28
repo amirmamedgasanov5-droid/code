@@ -23,7 +23,7 @@ interface KnowledgeBaseProps {
 }
 
 export const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ user }) => {
-    const t = translations[user.language || 'az'];
+    const t = translations[user.language || 'ru'];
     const [resources, setResources] = useState<KnowledgeResource[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');

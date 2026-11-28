@@ -53,7 +53,7 @@ export const SquwizSetup: React.FC<SquwizSetupProps> = ({ onComplete }) => {
                 ...(role === 'teacher' ? { requestedRole: 'teacher' as const } : {}),
                 className,
                 theme: 'light',
-                language: 'az',
+                language: 'ru',
                 effectsEnabled: true,
                 animationsEnabled: true,
                 glassmorphism: true,
@@ -72,7 +72,7 @@ export const SquwizSetup: React.FC<SquwizSetupProps> = ({ onComplete }) => {
             console.error("SQUWIZ Setup failed details:", error);
             // Show more specific error if possible
             const errorMessage = error?.message || "Naməlum xəta";
-            alert(`Xəta baş verdi: ${errorMessage}\n\nZəhmət olmasa Firebase konsolunda 'Anonymous Auth' aktiv olduğunu yoxlayın.`);
+            alert(`Произошла ошибка: ${errorMessage}\n\nПроверьте, что в консоли Firebase включён «Anonymous Auth».`);
         } finally {
             setLoading(false);
         }

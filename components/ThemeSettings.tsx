@@ -101,7 +101,7 @@ export const ThemeSettings: React.FC = () => {
       await setDoc(doc(db, 'school_settings', 'main'), { theme: preview }, { merge: true });
       setPreviewTheme(null);
       setPreview(null);
-      setMessage(`Hamı üçün tətbiq edildi: ${nameOf(preview)}`);
+      setMessage(`Применено для всех: ${nameOf(preview)}`);
     } catch (err: any) {
       setMessage('Saxlanmadı: ' + (err?.message || 'xəta') + '. Firestore qaydalarını dərc etdiyinizi yoxlayın.');
     } finally {

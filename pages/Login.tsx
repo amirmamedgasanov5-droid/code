@@ -68,7 +68,7 @@ export const Login: React.FC = () => {
               childName: invite.data().studentName,
               inviteCode: code,
               theme: 'light',
-              language: 'az',
+              language: 'ru',
               showNotifications: true,
               createdAt: new Date().toISOString(),
             });
@@ -99,7 +99,7 @@ export const Login: React.FC = () => {
           role: 'student',
           ...(role === 'teacher' ? { requestedRole: 'teacher' as const } : {}),
           theme: 'light',
-          language: 'az',
+          language: 'ru',
           className: '1-A',
           effectsEnabled: false,
           animationsEnabled: true,
@@ -313,7 +313,7 @@ export const Login: React.FC = () => {
                 value={email} 
                 onChange={e => setEmail(e.target.value)} 
                 className="w-full px-3.5 py-2.5 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl text-xs text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 outline-none transition-colors" 
-                placeholder="adiniz@example.com" 
+                placeholder="name@example.com" 
                 required 
               />
             </div>

@@ -60,7 +60,7 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
 
   // ── Language (students can switch the whole exam to Russian) ──
   const [lang, setLangState] = useState<'az' | 'ru'>(() => {
-    try { return localStorage.getItem('exam_lang') === 'ru' ? 'ru' : 'az'; } catch { return 'az'; }
+    try { return localStorage.getItem('exam_lang') === 'az' ? 'az' : 'ru'; } catch { return 'ru'; }
   });
   const setLang = (l: 'az' | 'ru') => {
     setLangState(l);
@@ -195,7 +195,7 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
       setNotice('Bu imtahan artıq əlavə olunub.');
       return;
     }
-    if (!window.confirm(`«${ready.title}» (${ready.questions.length} sual) əlavə olunsun?`)) return;
+    if (!window.confirm(`Добавить «${ready.title}» (вопросов: ${ready.questions.length})?`)) return;
     try {
       await addDoc(collection(db, 'exams'), {
         title: ready.title,
@@ -248,7 +248,7 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
     await addDoc(collection(db, 'notifications'), {
       userId: sub.studentId,
       title: 'İmtahan qiyməti',
-      message: `«${sub.examTitle}»: ${sub.score}/${sub.totalQuestions}. Qiymətiniz: ${mark}`,
+      message: `«${sub.examTitle}»: ${sub.score}/${sub.totalQuestions}. Ваша оценка: ${mark}`,
       type: 'success',
       read: false,
       createdAt: new Date().toISOString(),
@@ -258,7 +258,7 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
   const writeOne = async (sub: ExamSubmission) => {
     try {
       await writeMark(sub);
-      setNotice(`${sub.studentName}: qiymət ${markOf(sub)} jurnala yazıldı.`);
+      setNotice(`${sub.studentName}: оценка ${markOf(sub)} выставлена в журнал.`);
     } catch (err) {
       setNotice('Jurnala yazılmadı. Firestore qaydalarını dərc etdiyinizi yoxlayın.');
       try { handleFirestoreError(err, OperationType.WRITE, 'journal_v2'); } catch {}
@@ -269,10 +269,10 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
     const todo = shownResults.filter(sub => !sub.gradeMark);
     if (todo.length === 0) return;
     const subj = SUBJECTS.find(x => x.id === subjectId)?.name || subjectId;
-    if (!window.confirm(`${todo.length} şagirdin qiyməti «${subj}» fənni üzrə jurnala yazılsın?`)) return;
+    if (!window.confirm(`Выставить в журнал оценки (${todo.length}) по предмету «${subj}»?`)) return;
     try {
       for (const sub of todo) await writeMark(sub);
-      setNotice(`${todo.length} qiymət jurnala yazıldı və şagirdlərə bildiriş getdi.`);
+      setNotice(`Оценок выставлено в журнал: ${todo.length}. Ученикам отправлены уведомления.`);
     } catch (err) {
       setNotice('Bəzi qiymətlər yazılmadı. Firestore qaydalarını dərc etdiyinizi yoxlayın.');
       try { handleFirestoreError(err, OperationType.WRITE, 'journal_v2'); } catch {}
@@ -284,8 +284,8 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
   const sendExam = async (exam: Exam) => {
     const again = exam.published !== false;
     const msg = again
-      ? `«${exam.title}» imtahanı yenidən göndərilsin? Müddət bu andan ${EXAM_DAYS} gün olacaq.`
-      : `«${exam.title}» imtahanı bütün şagirdlərə göndərilsin? Müddət: ${EXAM_DAYS} gün.`;
+      ? `Отправить экзамен «${exam.title}» снова? Срок с этого момента: ${EXAM_DAYS} дн.`
+      : `Отправить экзамен «${exam.title}» всем ученикам? Срок: ${EXAM_DAYS} дн.`;
     if (!window.confirm(msg)) return;
     const startMs = Date.now();
     const expiresAtMs = startMs + EXAM_DAYS * 24 * 60 * 60 * 1000;
@@ -303,7 +303,7 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
         batch.set(doc(collection(db, 'notifications')), {
           userId: s.id,
           title: 'Yeni imtahan',
-          message: `«${exam.title}» imtahanı açıldı. ${fmtDate(expiresAtMs)}-dək tamamlayın.`,
+          message: `Экзамен «${exam.title}» открыт. Сдайте до ${fmtDate(expiresAtMs)}.`,
           type: 'info',
           read: false,
           createdAt: new Date().toISOString(),
@@ -315,7 +315,7 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
         }
       }
       await batch.commit();
-      setNotice(`Göndərildi. ${students.size} şagirdə bildiriş getdi. İmtahan ${fmtDate(expiresAtMs)}-dək açıqdır.`);
+      setNotice(`Отправлено. Уведомлений: ${students.size}. Экзамен открыт до ${fmtDate(expiresAtMs)}.`);
     } catch (err) {
       setNotice('Göndərilmədi. Firestore qaydalarını dərc etdiyinizi yoxlayın.');
       try { handleFirestoreError(err, OperationType.UPDATE, `exams/${exam.id}`); } catch {}
@@ -354,7 +354,7 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            {view === 'list' && (
+            {false && view === 'list' && (
               <div className="flex rounded-full bg-neutral-100 dark:bg-neutral-800 p-0.5 text-[11px]">
                 {([['az', 'AZ'], ['ru', 'RU']] as const).map(([id, label]) => (
                   <button
@@ -492,7 +492,7 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
                           {hasSubmitted ? (
                             <div className="flex items-center space-x-1 text-[11px] font-semibold text-green-500">
                               <CheckCircle2 className="w-3 h-3" />
-                              <span>{T.done}{mySub?.gradeMark ? ` · ${lang === 'ru' ? 'Оценка' : 'Qiymət'}: ${mySub.gradeMark}` : ''}</span>
+                              <span>{T.done}{mySub?.gradeMark ? ` · Оценка: ${mySub.gradeMark}` : ''}</span>
                             </div>
                           ) : st === 'closed' && !isTeacher ? (
                             <span className="text-[11px] font-semibold text-red-500">{T.closed}</span>
@@ -629,7 +629,7 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
                       questions={view_qs}
                       submitLabel={T.submit}
                       lang={useRu ? 'ru' : 'az'}
-                      onLangChange={ruTr ? setLang : undefined}
+                      onLangChange={undefined}
                       draftKey={`exam_draft_${activeExam.id}_${user.uid}`}
                       onBack={leaveExam}
                       onSubmit={payload => handleSubmitExam(payload.answers)}
@@ -725,7 +725,7 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
                               </div>
                               <div className="min-w-0">
                                 <div className="text-sm font-semibold text-text truncate">{sub.studentName}</div>
-                                <div className="text-[11px] text-muted truncate">{sub.examTitle} · {new Date(sub.submittedAt).toLocaleDateString('az-AZ')}</div>
+                                <div className="text-[11px] text-muted truncate">{sub.examTitle} · {new Date(sub.submittedAt).toLocaleDateString('ru-RU')}</div>
                               </div>
                             </div>
                             <div className="flex items-center space-x-2 w-36">

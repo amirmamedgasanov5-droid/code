@@ -31,7 +31,7 @@ export const DiplomaCard: React.FC<DiplomaCardProps> = ({ data }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const dateStr = data.date || new Date().toLocaleDateString('az-AZ');
+  const dateStr = data.date || new Date().toLocaleDateString('ru-RU');
   const serialNo = data.serialNumber || `IS-2026-${(data.id || '0000').slice(0, 4).toUpperCase()}`;
 
   const download = async () => {

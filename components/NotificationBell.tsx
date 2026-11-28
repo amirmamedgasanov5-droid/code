@@ -10,12 +10,12 @@ const timeAgo = (iso: string): string => {
   const s = Math.max(0, Math.floor((Date.now() - t) / 1000));
   if (s < 60) return 'indi';
   const m = Math.floor(s / 60);
-  if (m < 60) return `${m} dəq əvvəl`;
+  if (m < 60) return `${m} мин назад`;
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h} saat əvvəl`;
+  if (h < 24) return `${h} ч назад`;
   const d = Math.floor(h / 24);
-  if (d < 30) return `${d} gün əvvəl`;
-  return new Date(iso).toLocaleDateString('az-AZ');
+  if (d < 30) return `${d} дн. назад`;
+  return new Date(iso).toLocaleDateString('ru-RU');
 };
 
 const ICONS = {

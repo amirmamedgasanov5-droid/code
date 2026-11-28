@@ -84,7 +84,7 @@ export const Library: React.FC<LibraryProps> = ({ user }) => {
       setCoverImage(null);
       setToast({ visible: true, message: "Kitab uğurla əlavə edildi!", type: 'success' });
     } catch (error: any) {
-      setToast({ visible: true, message: `Xəta: ${error.message}`, type: 'error' });
+      setToast({ visible: true, message: `Ошибка: ${error.message}`, type: 'error' });
     } finally {
       setIsSaving(false);
     }
@@ -96,7 +96,7 @@ export const Library: React.FC<LibraryProps> = ({ user }) => {
         await deleteDoc(doc(booksDb, 'books', id));
         setToast({ visible: true, message: "Kitab silindi.", type: 'success' });
       } catch (err: any) {
-        setToast({ visible: true, message: `Silinmə xətası: ${err.message}`, type: 'error' });
+        setToast({ visible: true, message: `Ошибка удаления: ${err.message}`, type: 'error' });
       }
     }
   };

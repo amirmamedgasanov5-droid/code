@@ -241,7 +241,7 @@ export const IslamicGames: React.FC<IslamicGamesProps> = ({ user, onClose }) => 
     e.preventDefault();
     const correctWord = SCRAMBLE_WORDS[scrambleIndex].word;
     if (userGuess.toUpperCase() === correctWord) {
-      setScrambleMessage("Düzdür! Maşallah! ");
+      setScrambleMessage("Верно! Маша Аллах!");
       setTimeout(() => {
         setScrambleMessage("");
         setUserGuess("");
@@ -252,7 +252,7 @@ export const IslamicGames: React.FC<IslamicGamesProps> = ({ user, onClose }) => 
         }
       }, 1500);
     } else {
-      setScrambleMessage("Səhvdir, yenidən yoxlayın. ");
+      setScrambleMessage("Неверно, попробуйте ещё раз.");
       setTimeout(() => setScrambleMessage(""), 1500);
     }
   };
@@ -522,7 +522,7 @@ export const IslamicGames: React.FC<IslamicGamesProps> = ({ user, onClose }) => 
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className={`text-xs font-semibold ${scrambleMessage.includes('Düzdür') ? 'text-green-500' : 'text-red-500'}`}
+                        className={`text-xs font-semibold ${scrambleMessage.includes('Верно') ? 'text-green-500' : 'text-red-500'}`}
                       >
                         {scrambleMessage}
                       </motion.p>

@@ -462,8 +462,8 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
               { id: 'idcard', label: 'Rəsmi Vəsiqə (ID)', icon: ShieldCheck },
               { id: 'journal', label: 'Qiymətlər & Jurnal', icon: BookOpen },
               { id: 'attendance', label: 'Davamiyyət', icon: ClipboardList },
-              { id: 'discipline', label: `İntizam (${complaints.length})`, icon: AlertTriangle },
-              { id: 'awards', label: `Tərifnamələr (${congratulations.length})`, icon: Award },
+              { id: 'discipline', label: `Дисциплина (${complaints.length})`, icon: AlertTriangle },
+              { id: 'awards', label: `Благодарности (${congratulations.length})`, icon: Award },
               { id: 'schedule', label: 'Dərs Cədvəli', icon: Calendar },
               { id: 'inquiries', label: 'Rəhbərliyə Müraciət', icon: MessageSquare }
             ].map(tab => {
@@ -547,7 +547,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                     <span>Cari Səviyyə: {currentRank.name} ({currentRank.title})</span>
                   </span>
                   <span className="text-brand-600 font-semibold">
-                    {progress.nextRank ? `Növbəti Rütbəyə: ${progress.remainingXp} XP` : 'Maksimum Səviyyə! '}
+                    {progress.nextRank ? `До следующего ранга: ${progress.remainingXp} XP` : 'Maksimum Səviyyə! '}
                   </span>
                 </div>
 

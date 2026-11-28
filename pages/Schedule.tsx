@@ -17,7 +17,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ user }) => {
   const [filterLang, setFilterLang] = useState<Language | 'all'>('all');
   const [selectedDay, setSelectedDay] = useState<number | 'all'>('all');
 
-  const t = translations[user.language || 'az'];
+  const t = translations[user.language || 'ru'];
 
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,7 +29,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ user }) => {
     daysOfWeek: [] as number[],
     room: '',
     lessonLink: '',
-    language: (user.language || 'az') as Language
+    language: (user.language || 'ru') as Language
   });
 
   useEffect(() => {

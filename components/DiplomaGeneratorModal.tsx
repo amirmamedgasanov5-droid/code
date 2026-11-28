@@ -95,7 +95,7 @@ export const DiplomaGeneratorModal: React.FC<DiplomaGeneratorModalProps> = ({
     setIsSaving(true);
     try {
       const serialNumber = `IS-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-      const dateString = new Date().toLocaleDateString('az-AZ', { day: 'numeric', month: 'long', year: 'numeric' });
+      const dateString = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 
       // 1. Save to `certificates` collection
       await addDoc(collection(db, 'certificates'), {
@@ -115,7 +115,7 @@ export const DiplomaGeneratorModal: React.FC<DiplomaGeneratorModalProps> = ({
       // 2. Also send as official congratulation to Valideyn Portalı
       await addDoc(collection(db, 'congratulations'), {
         studentId: selectedStudentId,
-        title: `Rəsmi Diplom: ${customTitle}`,
+        title: `Официальный диплом: ${customTitle}`,
         message: customReason,
         teacherId: auth.currentUser?.uid || 'admin',
         teacherName: teacherName || 'Mədrəsə Rəhbərliyi',

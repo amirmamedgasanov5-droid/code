@@ -32,7 +32,7 @@ export const Banners: React.FC<{ user: User }> = ({ user }) => {
     const who = auth.currentUser?.isAnonymous ? 'anonim giriş (e-poçt yoxdur)' : auth.currentUser?.email || 'naməlum';
     const denied = String(err?.code || err?.message || '').includes('permission');
     return denied
-      ? `İcazə yoxdur. Daxil olduğunuz hesab: ${who}. Yoxlayın: 1) Firestore qaydaları Firebase Console-da dərc edilib? 2) Hesab idarəçi/müəllim e-poçtu ilə daxil olub?`
+      ? `Нет доступа. Текущий аккаунт: ${who}. Проверьте: 1) опубликованы ли правила Firestore в Firebase Console; 2) выполнен ли вход с почтой администратора/учителя.`
       : 'Xəta: ' + (err?.message || 'əməliyyat alınmadı');
   };
 
@@ -94,7 +94,7 @@ export const Banners: React.FC<{ user: User }> = ({ user }) => {
   };
 
   const remove = async (b: Banner) => {
-    if (!window.confirm(`"${b.title}" bannerini silmək istəyirsiniz?`)) return;
+    if (!window.confirm(`Удалить баннер «${b.title}»?`)) return;
     try {
       await deleteDoc(doc(db, 'banners', b.id));
     } catch (err) {

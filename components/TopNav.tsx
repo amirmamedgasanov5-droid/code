@@ -14,7 +14,7 @@ interface Props {
 
 /** Horizontal navigation used by the "minimal" theme (desktop). */
 export const TopNav: React.FC<Props> = ({ user, onLogout }) => {
-  const t = translations[(user.language || 'az') as keyof typeof translations];
+  const t = translations[(user.language || 'ru') as keyof typeof translations];
   const sections = buildNavSections(user, t);
   const flat = sections.flatMap(s => s.items);
   const main = flat.slice(0, 4);

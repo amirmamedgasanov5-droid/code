@@ -148,7 +148,7 @@ export const Extra: React.FC<ExtraProps> = ({ user }) => {
                 courseId,
                 studentId: user.uid,
                 studentName: user.name,
-                studentClass: user.class || 'Naməlum',
+                studentClass: user.class || 'Неизвестно',
                 enrolledAt: serverTimestamp()
             });
             setToast({ visible: true, message: 'Qeydiyyat tamamlandı', type: 'success' });

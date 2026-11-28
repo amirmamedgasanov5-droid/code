@@ -100,7 +100,7 @@ export const Services: React.FC<ServicesProps> = ({ user }) => {
         type: service.type,
         installedAt: serverTimestamp()
       });
-      showToast(`${service.name} uğurla quraşdırıldı!`, 'success');
+      showToast(`${service.name}: успешно установлено!`, 'success');
       setActiveTab('my');
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'user_services');

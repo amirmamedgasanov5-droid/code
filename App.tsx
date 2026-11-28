@@ -53,7 +53,7 @@ export default function App() {
   const [uiLang, setUiLangState] = useState(getUiLang());
   useEffect(() => onUiLangChange(() => setUiLangState(getUiLang())), []);
   useEffect(() => { if (uiLang === 'ru') startRu(); else stopRu(); return () => stopRu(); }, [uiLang]);
-  const user = useMemo(() => (userBase && uiLang === 'ru' ? { ...userBase, language: 'ru' as const } : userBase), [userBase, uiLang]);
+  const user = useMemo(() => (userBase ? { ...userBase, language: 'ru' as const } : userBase), [userBase, uiLang]);
   const [loading, setLoading] = useState(true);
   const [showSplash, setShowSplash] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);

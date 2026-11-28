@@ -50,11 +50,11 @@ const timeAgo = (iso?: string): string => {
   const s = Math.max(0, Math.floor((Date.now() - t) / 1000));
   if (s < 60) return 'indi';
   const m = Math.floor(s / 60);
-  if (m < 60) return `${m} dəq əvvəl`;
+  if (m < 60) return `${m} мин назад`;
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h} saat əvvəl`;
+  if (h < 24) return `${h} ч назад`;
   const d = Math.floor(h / 24);
-  return `${d} gün əvvəl`;
+  return `${d} дн. назад`;
 };
 
 const daysAgo = (n: number): Date => {
@@ -251,7 +251,7 @@ export const Analytics: React.FC<{ user: User }> = () => {
           <div className="flex items-center gap-1.5 text-xs text-muted"><Wifi className="w-3.5 h-3.5 text-green-600" /> İndi onlayn</div>
           <div className="text-3xl font-semibold text-text mt-1">{onlineEntries.length}</div>
           <div className="text-[11px] text-muted mt-1">
-            {Object.entries(onlineByRole).map(([r, n]) => `${ROLE_LABEL[r as Role] || 'Naməlum'}: ${n}`).join(' · ') || '—'}
+            {Object.entries(onlineByRole).map(([r, n]) => `${ROLE_LABEL[r as Role] || 'Неизвестно'}: ${n}`).join(' · ') || '—'}
           </div>
         </div>
         {[

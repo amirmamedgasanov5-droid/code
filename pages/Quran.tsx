@@ -382,7 +382,7 @@ export const Quran: React.FC<QuranProps> = ({ user }) => {
     setMemorizedSurahs(updated);
     setToast({ 
       visible: true, 
-      message: updated[surahNum] ? `Sura ${surahNum} hifz siyahısına əlavə olundu!` : `Sura ${surahNum} hifz siyahısından çıxarıldı.`, 
+      message: updated[surahNum] ? `Сура ${surahNum} добавлена в список заучивания!` : `Сура ${surahNum} удалена из списка заучивания.`, 
       type: 'success' 
     });
 

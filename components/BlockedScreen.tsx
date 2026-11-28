@@ -42,7 +42,7 @@ export const BlockedScreen: React.FC<BlockedScreenProps> = ({ user, onLogout }) 
     if (!isoString) return 'Müəyyən edilməyib';
     try {
       const d = new Date(isoString);
-      return d.toLocaleDateString('az-AZ', {
+      return d.toLocaleDateString('ru-RU', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',

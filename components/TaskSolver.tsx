@@ -83,7 +83,7 @@ export const TaskSolver: React.FC<TaskSolverProps> = ({
   submitLabel = 'İşi təhvil ver',
   draftKey,
   submitting = false,
-  lang = 'az',
+  lang = 'ru',
   onLangChange,
   onBack,
   onSubmit,

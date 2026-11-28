@@ -22,7 +22,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ user, onLogout, collapsed, onToggleCollapsed, hideDesktop = false }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const lang = (user?.language || 'az') as keyof typeof translations;
+  const lang = (user?.language || 'ru') as keyof typeof translations;
   const t = translations[lang];
 
   const toggleSidebar = () => setIsOpen(!isOpen);

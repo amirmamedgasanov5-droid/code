@@ -4,9 +4,8 @@ const KEY = 'ui_lang';
 const EVT = 'uilangchange';
 const D = dict as Record<string, string>;
 
-export const getUiLang = (): 'ru' | null => {
-  try { return localStorage.getItem(KEY) === 'ru' ? 'ru' : null; } catch { return null; }
-};
+/** The platform is Russian-only. */
+export const getUiLang = (): 'ru' | null => 'ru';
 
 export const setUiLang = (l: 'ru' | null) => {
   try { l ? localStorage.setItem(KEY, l) : localStorage.removeItem(KEY); } catch { /* ignore */ }

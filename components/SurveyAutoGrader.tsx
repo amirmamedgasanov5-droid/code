@@ -56,7 +56,7 @@ export const SurveyAutoGrader: React.FC<SurveyAutoGraderProps> = ({ user }) => {
               subject: 'SORĞU',
               score: 2,
               date: now.toISOString(),
-              comment: `"${survey.title}" sorğusu vaxtında tamamlanmadığı üçün avtomatik qiymət.`,
+              comment: `"${survey.title}" опрос не пройден вовремя — оценка выставлена автоматически.`,
               teacherId: 'SYSTEM',
               surveyId: survey.id
             });
@@ -65,7 +65,7 @@ export const SurveyAutoGrader: React.FC<SurveyAutoGraderProps> = ({ user }) => {
             await addDoc(collection(db, 'notifications'), {
               userId: user.id,
               title: "Avtomatik Qiymət",
-              message: `"${survey.title}" sorğusunu 2 gün ərzində tamamlamadığınız üçün jurnalınıza "2" yazıldı.`,
+              message: `"${survey.title}" опрос не пройден в течение 2 дней, в журнал выставлена оценка «2».`,
               type: 'warning',
               read: false,
               createdAt: now.toISOString()

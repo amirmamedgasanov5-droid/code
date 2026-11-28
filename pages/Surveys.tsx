@@ -329,7 +329,7 @@ export const Surveys: React.FC<SurveysProps> = ({ user }) => {
                           </span>
                         )}
                         <span className="text-[11px] tabular-nums text-neutral-400">
-                          {new Date(s.createdAt).toLocaleDateString('az')}
+                          {new Date(s.createdAt).toLocaleDateString('ru-RU')}
                         </span>
                       </div>
                       {s.description && (
@@ -418,7 +418,7 @@ export const Surveys: React.FC<SurveysProps> = ({ user }) => {
                                     <span>{r.studentName}</span>
                                   </div>
                                   <span className="text-[11px] tabular-nums text-neutral-400">
-                                    {new Date(r.submittedAt).toLocaleString('az')}
+                                    {new Date(r.submittedAt).toLocaleString('ru-RU')}
                                   </span>
                                 </div>
                                 <div className="grid gap-1.5 text-xs">

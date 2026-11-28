@@ -84,10 +84,10 @@ export const Admin: React.FC<{ user: User }> = ({ user }) => {
       notify('Bu istifadəçinin e-poçtu yoxdur', 'error');
       return;
     }
-    if (!window.confirm(`${target.name} (${target.email}) ünvanına şifrə yeniləmə linki göndərilsin?`)) return;
+    if (!window.confirm(`Отправить ссылку для сброса пароля на ${target.name} (${target.email})?`)) return;
     try {
       await sendPasswordResetEmail(auth, target.email);
-      notify(`Link göndərildi: ${target.email}`);
+      notify(`Ссылка отправлена: ${target.email}`);
     } catch (err: any) {
       notify('Link göndərilmədi: ' + (err?.message || 'xəta'), 'error');
     }
@@ -310,7 +310,7 @@ export const Admin: React.FC<{ user: User }> = ({ user }) => {
                       {wantsTeacher && <span className="text-[11px] px-2 py-0.5 rounded-md bg-brand-100 text-brand-700 dark:bg-brand-950/50 dark:text-brand-300">Müəllim sorğusu</span>}
                       {u.isBlocked && <span className="text-[11px] px-2 py-0.5 rounded-md bg-red-50 text-red-600">Bloklanıb</span>}
                     </div>
-                    <div className="text-[11px] text-muted truncate">{u.email}{u.className ? ` · ${u.className}` : ''}{u.username ? ` · @${u.username}` : ''}{u.role === 'parent' && u.childName ? ` · Övlad: ${u.childName}` : ''}</div>
+                    <div className="text-[11px] text-muted truncate">{u.email}{u.className ? ` · ${u.className}` : ''}{u.username ? ` · @${u.username}` : ''}{u.role === 'parent' && u.childName ? ` · Ребёнок: ${u.childName}` : ''}</div>
                   </div>
                 </div>
 

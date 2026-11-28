@@ -3,6 +3,8 @@ import { Globe } from 'lucide-react';
 import { getUiLang, onUiLangChange, setUiLang } from '../src/utils/uiLang';
 
 export const LangSwitch: React.FC<{ className?: string }> = ({ className = '' }) => {
+  return null;
+  // eslint-disable-next-line no-unreachable
   const [lang, setLang] = useState(getUiLang());
   useEffect(() => onUiLangChange(() => setLang(getUiLang())), []);
   return (

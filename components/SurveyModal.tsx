@@ -135,7 +135,7 @@ export const SurveyModal: React.FC<SurveyModalProps> = ({ user }) => {
       }
     } catch (error: any) {
       console.error("Error submitting survey:", error);
-      setToast({ visible: true, message: `Xəta: ${error.message || "Göndərmək mümkün olmadı"}`, type: 'error' });
+      setToast({ visible: true, message: `Ошибка: ${error.message || "Не удалось отправить"}`, type: 'error' });
     } finally {
       setIsSubmitting(false);
     }

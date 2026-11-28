@@ -207,7 +207,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ user }) => {
             />
           </div>
           <p className="mt-1.5 text-[11px] text-muted">
-            {progress.nextRank ? `Növbəti rütbəyə ${progress.remainingXp} XP qalıb` : 'Ən yüksək səviyyə'}
+            {progress.nextRank ? `До следующего ранга осталось ${progress.remainingXp} XP` : 'Ən yüksək səviyyə'}
           </p>
         </div>
       </div>
