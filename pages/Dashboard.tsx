@@ -195,7 +195,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     }
   };
 
-  const monthNames = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "İyun", "İyul", "Avqust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"];
+  const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
   const days = ['B.', 'B.E.', 'Ç.', 'Ç.A.', 'C.', 'C.A.', 'Ş.'];
 
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();

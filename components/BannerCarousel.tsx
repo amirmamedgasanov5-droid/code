@@ -125,7 +125,7 @@ export const BannerCarousel: React.FC<Props> = ({ banners }) => {
                 key={i}
                 onClick={() => go(i, i > idx ? 1 : -1)}
                 className={`h-1.5 rounded-full transition-all ${i === current ? 'w-5 bg-brand-600' : 'w-1.5 bg-brand-300'}`}
-                aria-label={`Slayd ${i + 1}`}
+                aria-label={`Слайд ${i + 1}`}
               />
             ))}
           </div>

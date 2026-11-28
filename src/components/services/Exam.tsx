@@ -458,7 +458,7 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
                               st === 'open' ? 'bg-green-50 text-green-700' : st === 'closed' ? 'bg-red-50 text-red-600' : st === 'draft' ? 'bg-amber-50 text-amber-700' : 'bg-neutral-100 text-muted'
                             }`}>
                               {st === 'draft' && 'Göndərilməyib'}
-                              {st === 'open' && `Açıqdır · qalıb ${leftText(exam.expiresAtMs as number)}`}
+                              {st === 'open' && `Открыт · осталось ${leftText(exam.expiresAtMs as number)}`}
                               {st === 'closed' && 'Müddət bitib'}
                               {st === 'legacy' && 'Müddətsiz'}
                             </span>
@@ -558,7 +558,7 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
                           />
                           <input 
                             type="text" 
-                            placeholder={`Variant ${idx + 1}`}
+                            placeholder={`Вариант ${idx + 1}`}
                             value={opt}
                             onChange={e => {
                               const newOpts = [...newQuestion.options];

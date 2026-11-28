@@ -228,7 +228,7 @@ export const Surveys: React.FC<SurveysProps> = ({ user }) => {
                           <div key={optIdx} className="relative group">
                             <input 
                               className="w-full bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 rounded-xl p-2 pr-8 text-xs font-medium outline-none text-neutral-900 dark:text-neutral-100"
-                              placeholder={`Variant ${optIdx + 1}`}
+                              placeholder={`Вариант ${optIdx + 1}`}
                               value={opt}
                               onChange={e => {
                                 const qs = [...newSurvey.questions];
