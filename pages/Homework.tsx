@@ -219,7 +219,7 @@ export const Homework: React.FC<HomeworkProps> = ({ user }) => {
         await addDoc(collection(db, 'notifications'), {
             userId: gradingSubmission.studentId,
             title: "Tapşırıq Qiymətləndirildi",
-            message: `${viewingSubmissionsFor.subject}: ${gradingData.grade} (${gradingData.score} bal)`,
+            message: `${viewingSubmissionsFor.subject}: ${gradingData.grade} (${gradingData.score} б.)`,
             type: 'success',
             read: false,
             createdAt: new Date().toISOString()
@@ -375,14 +375,14 @@ export const Homework: React.FC<HomeworkProps> = ({ user }) => {
                                 </div>
                                 <div>
                                     <h3 className="font-semibold text-text text-lg tracking-tight">{sub.studentName}</h3>
-                                    <p className="text-[11px] text-muted font-semibold mt-1">@{sub.studentUsername || 'yoxdur'} • {formatDate(sub.submittedAt)}</p>
+                                    <p className="text-[11px] text-muted font-semibold mt-1">@{sub.studentUsername || 'нет'} • {formatDate(sub.submittedAt)}</p>
                                 </div>
                             </div>
                             {sub.status === 'graded' ? (
                                 <div className="flex items-center gap-3">
                                     <div className="flex items-center gap-3 px-4 py-2.5 bg-neutral-50 text-text rounded-2xl border border-border/50 shadow-sm">
                                         <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                        <span className="text-[11px] font-semibold ">Qiymətləndirilib: {sub.grade} ({sub.score} bal)</span>
+                                        <span className="text-[11px] font-semibold ">Qiymətləndirilib: {sub.grade} ({sub.score} б.)</span>
                                     </div>
                                     <button 
                                         onClick={() => setShowCongratulateModal(sub)}
@@ -517,7 +517,7 @@ export const Homework: React.FC<HomeworkProps> = ({ user }) => {
         <Toast isVisible={toast.visible} message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, visible: false })} />
         <TaskSolver
           title={hw.title}
-          subtitle={`${hw.subject}${hw.dueDate ? ' · Son tarix: ' + hw.dueDate : ''}`}
+          subtitle={`${hw.subject}${hw.dueDate ? ' · Срок: ' + hw.dueDate : ''}`}
           description={hw.description}
           images={hw.imageUrl ? [hw.imageUrl] : []}
           questions={(hw.questions || []).map(q => ({
@@ -640,7 +640,7 @@ export const Homework: React.FC<HomeworkProps> = ({ user }) => {
                   </div>
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center gap-3 text-xs text-muted">
-                      <span>{e.questions.length} sual</span>
+                      <span>{e.questions.length} вопр.</span>
                       {hasDeadline && !closed && <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Qalıb: {left}</span>}
                     </div>
                     {submitted ? (

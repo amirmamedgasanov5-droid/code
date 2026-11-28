@@ -625,7 +625,7 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
                   return (
                     <TaskSolver
                       title={useRu ? ruTr!.title : activeExam.title}
-                      subtitle={useRu ? ruTr!.description : activeExam.description || `${activeExam.questions.length} sual`}
+                      subtitle={useRu ? ruTr!.description : activeExam.description || `${activeExam.questions.length} вопр.`}
                       questions={view_qs}
                       submitLabel={T.submit}
                       lang={useRu ? 'ru' : 'az'}
