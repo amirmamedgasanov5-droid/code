@@ -1,0 +1,278 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ───────────────────────── Helpers ─────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function myDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function myRole() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? myDoc().get('role', 'student')
+        : 'student';
+    }
+
+    // Main administrator. Other admins can be promoted by this account.
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'amirmamedgasanov5@gmail.com' ||
+        myRole() == 'admin'
+      );
+    }
+
+    // Teachers and administrators.
+    function isStaff() {
+      return isAdmin() || (isSignedIn() && myRole() == 'teacher');
+    }
+
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // ───────────────────────── Administrator ─────────────────────────
+    // The administrator can read and change everything.
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    // ───────────────────────── Users ─────────────────────────
+    match /users/{userId} {
+      function validBase() {
+        return incoming().keys().hasAll(['uid', 'name', 'role']) &&
+               incoming().uid == request.auth.uid &&
+               incoming().name is string && incoming().name.size() > 0 && incoming().name.size() <= 100;
+      }
+
+      // A parent account can only be created with a valid, unused invite code issued by the school
+      // for exactly that child.
+      function validParent() {
+        return incoming().role == 'parent' &&
+               incoming().inviteCode is string &&
+               incoming().childUid is string &&
+               exists(/databases/$(database)/documents/parent_invites/$(incoming().inviteCode)) &&
+               get(/databases/$(database)/documents/parent_invites/$(incoming().inviteCode)).data.used == false &&
+               get(/databases/$(database)/documents/parent_invites/$(incoming().inviteCode)).data.studentUid == incoming().childUid;
+      }
+
+      function validNewUser() {
+        // Nobody can make themselves a teacher/admin. Teachers are approved by the administrator.
+        return validBase() && (incoming().role == 'student' || validParent());
+      }
+
+      function protectedFieldsUnchanged() {
+        return incoming().get('role', 'student') == existing().get('role', 'student') &&
+               incoming().get('isBlocked', false) == existing().get('isBlocked', false) &&
+               incoming().get('blockedUntil', null) == existing().get('blockedUntil', null) &&
+               incoming().get('blockReason', '') == existing().get('blockReason', '') &&
+               incoming().get('requestedRole', '') == existing().get('requestedRole', '') &&
+               incoming().get('childUid', '') == existing().get('childUid', '');
+      }
+
+      allow get, list: if isSignedIn();
+      allow create: if isOwner(userId) && validNewUser();
+      allow update: if
+        // the user edits their own profile (but not role / block state)
+        (isOwner(userId) && incoming().uid == existing().uid && protectedFieldsUnchanged()) ||
+        // teachers can block / unblock students (Complaints)
+        (isStaff() && incoming().diff(existing()).affectedKeys()
+           .hasOnly(['isBlocked', 'blockedUntil', 'blockReason', 'blockedAt', 'blockedBy']));
+    }
+
+    match /usernames/{username} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && incoming().uid == request.auth.uid;
+      allow delete: if isSignedIn() && existing().uid == request.auth.uid;
+    }
+
+    // ───────────────────────── Banners (new) ─────────────────────────
+    // Everyone signed in sees them. Teachers and the administrator publish them.
+    match /banners/{id} {
+      allow read: if isSignedIn();
+      allow create: if isStaff() && incoming().authorId == request.auth.uid;
+      allow update, delete: if isStaff() && (existing().authorId == request.auth.uid || isAdmin());
+    }
+
+    // ───────────────────────── Parent invites ─────────────────────────
+    // The administrator/teachers issue a one-time code per parent. The parent registers with it.
+    match /parent_invites/{code} {
+      allow get: if isSignedIn();
+      allow list: if isStaff();
+      allow create: if isStaff() && incoming().used == false;
+      allow delete: if isStaff();
+      // a freshly registered parent marks their own code as used (and nothing else)
+      allow update: if isStaff() || (isSignedIn() && existing().used == false &&
+                       incoming().used == true && incoming().parentUid == request.auth.uid &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['used', 'parentUid', 'usedAt']));
+    }
+
+    // A parent account can be linked to more children later by entering another school-issued code.
+    match /parent_links/{id} {
+      allow read: if isSignedIn() && (existing().parentUid == request.auth.uid || isStaff());
+      allow create: if isSignedIn() && myRole() == 'parent' &&
+                       incoming().parentUid == request.auth.uid &&
+                       incoming().code is string && incoming().childUid is string &&
+                       exists(/databases/$(database)/documents/parent_invites/$(incoming().code)) &&
+                       get(/databases/$(database)/documents/parent_invites/$(incoming().code)).data.used == false &&
+                       get(/databases/$(database)/documents/parent_invites/$(incoming().code)).data.studentUid == incoming().childUid;
+      allow delete: if isStaff();
+    }
+
+    // ───────────────────────── Activity analytics ─────────────────────────
+    // Written by the app for the signed-in user; read only by teachers/administrator.
+    match /activity_days/{day}/users/{uid} {
+      allow read: if isStaff();
+      allow create, update: if isSignedIn() && request.auth.uid == uid;
+    }
+    match /activity_pages/{day} {
+      allow read: if isStaff();
+      allow create, update: if isSignedIn();
+    }
+
+    match /school_settings/{id} {
+      allow read: if isSignedIn();
+    }
+
+    // ───────────────────────── Announcements / schedule / content ─────────────────────────
+    match /announcements/{id}    { allow read: if isSignedIn(); allow write: if isStaff(); }
+    match /lessons/{id}          { allow read: if isSignedIn(); allow write: if isStaff(); }
+    match /extra_courses/{id}    { allow read: if isSignedIn(); allow write: if isStaff(); }
+    match /library_items/{id}    { allow read: if isSignedIn(); allow write: if isStaff(); }
+    match /knowledge_base/{id}   { allow read: if isSignedIn(); allow write: if isStaff(); }
+    match /books/{id}            { allow read: if isSignedIn(); allow write: if isStaff(); }
+    match /certificates/{id}     { allow read: if isSignedIn(); allow write: if isStaff(); }
+    match /surveys/{id}          { allow read: if isSignedIn(); allow write: if isStaff(); }
+
+    match /course_enrollments/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && incoming().studentId == request.auth.uid;
+      allow delete: if isSignedIn() && existing().studentId == request.auth.uid;
+    }
+
+    // ───────────────────────── Homework, exams, journal ─────────────────────────
+    match /homeworks/{id} { allow read: if isSignedIn(); allow write: if isStaff(); }
+
+    // Read by everyone signed in: the leaderboard needs all submissions.
+    match /submissions/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && incoming().studentId is string;
+      allow update: if isStaff();
+    }
+
+    match /grades/{id} {
+      allow read: if isSignedIn() && (existing().get('studentId', '') == request.auth.uid || isStaff());
+      allow create: if isStaff() || (isSignedIn() && incoming().studentId == request.auth.uid && incoming().teacherId == 'SYSTEM');
+      allow update, delete: if isStaff();
+    }
+
+    match /journal_v2/{id} { allow read: if isSignedIn(); allow write: if isStaff(); }
+
+    match /exams/{id} { allow read: if isSignedIn(); allow write: if isStaff(); }
+    // An exam can be sent with a deadline (expiresAtMs). After it passes, answers are rejected by the server.
+    function examOpen(examId) {
+      let e = get(/databases/$(database)/documents/exams/$(examId)).data;
+      return !('expiresAtMs' in e) || request.time.toMillis() <= e.expiresAtMs;
+    }
+
+    match /exam_submissions/{id} {
+      allow read: if isSignedIn() && (existing().get('studentId', '') == request.auth.uid || isStaff());
+      allow create: if isSignedIn() && incoming().studentId == request.auth.uid &&
+                       incoming().examId is string && examOpen(incoming().examId);
+      // teachers record the mark that was written to the journal
+      allow update: if isStaff() && incoming().diff(existing()).affectedKeys().hasOnly(['gradeMark', 'gradedAt', 'gradedBy']);
+    }
+
+    match /achievements/{id} { allow read: if isSignedIn(); allow write: if isStaff(); }
+    match /awards/{id}       { allow read: if isSignedIn(); allow write: if isStaff(); }
+
+    match /survey_responses/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+    }
+
+    // ───────────────────────── Communication ─────────────────────────
+    match /chats/{chatId} {
+      allow get, list: if isSignedIn() && request.auth.uid in resource.data.participants;
+      allow create: if isSignedIn() && request.auth.uid in request.resource.data.participants;
+      allow update: if isSignedIn() && request.auth.uid in resource.data.participants &&
+                       request.resource.data.participants == resource.data.participants;
+
+      match /messages/{messageId} {
+        allow read: if isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        allow create: if isSignedIn() &&
+                         request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants &&
+                         request.resource.data.senderId == request.auth.uid;
+      }
+    }
+
+    match /global_messages/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && incoming().senderId == request.auth.uid;
+    }
+
+    match /notifications/{id} {
+      allow read: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isStaff() || (isSignedIn() && incoming().userId == request.auth.uid);
+      allow update: if isSignedIn() && existing().userId == request.auth.uid &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['read']);
+    }
+
+    match /congratulations/{id} {
+      allow read: if isSignedIn();
+      allow create, delete: if isStaff();
+      // students may only mark a message as seen
+      allow update: if isStaff() || (isSignedIn() &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['seen', 'seenBy']));
+    }
+
+    // Parent portal signs in anonymously, so it only needs a signed-in session.
+    match /parent_notes/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isStaff();
+    }
+
+    // ───────────────────────── Discipline ─────────────────────────
+    match /complaints/{id} {
+      allow read: if isSignedIn();
+      allow write: if isStaff();
+    }
+
+    // ───────────────────────── Services & personal data ─────────────────────────
+    match /services_store/{id} { allow read: if isSignedIn(); }
+
+    match /user_services/{id} {
+      allow read, write: if isSignedIn() && (existing().userId == request.auth.uid || incoming().userId == request.auth.uid);
+    }
+    match /notes/{id} {
+      allow read, write: if isSignedIn() && (existing().userId == request.auth.uid || incoming().userId == request.auth.uid);
+    }
+    match /todos/{id} {
+      allow read, write: if isSignedIn() && (existing().userId == request.auth.uid || incoming().userId == request.auth.uid);
+    }
+
+    match /user_hifz/{userId} {
+      allow read, write: if isSignedIn() && (request.auth.uid == userId || isStaff());
+    }
+
+    match /game_questions/{id} { allow read: if isSignedIn(); allow write: if isStaff(); }
+    match /game_scores/{id} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && incoming().userId == request.auth.uid;
+    }
+
+    match /posts/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && incoming().authorId == request.auth.uid;
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn() && existing().authorId == request.auth.uid;
+    }
+  }
+}

@@ -1,11 +1,11 @@
-<div align="center">
+# Nəsihətlər Mədrəsəsi
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+Akademik idarəetmə portalı (React + Vite + Firebase).
 
-  <h1>Built with AI Studio</h2>
+- `npm install`
+- `npm run dev` — lokal server
+- `npm run build` — `dist/` qovluğu (EdgeOne Pages üçün)
 
-  <p>The fastest path from prompt to production with Gemini.</p>
-
-  <a href="https://aistudio.google.com/apps">Start building</a>
-
-</div>
+## EdgeOne Pages
+`release/nesihetler-edgeone.zip` — hazır `dist` (index.html arxivin kökündədir). EdgeOne Pages-də "Upload" ilə yükləyin.
+Router `HashRouter` olduğu üçün əlavə yönləndirmə qaydası lazım deyil.

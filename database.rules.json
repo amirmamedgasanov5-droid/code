@@ -1,0 +1,34 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "games": {
+      ".read": "auth != null",
+      "quiz": {
+        ".write": "auth != null",
+        "scores": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid"
+          }
+        }
+      }
+    },
+    "paint": {
+      ".read": "auth != null",
+      "drawing": {
+        ".write": "auth != null"
+      },
+      "cursors": {
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid"
+        }
+      }
+    },
+    "presence": {
+      ".read": "auth != null && auth.token.email === 'amirmamedgasanov5@gmail.com'",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    }
+  }
+}

@@ -1,0 +1,224 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;600&display=swap');
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: "Noto Naskh Arabic", "Inter", serif;
+  
+  --color-brand: #4f46e5;
+  --color-brand-dark: #4338ca;
+  --color-surface: #ffffff;
+  --color-background: #f6f7fb;
+  --color-text: #1e1b3a;
+  --color-muted: #737373;
+  --color-border: #e6e8f0;
+  
+  --radius-huge: 1rem;
+  --radius-large: 0.75rem;
+  --radius-medium: 0.5rem;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  .dark {
+    color-scheme: dark;
+    --color-surface: #111214;
+    --color-background: #0c0d0e;
+    --color-text: #ededed;
+    --color-muted: #a3a3a3;
+    --color-border: #262626;
+  }
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+  body {
+    @apply bg-background text-text antialiased font-normal text-[13px] selection:bg-indigo-200 selection:text-indigo-950;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    font-feature-settings: "cv11", "ss03";
+    font-variant-numeric: tabular-nums;
+  }
+  
+  input, textarea, [contenteditable="true"] {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+}
+
+/* Custom Minimal Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 9999px;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Sleek Minimal SaaS Card & Container Styles */
+.card {
+  @apply bg-surface border border-border rounded-2xl p-5 shadow-[0_1px_2px_rgba(30,27,58,0.04)] transition-colors;
+}
+
+.card-hover {
+  @apply transition-colors hover:border-indigo-200 dark:hover:border-indigo-800;
+}
+
+/* Enterprise Minimal Buttons */
+.btn-primary {
+  @apply bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl px-4 py-2 text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer;
+}
+
+.btn-secondary {
+  @apply bg-surface border border-border hover:bg-neutral-50 dark:hover:bg-neutral-800 text-text font-medium rounded-xl px-4 py-2 text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer;
+}
+
+.btn-indigo {
+  @apply bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl px-4 py-2 text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer;
+}
+
+.btn-amber {
+  @apply bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-xl px-4 py-2 text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer;
+}
+
+.btn-surface {
+  @apply bg-surface hover:bg-neutral-50 dark:hover:bg-neutral-800 text-text font-medium rounded-xl border border-border px-4 py-2 text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer;
+}
+
+/* ───────────────────────── Themes ─────────────────────────
+   "classic" is the default and has no overrides.
+   Tailwind utilities read these variables, so switching data-theme on <html>
+   restyles the whole app. "minimal" also changes the layout (top navigation). */
+
+/* ========== MINIMAL: portfolio-like, white sheet on grey, quiet graphite ========== */
+html[data-theme="minimal"] {
+  --color-background: #f3f4f6;
+  --color-surface: #ffffff;
+  --color-text: #141416;
+  --color-muted: #8d8d95;
+  --color-border: #ececef;
+  --color-brand: #3f3f46;
+  --color-brand-dark: #27272a;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.75rem;
+  --radius-3xl: 2.25rem;
+  --color-indigo-50: #f5f5f6;
+  --color-indigo-100: #ededef;
+  --color-indigo-200: #dedee2;
+  --color-indigo-300: #bfbfc6;
+  --color-indigo-400: #93939c;
+  --color-indigo-500: #55555d;
+  --color-indigo-600: #3f3f46;
+  --color-indigo-700: #2d2d33;
+  --color-indigo-800: #1f1f23;
+  --color-indigo-900: #141416;
+  --color-indigo-950: #0a0a0b;
+}
+html[data-theme="minimal"] .font-semibold { font-weight: 500; }
+html[data-theme="minimal"] .font-medium { font-weight: 400; }
+html[data-theme="minimal"] h1 { font-size: 1.875rem; font-weight: 400; letter-spacing: -0.025em; line-height: 1.2; }
+html[data-theme="minimal"] .minimal-shell {
+  background: #ffffff;
+  border-radius: 40px;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 56px 52px 72px;
+  min-height: calc(100vh - 150px);
+}
+@media (max-width: 1023px) {
+  html[data-theme="minimal"] .minimal-shell { padding: 28px 16px 40px; border-radius: 28px; }
+}
+html[data-theme="minimal"] .topnav { background: rgba(243, 244, 246, 0.86); backdrop-filter: blur(12px); }
+html[data-theme="minimal"] .topnav-link { color: #8d8d95; border-bottom: 1px solid transparent; padding-bottom: 2px; transition: color 0.15s, border-color 0.15s; }
+html[data-theme="minimal"] .topnav-link:hover { color: #141416; }
+html[data-theme="minimal"] .topnav-link-active { color: #141416; border-bottom-color: #d4d4d8; }
+html[data-theme="minimal"] .topnav-menu { background: #fff; border: 1px solid #ececef; border-radius: 22px; box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.22); }
+html[data-theme="minimal"] .card { background: #fafafb; border: 1px solid #f0f0f2; box-shadow: none; }
+html[data-theme="minimal"] .btn-primary,
+html[data-theme="minimal"] .btn-indigo,
+html[data-theme="minimal"] .btn-amber { border-radius: 9999px; padding: 0.6rem 1.25rem; }
+html[data-theme="minimal"] .btn-secondary,
+html[data-theme="minimal"] .btn-surface { border-radius: 9999px; padding: 0.6rem 1.25rem; background: #f4f4f5; border-color: transparent; }
+html[data-theme="minimal"] .btn-secondary:hover,
+html[data-theme="minimal"] .btn-surface:hover { background: #ebebed; }
+
+/* ========== DARK: command-center, flat, compact, violet accent ========== */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --color-background: #0b0b0d;
+  --color-surface: #141417;
+  --color-text: #ececef;
+  --color-muted: #8c8c97;
+  --color-border: #26262c;
+  --color-brand: #7c6cf0;
+  --color-brand-dark: #6a5ae0;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.25rem;
+
+  /* neutral / slate / gray scales are inverted */
+  --color-neutral-50: #131316; --color-neutral-100: #1a1a1e; --color-neutral-200: #25252b; --color-neutral-300: #35353c;
+  --color-neutral-400: #6b6b76; --color-neutral-500: #8c8c97; --color-neutral-600: #a8a8b3; --color-neutral-700: #c4c4cd;
+  --color-neutral-800: #dcdce3; --color-neutral-900: #ececef; --color-neutral-950: #f7f7f8;
+  --color-slate-50: #131316; --color-slate-100: #1a1a1e; --color-slate-200: #25252b; --color-slate-300: #35353c;
+  --color-slate-400: #6b6b76; --color-slate-500: #8c8c97; --color-slate-600: #a8a8b3; --color-slate-700: #c4c4cd;
+  --color-slate-800: #dcdce3; --color-slate-900: #ececef; --color-slate-950: #f7f7f8;
+  --color-gray-50: #131316; --color-gray-100: #1a1a1e; --color-gray-200: #25252b; --color-gray-300: #35353c;
+  --color-gray-400: #6b6b76; --color-gray-500: #8c8c97; --color-gray-600: #a8a8b3; --color-gray-700: #c4c4cd;
+  --color-gray-800: #dcdce3; --color-gray-900: #ececef; --color-gray-950: #f7f7f8;
+
+  /* accent: indigo becomes violet */
+  --color-indigo-50: #1a1733; --color-indigo-100: #221e44; --color-indigo-200: #2d2860; --color-indigo-300: #4a4296;
+  --color-indigo-400: #8b7cf6; --color-indigo-500: #7c6cf0; --color-indigo-600: #6d5bf0; --color-indigo-700: #5a49d8;
+  --color-indigo-800: #43379f; --color-indigo-900: #2a2266; --color-indigo-950: #14102e;
+
+  /* soft status tints */
+  --color-red-50: #2a1214; --color-red-100: #3a171a; --color-red-200: #5a2127;
+  --color-rose-50: #2a1219; --color-rose-100: #3a1722; --color-rose-200: #5a2133;
+  --color-green-50: #0f2418; --color-green-100: #143020; --color-green-200: #1e4a31;
+  --color-amber-50: #2a1f0b; --color-amber-100: #3a2a0e; --color-amber-200: #5a4113;
+  --color-yellow-50: #2a260b; --color-yellow-100: #3a340e; --color-yellow-200: #5a4f13;
+  --color-orange-50: #2a1a0b; --color-orange-100: #3a240e; --color-orange-200: #5a3813;
+}
+html[data-theme="dark"] .bg-white { background-color: #141417; }
+html[data-theme="dark"] [class*="bg-white/"] { background-color: rgba(20, 20, 23, 0.85); }
+html[data-theme="dark"] .bg-neutral-900,
+html[data-theme="dark"] .bg-slate-900,
+html[data-theme="dark"] .bg-slate-800 { background-color: #25252b; }
+html[data-theme="dark"] .text-indigo-600,
+html[data-theme="dark"] .text-indigo-700,
+html[data-theme="dark"] .text-indigo-800,
+html[data-theme="dark"] .text-indigo-900 { color: #b4a9ff; }
+html[data-theme="dark"] .text-red-600, html[data-theme="dark"] .text-red-700, html[data-theme="dark"] .text-red-800,
+html[data-theme="dark"] .text-rose-600, html[data-theme="dark"] .text-rose-700 { color: #fca5a5; }
+html[data-theme="dark"] .text-green-600, html[data-theme="dark"] .text-green-700, html[data-theme="dark"] .text-green-800 { color: #86efac; }
+html[data-theme="dark"] .text-amber-600, html[data-theme="dark"] .text-amber-700, html[data-theme="dark"] .text-amber-800,
+html[data-theme="dark"] .text-yellow-700, html[data-theme="dark"] .text-orange-600 { color: #fcd34d; }
+html[data-theme="dark"] .card { box-shadow: none; }
+html[data-theme="dark"] body { font-size: 13px; }
+@media (min-width: 1024px) {
+  html[data-theme="dark"] aside {
+    top: 0 !important; bottom: 0 !important; left: 0 !important; width: 15rem !important;
+    border-radius: 0 !important; border-width: 0 1px 0 0 !important; box-shadow: none !important;
+  }
+  html[data-theme="dark"] aside > button[aria-label^="Menyunu"] { display: none; }
+  html[data-theme="dark"] main { margin-left: 15rem !important; padding-top: 0 !important; }
+  html[data-theme="dark"] main > header {
+    border-radius: 0; border-width: 0 0 1px 0; box-shadow: none; background: transparent;
+    margin: 0 -1.5rem 1.25rem; padding: 0 1.5rem; height: 3.5rem;
+  }
+}

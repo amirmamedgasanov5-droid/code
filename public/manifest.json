@@ -1,0 +1,18 @@
+{
+  "short_name": "Nəsihətlər",
+  "name": "Nəsihətlər Mədrəsəsi",
+  "description": "Nəsihətlər Mədrəsəsi platforması üçün rəsmi tətbiq.",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "./",
+  "display": "standalone",
+  "theme_color": "#4f46e5",
+  "background_color": "#f6f7fb"
+}

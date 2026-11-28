@@ -1,0 +1,8 @@
+{
+  "name": "Nəsihetlər Mədrəsesi",
+  "description": "Nəsihetlər Mədrəsəsi üçün müasir 3D elektron təhsil idarəetmə platforması: 8 pilləli rütbə sistemi, həftəlik akademik liqalar, elektron jurnal və valideyn portalı.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

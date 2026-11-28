@@ -1,0 +1,676 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User profile information including role and preferences.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the user (custom ID)." },
+        "uid": { "type": "string", "description": "Firebase Auth UID." },
+        "name": { "type": "string", "description": "Full name of the user." },
+        "email": { "type": "string", "description": "Email address." },
+        "role": { "type": "string", "enum": ["student", "teacher", "admin"], "description": "User role." },
+        "language": { "type": "string", "enum": ["az", "ru", "en"], "description": "Preferred language." },
+        "photoURL": { "type": "string", "description": "Profile picture URL." },
+        "username": { "type": "string", "description": "Unique username for the user." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Account creation timestamp." }
+      },
+      "required": ["uid", "name", "role"]
+    },
+    "Homework": {
+      "title": "Homework Assignment",
+      "description": "Homework or classwork assignment created by a teacher.",
+      "type": "object",
+      "properties": {
+        "subject": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "dueDate": { "type": "string", "format": "date-time" },
+        "type": { "type": "string", "enum": ["homework", "classwork", "mock", "test", "notes"] },
+        "language": { "type": "string", "enum": ["az", "ru", "en"] },
+        "questions": { "type": "array", "items": { "type": "object" } },
+        "imageUrl": { "type": "string" },
+        "isCompleted": { "type": "boolean" },
+        "lessonId": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "archived"] },
+        "teacherId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "subject", "dueDate", "type", "teacherId"]
+    },
+    "Submission": {
+      "title": "Homework Submission",
+      "description": "Student's response to a homework assignment.",
+      "type": "object",
+      "properties": {
+        "homeworkId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentUid": { "type": "string" },
+        "studentName": { "type": "string" },
+        "studentUsername": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "textResponse": { "type": "string" },
+        "answers": { "type": "object" },
+        "submittedAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "graded"] },
+        "score": { "type": "number" },
+        "grade": { "type": "string" },
+        "teacherComment": { "type": "string" }
+      },
+      "required": ["homeworkId", "studentId", "studentUid", "status"]
+    },
+    "Grade": {
+      "title": "Grade Record",
+      "description": "A grade entry in the electronic journal.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "studentUsername": { "type": "string" },
+        "subject": { "type": "string" },
+        "score": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" },
+        "comment": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "surveyId": { "type": "string", "description": "Reference to the survey that triggered this grade (if automatic)." }
+      },
+      "required": ["studentId", "subject", "score", "date", "teacherId"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "User notification for events like grading or messages.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "success", "warning", "error"] },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "message", "read", "createdAt"]
+    },
+    "Chat": {
+      "title": "Chat Session",
+      "description": "A conversation between two users.",
+      "type": "object",
+      "properties": {
+        "participants": { "type": "array", "items": { "type": "string" } },
+        "participantNames": { "type": "object" },
+        "lastMessage": { "type": "string" },
+        "lastMessageSenderId": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["participants", "participantNames", "updatedAt"]
+    },
+    "Message": {
+      "title": "Chat Message",
+      "description": "A single message within a chat.",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "text": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderId", "createdAt"]
+    },
+    "Book": {
+      "title": "Library Book",
+      "description": "A book available in the knowledge library.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "author": { "type": "string" },
+        "description": { "type": "string" },
+        "url": { "type": "string" },
+        "category": { "type": "string" },
+        "language": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "url", "category", "language"]
+    },
+    "Announcement": {
+      "title": "Announcement",
+      "description": "A news or fatwa announcement displayed on the dashboard.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "date": { "type": "string" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "isInternal": { "type": "boolean" },
+        "first": { "type": "string" },
+        "second": { "type": "string" },
+        "third": { "type": "string" }
+      },
+      "required": ["title", "content", "date"]
+    },
+    "Survey": {
+      "title": "Survey",
+      "description": "A survey created by a teacher.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "questions": { "type": "array", "items": { "type": "object" } },
+        "mandatory": { "type": "boolean" },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "questions", "mandatory", "active", "createdAt"]
+    },
+    "SurveyResponse": {
+      "title": "Survey Response",
+      "description": "A student's response to a survey.",
+      "type": "object",
+      "properties": {
+        "surveyId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentUid": { "type": "string" },
+        "studentName": { "type": "string" },
+        "studentUsername": { "type": "string" },
+        "answers": { "type": "object" },
+        "submittedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["surveyId", "studentId", "studentUid", "answers", "submittedAt"]
+    },
+    "Lesson": {
+      "title": "Schedule Lesson",
+      "description": "A scheduled lesson in the timetable.",
+      "type": "object",
+      "properties": {
+        "subject": { "type": "string" },
+        "teacherName": { "type": "string" },
+        "time": { "type": "string" },
+        "daysOfWeek": { "type": "array", "items": { "type": "integer" } },
+        "room": { "type": "string" },
+        "lessonLink": { "type": "string" },
+        "language": { "type": "string", "enum": ["az", "ru", "en"] }
+      },
+      "required": ["subject", "time", "daysOfWeek"]
+    },
+    "LibraryItem": {
+      "title": "Knowledge Library Item",
+      "description": "A Hadith, Ayah, or other knowledge base entry.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "category": { "type": "string" },
+        "language": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "teacherName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "category", "language", "teacherId"]
+    },
+    "ExtraCourse": {
+      "title": "Extra Course",
+      "description": "An additional course created by a teacher.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "schedule": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "teacherName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "description", "schedule", "teacherId"]
+    },
+    "CourseEnrollment": {
+      "title": "Course Enrollment",
+      "description": "A student's enrollment in an extra course.",
+      "type": "object",
+      "properties": {
+        "courseId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "studentClass": { "type": "string" },
+        "enrolledAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["courseId", "studentId", "studentName"]
+    },
+    "GlobalMessage": {
+      "title": "Global Chat Message",
+      "description": "A message in the public global chat.",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "text": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderId", "senderName", "text", "createdAt"]
+    },
+    "Service": {
+      "title": "App Service",
+      "description": "An available service in the store.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "icon": { "type": "string" },
+        "type": { "type": "string", "enum": ["paint", "calculator", "notes", "todo", "feed", "game"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "type"]
+    },
+    "Note": {
+      "title": "User Note",
+      "description": "A private note created by a user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "content", "createdAt"]
+    },
+    "Todo": {
+      "title": "Task",
+      "description": "A task or habit tracker item.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "completed": { "type": "boolean" },
+        "category": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "completed", "createdAt"]
+    },
+    "Post": {
+      "title": "Feed Post",
+      "description": "A public post in the community feed.",
+      "type": "object",
+      "properties": {
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorPhoto": { "type": "string" },
+        "content": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "likesCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["authorId", "authorName", "content", "createdAt"]
+    },
+    "UserService": {
+      "title": "User Installed Service",
+      "description": "A service installed by a specific user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "serviceId": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "installedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "serviceId", "name", "type", "installedAt"]
+    },
+    "GameScore": {
+      "title": "Game Score",
+      "description": "Persistent high score for a game.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "gameType": { "type": "string" },
+        "score": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "userName", "gameType", "score", "updatedAt"]
+    },
+    "GameQuestion": {
+      "title": "Game Question",
+      "description": "A question for the Islamic Quiz game.",
+      "type": "object",
+      "properties": {
+        "question": { "type": "string" },
+        "options": { "type": "array", "items": { "type": "string" } },
+        "correct": { "type": "number" },
+        "category": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["question", "options", "correct", "teacherId", "createdAt"]
+    },
+    "UsernameMapping": {
+      "title": "Username to UID Mapping",
+      "description": "Ensures username uniqueness and allows quick UID lookup.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "username": { "type": "string" }
+      },
+      "required": ["uid", "username"]
+    },
+    "Exam": {
+      "title": "Exam",
+      "description": "An exam created by a teacher with multiple questions.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "teacherName": { "type": "string" },
+        "questions": { 
+          "type": "array", 
+          "items": { 
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "text": { "type": "string" },
+              "options": { "type": "array", "items": { "type": "string" } },
+              "correctIndex": { "type": "number" }
+            },
+            "required": ["id", "text", "options", "correctIndex"]
+          } 
+        },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "teacherId", "questions", "active", "createdAt"]
+    },
+    "ExamSubmission": {
+      "title": "Exam Submission",
+      "description": "A student's submission for an exam.",
+      "type": "object",
+      "properties": {
+        "examId": { "type": "string" },
+        "examTitle": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "studentUsername": { "type": "string" },
+        "answers": { 
+          "type": "array", 
+          "items": { 
+            "type": "object",
+            "properties": {
+              "questionId": { "type": "string" },
+              "selectedOption": { "type": "number" },
+              "isCorrect": { "type": "boolean" }
+            }
+          } 
+        },
+        "score": { "type": "number" },
+        "totalQuestions": { "type": "number" },
+        "submittedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["examId", "studentId", "answers", "score", "submittedAt"]
+    },
+    "KnowledgeBaseResource": {
+      "title": "Knowledge Base Resource",
+      "description": "An educational resource link (PDF, Google Doc, etc.) shared by a teacher.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "url": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "url", "authorId", "createdAt"]
+    },
+    "Certificate": {
+      "title": "Certificate",
+      "description": "A certificate or diploma issued to a student.",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["certificate", "diploma"] },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "reason": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["type", "studentId", "imageUrl", "teacherId", "createdAt"]
+    },
+    "Achievement": {
+      "title": "Achievement",
+      "description": "An automated badge earned by a student.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "type": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "earnedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentId", "type", "name", "earnedAt"]
+    },
+    "JournalEntry": {
+      "title": "Journal Entry",
+      "description": "An attendance or grade mark in the journal.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "date": { "type": "string" },
+        "mark": { "type": "string" },
+        "type": { "type": "string", "enum": ["daily", "half_year_1", "half_year_2", "annual"] },
+        "teacherId": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentId", "subjectId", "date", "mark", "type", "teacherId"]
+    },
+    "Congratulation": {
+      "title": "Congratulation",
+      "description": "A congratulatory letter sent to a student.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "teacherName": { "type": "string" },
+        "seen": { "type": "boolean" },
+        "seenBy": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentId", "title", "message"]
+    },
+    "UserHifz": {
+      "title": "User Quran Memorization Progress",
+      "description": "User memorized Quran surahs and ayahs tracking.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "memorizedSurahs": { "type": "object" },
+        "memorizedAyahsMap": { "type": "object" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId"]
+    },
+    "Complaint": {
+      "title": "Complaint & Discipline Record",
+      "description": "Complaints, warnings, and suspension sanctions issued by the administrator.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "studentUid": { "type": "string" },
+        "studentName": { "type": "string" },
+        "studentUsername": { "type": "string" },
+        "studentClass": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "type": "string", "enum": ["warning", "reprimand", "final_warning", "ban"] },
+        "isBlocked": { "type": "boolean" },
+        "blockDays": { "type": "number" },
+        "blockedUntil": { "type": "string" },
+        "blockReason": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "creatorEmail": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "resolved", "cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "resolvedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentId", "studentUid", "studentName", "title", "description", "type", "createdBy", "creatorEmail", "status", "createdAt"]
+    },
+    "ParentNote": {
+      "title": "Parent Inquiry & Feedback Note",
+      "description": "Direct communication from parents to madrasa administration.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "studentUid": { "type": "string" },
+        "studentName": { "type": "string" },
+        "studentClass": { "type": "string" },
+        "parentName": { "type": "string" },
+        "parentPhone": { "type": "string" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "reviewed", "resolved"] },
+        "reply": { "type": "string" },
+        "repliedBy": { "type": "string" },
+        "repliedAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentId", "studentUid", "studentName", "parentName", "subject", "message", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/parent_notes/{id}": {
+      "schema": "ParentNote",
+      "description": "Inquiries, notes, and questions submitted by parents."
+    },
+    "/complaints/{id}": {
+      "schema": "Complaint",
+      "description": "Disciplinary complaints and account ban records."
+    },
+    "/congratulations/{id}": {
+      "schema": "Congratulation",
+      "description": "Congratulatory letters sent to students."
+    },
+    "/user_hifz/{userId}": {
+      "schema": "UserHifz",
+      "description": "Quran memorization state for users."
+    },
+    "/certificates/{id}": {
+      "schema": "Certificate",
+      "description": "Certificates and diplomas list."
+    },
+    "/achievements/{id}": {
+      "schema": "Achievement",
+      "description": "Badges earned by students."
+    },
+    "/journal_v2/{id}": {
+      "schema": "JournalEntry",
+      "description": "Attendance and grades journal."
+    },
+    "/knowledge_base/{id}": {
+      "schema": "KnowledgeBaseResource",
+      "description": "Educational resource links."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles."
+    },
+    "/homeworks/{homeworkId}": {
+      "schema": "Homework",
+      "description": "Homework assignments."
+    },
+    "/submissions/{submissionId}": {
+      "schema": "Submission",
+      "description": "Student submissions."
+    },
+    "/grades/{gradeId}": {
+      "schema": "Grade",
+      "description": "Journal grades."
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "User notifications."
+    },
+    "/chats/{chatId}": {
+      "schema": "Chat",
+      "description": "Chat sessions."
+    },
+    "/chats/{chatId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Messages within a chat."
+    },
+    "/global_messages/{messageId}": {
+      "schema": "GlobalMessage",
+      "description": "Public chat messages."
+    },
+    "/lessons/{lessonId}": {
+      "schema": "Lesson",
+      "description": "Timetable lessons."
+    },
+    "/surveys/{surveyId}": {
+      "schema": "Survey",
+      "description": "Surveys."
+    },
+    "/survey_responses/{responseId}": {
+      "schema": "SurveyResponse",
+      "description": "Survey responses."
+    },
+    "/library_items/{itemId}": {
+      "schema": "LibraryItem",
+      "description": "Knowledge library items."
+    },
+    "/extra_courses/{courseId}": {
+      "schema": "ExtraCourse",
+      "description": "Extra courses."
+    },
+    "/course_enrollments/{enrollmentId}": {
+      "schema": "CourseEnrollment",
+      "description": "Extra course enrollments."
+    },
+    "/services_store/{serviceId}": {
+      "schema": "Service",
+      "description": "Available services in the store."
+    },
+    "/user_services/{userServiceId}": {
+      "schema": "UserService",
+      "description": "Services installed by users."
+    },
+    "/notes/{noteId}": {
+      "schema": "Note",
+      "description": "Private user notes."
+    },
+    "/todos/{todoId}": {
+      "schema": "Todo",
+      "description": "User tasks and habits."
+    },
+    "/posts/{postId}": {
+      "schema": "Post",
+      "description": "Public community posts."
+    },
+    "/game_scores/{scoreId}": {
+      "schema": "GameScore",
+      "description": "Persistent game leaderboards."
+    },
+    "/game_questions/{questionId}": {
+      "schema": "GameQuestion",
+      "description": "Questions for the Islamic Quiz."
+    },
+    "/usernames/{username}": {
+      "schema": "UsernameMapping",
+      "description": "Username to UID mapping for uniqueness and lookup."
+    },
+    "/exams/{examId}": {
+      "schema": "Exam",
+      "description": "Exams created by teachers."
+    },
+    "/exam_submissions/{submissionId}": {
+      "schema": "ExamSubmission",
+      "description": "Student exam submissions."
+    },
+    "/announcements/{id}": {
+      "schema": "Announcement",
+      "description": "News and fatwas."
+    },
+    "/books/{id}": {
+      "schema": "Book",
+      "description": "Library books."
+    }
+  }
+}
