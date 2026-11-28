@@ -196,7 +196,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   };
 
   const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
-  const days = ['B.', 'B.E.', 'Ç.', 'Ç.A.', 'C.', 'C.A.', 'Ş.'];
+  const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
@@ -423,7 +423,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         <div className="lg:col-span-7 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold tracking-tight">Elanlar</h2>
-            <span className="text-xs text-muted">{filteredAnnouncements.length} qeyd</span>
+            <span className="text-xs text-muted">{filteredAnnouncements.length} записей</span>
           </div>
           <div className="card !p-0 overflow-hidden divide-y divide-border">
             {filteredAnnouncements.map((ann) => (

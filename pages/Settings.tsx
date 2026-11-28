@@ -110,31 +110,7 @@ export const Settings: React.FC<SettingsProps> = ({ user }) => {
             </div>
         </section>
 
-        <section className="space-y-5">
-            <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-background rounded-xl flex items-center justify-center border border-border shadow-sm">
-                    <Globe className="w-5 h-5 text-text" />
-                </div>
-                <h2 className="text-xl font-semibold text-text tracking-tight">{t.language}</h2>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                {languages.filter(l => l.id === 'ru').map((lang) => (
-                    <button
-                        key={lang.id}
-                        onClick={() => { setUiLang(lang.id === 'ru' ? 'ru' : null); updatePreference({ language: lang.id }); }}
-                        disabled={isUpdating}
-                        className={`flex flex-col items-center justify-center p-6 rounded-2xl border transition-all group ${
-                            user.language === lang.id 
-                            ? 'bg-brand text-white border-brand' 
-                            : 'bg-surface border-border text-muted hover:border-brand/20'
-                        }`}
-                    >
-                        <span className="text-[11px] font-semibold mb-1">{lang.id}</span>
-                        <span className="text-[11px] font-semibold opacity-60 group-hover:opacity-100 ">{lang.native}</span>
-                    </button>
-                ))}
-            </div>
-        </section>
+        
 
       </div>
       

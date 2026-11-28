@@ -128,7 +128,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ user }) => {
 
             <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
               {/* Language Segmented Control */}
-              <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800/60 p-1 rounded-xl border border-neutral-200/60 dark:border-neutral-800 overflow-x-auto max-w-full">
+              <div className="hidden items-center gap-1 bg-neutral-100 dark:bg-neutral-800/60 p-1 rounded-xl border border-neutral-200/60 dark:border-neutral-800 overflow-x-auto max-w-full">
                 {langList.map(l => {
                   const isSelected = filterLang === l.id;
                   return (

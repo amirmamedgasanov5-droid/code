@@ -188,7 +188,7 @@ export const Library: React.FC<LibraryProps> = ({ user }) => {
             </div>
             <div className="min-w-0 flex-1">
                 <h1 className="text-xl font-semibold tracking-tight text-text">{t.library}</h1>
-                <div className="flex items-center gap-2 mt-3 overflow-x-auto pb-1 no-scrollbar max-w-full">
+                <div className="hidden items-center gap-2 mt-3 overflow-x-auto pb-1 no-scrollbar max-w-full">
                     {langList.map(l => (
                         <button 
                             key={l.id}

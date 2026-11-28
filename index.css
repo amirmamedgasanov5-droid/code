@@ -25,27 +25,28 @@
   --color-brand-950: #0b150a;
   --color-accent: #a8140a;
 
-  --color-surface: #ffffff;
-  --color-background: #f5f5f2;
-  --color-text: #171a14;
-  --color-muted: #6b6f66;
-  --color-border: #e4e5df;
+  --color-surface: #fffefb;
+  --color-background: #f4f1e9;
+  --color-text: #1b1f17;
+  --color-muted: #6c6b61;
+  --color-border: #ddd8ca;
 
   /* Calmer, tighter corner radii (replaces the oversized default rounding) */
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.5rem;
-  --radius-2xl: 0.625rem;
-  --radius-3xl: 0.75rem;
-  --radius-huge: 0.75rem;
-  --radius-large: 0.5rem;
-  --radius-medium: 0.375rem;
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 4px;
+  --radius-2xl: 6px;
+  --radius-3xl: 6px;
+  --radius-huge: 6px;
+  --radius-large: 4px;
+  --radius-medium: 3px;
 
   /* Shadows: soft, neutral, low-opacity (floating layers only) */
-  --shadow-xs: 0 1px 2px rgb(23 26 20 / 0.05);
-  --shadow-sm: 0 1px 2px rgb(23 26 20 / 0.05), 0 1px 3px rgb(23 26 20 / 0.04);
-  --shadow-md: 0 4px 12px -2px rgb(23 26 20 / 0.08), 0 2px 4px -2px rgb(23 26 20 / 0.05);
-  --shadow-lg: 0 12px 28px -8px rgb(23 26 20 / 0.14), 0 4px 8px -4px rgb(23 26 20 / 0.06);
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: 0 8px 24px -12px rgb(27 31 23 / 0.22);
+  --shadow-lg: 0 16px 40px -16px rgb(27 31 23 / 0.28);
 
   /* Motion */
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
@@ -142,7 +143,7 @@
 
 /* Cards & buttons */
 .card {
-  @apply bg-surface border border-border rounded-2xl p-5 shadow-[0_1px_2px_rgba(23,26,20,0.04)] transition-colors;
+  @apply bg-surface border border-border rounded-2xl p-5 transition-colors;
 }
 
 .card-hover {
@@ -151,19 +152,19 @@
 
 /* Enterprise Minimal Buttons */
 .btn-primary {
-  @apply bg-brand-600 hover:bg-brand-500 text-white font-medium rounded-xl px-4 py-2 text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer;
+  @apply bg-brand-600 hover:bg-brand-500 text-white font-medium rounded px-4 h-9 text-[13px] transition-colors flex items-center justify-center gap-2 cursor-pointer;
 }
 
 .btn-secondary {
-  @apply bg-surface border border-border hover:bg-neutral-50 dark:hover:bg-neutral-800 text-text font-medium rounded-xl px-4 py-2 text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer;
+  @apply bg-surface border border-border hover:bg-neutral-50 dark:hover:bg-neutral-800 text-text font-medium rounded px-4 h-9 text-[13px] transition-colors flex items-center justify-center gap-2 cursor-pointer;
 }
 
 .btn-brand {
-  @apply bg-brand-600 hover:bg-brand-500 text-white font-medium rounded-xl px-4 py-2 text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer;
+  @apply bg-brand-600 hover:bg-brand-500 text-white font-medium rounded px-4 h-9 text-[13px] transition-colors flex items-center justify-center gap-2 cursor-pointer;
 }
 
 .btn-amber {
-  @apply bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-xl px-4 py-2 text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer;
+  @apply bg-amber-600 hover:bg-amber-500 text-white font-medium rounded px-4 h-9 text-[13px] transition-colors flex items-center justify-center gap-2 cursor-pointer;
 }
 
 .btn-surface {
@@ -281,3 +282,19 @@ html[data-theme="dark"] body { font-size: 13px; }
     margin: 0 -1.5rem 1.25rem; padding: 0 1.5rem; height: 3.5rem;
   }
 }
+
+/* ───────── İsnad design language ─────────
+   Warm paper ground, hairline rules instead of shadows, small radii,
+   no tinted icon tiles, no pill-everything, no gradients or glow. */
+div:has(> svg:only-child)[class*="rounded"][class*="bg-"][class*="-50"],
+div:has(> svg:only-child)[class*="rounded"][class*="bg-"][class*="-100"] {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+}
+span.rounded-full[class*="px-"][class*="py-"],
+div.rounded-full[class*="px-"][class*="py-"] { border-radius: 4px; }
+button.rounded-full[class*="px-"] { border-radius: 4px; }
+h1 { font-size: 1.5rem; line-height: 1.2; font-weight: 600; letter-spacing: -0.02em; }
+.card, [class*="border-border"][class*="rounded"] { box-shadow: none; }
+table { border-collapse: collapse; }

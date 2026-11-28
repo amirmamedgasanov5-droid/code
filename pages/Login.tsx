@@ -13,7 +13,6 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { Toast, ToastType } from '../components/Toast';
-import { LangSwitch } from '../components/LangSwitch';
 
 export const Login: React.FC = () => {
   const [isRegistering, setIsRegistering] = useState(false);
@@ -123,20 +122,22 @@ export const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen flex bg-background text-text">
-      <LangSwitch className="fixed top-4 right-4 z-50" />
       {/* Left brand panel */}
-      <div className="hidden lg:flex w-1/2 p-4">
-        <div className="relative w-full rounded-2xl bg-brand-50 border border-brand-100 text-brand-950 p-12 flex flex-col justify-between overflow-hidden">
-          <div className="flex items-center gap-3">
-            <Logo className="w-12 h-12" />
-            <span className="text-sm font-medium tracking-tight">İsnad Mədrəsəsi</span>
+      <div className="hidden lg:flex w-[46%] relative overflow-hidden bg-[#ebe6d6] border-r border-border p-14 flex-col justify-between">
+        <img src="/logo.png" alt="" aria-hidden className="absolute -right-24 -bottom-24 w-[560px] h-[560px] object-contain opacity-[0.16] select-none pointer-events-none" />
+        <div className="relative flex items-center gap-3">
+          <Logo className="w-11 h-11" />
+          <div className="leading-tight">
+            <div className="text-[15px] font-bold tracking-[0.08em] text-brand-800">ИСНАД</div>
+            <div className="text-xs text-neutral-600">онлайн-медресе</div>
           </div>
-          <div className="space-y-3 max-w-md">
-            <h2 className="text-4xl font-semibold tracking-tight leading-tight">İsnad Mədrəsəsinə xoş gəlmisiniz</h2>
-            <p className="text-sm text-brand-800/80 leading-relaxed">
-              Cədvəl, jurnal, tapşırıqlar və kitabxana — hamısı bir yerdə. Daxil olun və dərsləri davam etdirin.
-            </p>
-          </div>
+        </div>
+        <div className="relative max-w-md space-y-5">
+          <div className="h-px w-12 bg-brand-700" />
+          <h2 className="text-[34px] font-semibold tracking-tight leading-[1.15] text-brand-950">Учёба, знания и передача знаний — в одном месте</h2>
+          <p className="text-sm text-neutral-700 leading-relaxed">
+            Расписание, журнал, задания и библиотека медресе. Войдите, чтобы продолжить обучение.
+          </p>
         </div>
       </div>
 
@@ -153,7 +154,7 @@ export const Login: React.FC = () => {
         
         {/* Minimal Academic Brand Header */}
         <div className="text-center space-y-2">
-          <Logo className="w-14 h-14 mx-auto mb-1" />
+          <Logo className="w-14 h-14 mx-auto mb-1 lg:hidden" />
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
               İsnad Mədrəsəsi

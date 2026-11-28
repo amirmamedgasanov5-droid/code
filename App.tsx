@@ -275,7 +275,7 @@ export default function App() {
                 className={
                   topLayout
                     ? 'flex-1 min-w-0 pt-[72px] lg:pt-[96px] px-3 lg:px-6 pb-6 overflow-y-auto h-screen scroll-smooth custom-scrollbar'
-                    : `flex-1 min-w-0 ${navCollapsed ? 'lg:ml-[104px]' : 'lg:ml-[272px]'} transition-[margin] duration-200 p-4 lg:p-6 pt-[72px] lg:pt-4 overflow-y-auto h-screen scroll-smooth custom-scrollbar`
+                    : `flex-1 min-w-0 ${navCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[248px]'} transition-[margin] duration-300 px-4 lg:px-10 pb-6 pt-[72px] lg:pt-0 overflow-y-auto h-screen scroll-smooth custom-scrollbar`
                 }
               >
                 {topLayout ? (
