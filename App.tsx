@@ -117,7 +117,7 @@ export default function App() {
     // The theme is managed by ThemeManager / theme.ts (data-theme). The Tailwind 'dark:' variants stay off:
     // the dark theme re-maps the colour scales instead.
     root.classList.remove('dark', 'cream');
-    if (themeColorMeta) themeColorMeta.setAttribute('content', '#4f46e5');
+    if (themeColorMeta) themeColorMeta.setAttribute('content', '#2f5224');
   }, []);
 
   useEffect(() => {

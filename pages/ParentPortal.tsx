@@ -769,7 +769,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
               {certificates.length > 0 && (
                 <div className="space-y-4">
                   <h4 className="text-xs font-semibold text-amber-500 flex items-center gap-1.5">
-                    <span>Rəsmi Mədrəsə Diplomları ({certificates.length})</span>
+                    <span>Официальные дипломы медресе ({certificates.length})</span>
                   </h4>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {certificates.map((cert) => {

@@ -266,7 +266,7 @@ export const Journal: React.FC<JournalV2Props> = ({ currentUser }) => {
                                         <tr key={sub.id} className="hover:bg-slate-50/30 transition-colors border-b border-border/50">
                                             <td className="p-6 sticky left-0 bg-white z-10">
                                                 <h3 className="text-xs font-semibold text-text tracking-tight">{currentUser.language === 'ru' ? sub.name_ru : sub.name}</h3>
-                                                <p className="text-[11px] font-semibold text-brand mt-1">Ortalama: {avg || '-'}</p>
+                                                <p className="text-[11px] font-semibold text-brand mt-1">Среднее: {avg || '-'}</p>
                                             </td>
                                             <td className="p-6">
                                                 <div className="flex flex-wrap gap-1.5 min-h-[40px]">

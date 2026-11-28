@@ -29,7 +29,7 @@ const Mini: React.FC<{ id: ThemeId }> = ({ id }) => {
     return (
       <div className="rounded-xl h-28 flex overflow-hidden" style={{ background: '#0b0b0d' }}>
         <div className="w-10 p-2 space-y-1.5" style={{ background: '#141417', borderRight: '1px solid #26262c' }}>
-          <div className="h-2 w-full rounded" style={{ background: '#6d5bf0' }} />
+          <div className="h-2 w-full rounded" style={{ background: '#2f5224' }} />
           <div className="h-2 w-full rounded" style={{ background: '#26262c' }} />
           <div className="h-2 w-full rounded" style={{ background: '#26262c' }} />
         </div>
@@ -38,22 +38,22 @@ const Mini: React.FC<{ id: ThemeId }> = ({ id }) => {
             <div className="h-1.5 w-16 rounded mb-1" style={{ background: '#8c8c97' }} />
             <div className="h-1.5 w-24 rounded" style={{ background: '#26262c' }} />
           </div>
-          <div className="h-4 w-14 rounded-lg" style={{ background: '#6d5bf0' }} />
+          <div className="h-4 w-14 rounded-lg" style={{ background: '#2f5224' }} />
         </div>
       </div>
     );
   }
   return (
-    <div className="rounded-xl h-28 flex gap-2 p-2.5" style={{ background: '#f6f7fb' }}>
-      <div className="w-8 rounded-lg p-1.5 space-y-1.5" style={{ background: '#fff', border: '1px solid #e6e8f0' }}>
-        <div className="h-2 w-full rounded" style={{ background: '#4f46e5' }} />
-        <div className="h-2 w-full rounded" style={{ background: '#e0e7ff' }} />
-        <div className="h-2 w-full rounded" style={{ background: '#e0e7ff' }} />
+    <div className="rounded-xl h-28 flex gap-2 p-2.5" style={{ background: '#f5f5f2' }}>
+      <div className="w-8 rounded-lg p-1.5 space-y-1.5" style={{ background: '#fff', border: '1px solid #e4e5df' }}>
+        <div className="h-2 w-full rounded" style={{ background: '#2f5224' }} />
+        <div className="h-2 w-full rounded" style={{ background: '#e4ebd8' }} />
+        <div className="h-2 w-full rounded" style={{ background: '#e4ebd8' }} />
       </div>
-      <div className="flex-1 p-2" style={{ background: '#fff', borderRadius: 12, border: '1px solid #e6e8f0' }}>
+      <div className="flex-1 p-2" style={{ background: '#fff', borderRadius: 12, border: '1px solid #e4e5df' }}>
         <div className="h-1.5 w-14 rounded mb-1.5" style={{ background: '#d4d4d8' }} />
         <div className="h-1.5 w-20 rounded mb-2" style={{ background: '#ececee' }} />
-        <div className="h-4 w-14 rounded-lg" style={{ background: '#4f46e5' }} />
+        <div className="h-4 w-14 rounded-lg" style={{ background: '#2f5224' }} />
       </div>
     </div>
   );

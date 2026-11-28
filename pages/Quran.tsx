@@ -33,19 +33,17 @@ interface AyahData {
 }
 
 const RECITERS = [
-  { id: 'ar.alafasy', name: 'Mişari Rəşid əl-Afasi', style: 'Məşhur, aydın' },
-  { id: 'ar.abdulbasitmujawwad', name: 'Əbdülbasit Əbdülsəməd', style: 'Mücavvəd, klassik' },
-  { id: 'ar.minshawi', name: 'Məhəmməd Siddiq əl-Minşavi', style: 'Tərtil, duyğulu' },
-  { id: 'ar.husary', name: 'Mahmud Xəlil əl-Husari', style: 'Təcvid ustadı, əzbər üçün əla' },
-  { id: 'ar.shaatree', name: 'Əbu Bəkr əş-Şatiri', style: 'Sakit tərz' },
-  { id: 'ar.ghanim', name: 'Səəd əl-Qamidi', style: 'Məşhur tərtil' },
-  { id: 'ar.mahermuaiqly', name: 'Mahir əl-Mueyqli', style: 'Hərəm imamı' },
+  { id: 'ar.alafasy', name: 'Мишари Рашид аль-Афаси', style: 'Известный, чёткое чтение' },
+  { id: 'ar.abdulbasitmujawwad', name: 'Абдуль-Басит Абдус-Самад', style: 'Муджаввад, классическое чтение' },
+  { id: 'ar.minshawi', name: 'Мухаммад Сиддик аль-Миншави', style: 'Тартиль, проникновенное чтение' },
+  { id: 'ar.husary', name: 'Махмуд Халиль аль-Хусари', style: 'Мастер таджвида, отлично подходит для заучивания' },
+  { id: 'ar.shaatree', name: 'Абу Бакр аш-Шатри', style: 'Спокойный стиль' },
+  { id: 'ar.ghanim', name: 'Саад аль-Гамиди', style: 'Известный тартиль' },
+  { id: 'ar.mahermuaiqly', name: 'Махир аль-Муайкили', style: 'Имам Заповедной мечети' },
 ];
 
 const TRANSLATIONS = [
-  { id: 'az.mammadaliyev', name: 'Azərbaycan dili (Məmmədəliyev & Bünyadov)' },
   { id: 'ru.kuliev', name: 'Русский (Эльмир Кулиев)' },
-  { id: 'en.sahih', name: 'English (Saheeh International)' },
 ];
 
 // Pre-stored 114 Surahs metadata
@@ -170,7 +168,7 @@ export const Quran: React.FC<QuranProps> = ({ user }) => {
   const [activeTab, setActiveTab] = useState<'player' | 'memorize' | 'my_hifz'>('player');
   const [selectedSurahNumber, setSelectedSurahNumber] = useState<number>(1);
   const [selectedReciter, setSelectedReciter] = useState<string>('ar.alafasy');
-  const [selectedTranslation, setSelectedTranslation] = useState<string>('az.mammadaliyev');
+  const [selectedTranslation, setSelectedTranslation] = useState<string>('ru.kuliev');
   
   const [ayahs, setAyahs] = useState<AyahData[]>([]);
   const [loadingAyahs, setLoadingAyahs] = useState<boolean>(false);
@@ -962,7 +960,7 @@ export const Quran: React.FC<QuranProps> = ({ user }) => {
                   {currentSurahMeta.englishName} ({currentSurahMeta.name})
                 </h4>
                 <p className="text-[11px] text-brand-300 font-medium">
-                  Ayə {currentAyahIndex + 1} / {ayahs.length} • {RECITERS.find(r=>r.id===selectedReciter)?.name.split(' ')[0]}
+                  Аят {currentAyahIndex + 1} / {ayahs.length} • {RECITERS.find(r=>r.id===selectedReciter)?.name.split(' ')[0]}
                 </p>
               </div>
             </div>
@@ -981,7 +979,7 @@ export const Quran: React.FC<QuranProps> = ({ user }) => {
               <button
                 onClick={togglePlayPause}
                 className="w-12 h-12 rounded-full bg-brand-500 hover:bg-brand-400 text-slate-950 flex items-center justify-center font-semibold transition-all"
-                title={isPlaying ? 'Pauza' : 'Oyna'}
+                title={isPlaying ? 'Пауза' : 'Играть'}
               >
                 {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current ml-0.5" />}
               </button>

@@ -86,7 +86,7 @@ export const Awards: React.FC<AwardsProps> = ({ user }) => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-neutral-200/70 dark:border-neutral-800/80">
                 <div>
                     <h1 className="text-xl font-semibold tracking-tight text-text">
-                        Diplomlar & Sertifikatlar
+                        Дипломы и сертификаты
                     </h1>
                     <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
                         Rəsmi mədrəsə şəhadətnamələri, diplomlar və nailiyyətlər reyestri
@@ -103,7 +103,7 @@ export const Awards: React.FC<AwardsProps> = ({ user }) => {
                                 : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200'
                         }`}
                     >
-                        Diplomlar
+                        Дипломы
                     </button>
                     <button 
                         onClick={() => setActiveTab('certificates')}
@@ -113,7 +113,7 @@ export const Awards: React.FC<AwardsProps> = ({ user }) => {
                                 : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200'
                         }`}
                     >
-                        Sertifikatlar
+                        Сертификаты
                     </button>
                     <button 
                         onClick={() => setActiveTab('achievements')}
