@@ -97,11 +97,11 @@ export const Schedule: React.FC<ScheduleProps> = ({ user }) => {
 
   const langList: { id: Language | 'all'; label: string }[] = [
     { id: 'all', label: 'Bütün dillər' },
-    { id: 'az', label: 'Azərbaycan' },
+    { id: 'az', label: 'Азербайджанский' },
     { id: 'ru', label: 'Русский' },
-    { id: 'ar', label: 'العربية' },
-    { id: 'tr', label: 'Türkçe' },
-    { id: 'en', label: 'English' }
+    { id: 'ar', label: 'Арабский' },
+    { id: 'tr', label: 'Турецкий' },
+    { id: 'en', label: 'Английский' }
   ];
 
   return (
@@ -248,11 +248,11 @@ export const Schedule: React.FC<ScheduleProps> = ({ user }) => {
                         value={newLesson.language} 
                         onChange={e => setNewLesson({...newLesson, language: e.target.value as Language})}
                       >
-                        <option value="az">Azərbaycan</option>
+                        <option value="az">Азербайджанский</option>
                         <option value="ru">Русский</option>
-                        <option value="ar">العربية</option>
-                        <option value="tr">Türkçe</option>
-                        <option value="en">English</option>
+                        <option value="ar">Арабский</option>
+                        <option value="tr">Турецкий</option>
+                        <option value="en">Английский</option>
                       </select>
                     </div>
                     <div className="space-y-1">

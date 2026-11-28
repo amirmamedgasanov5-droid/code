@@ -114,9 +114,9 @@ export const Library: React.FC<LibraryProps> = ({ user }) => {
     { id: 'all', label: 'Bütün' },
     { id: 'az', label: 'Azerbaijani' },
     { id: 'ru', label: 'Русский' },
-    { id: 'ar', label: 'العربية' },
-    { id: 'tr', label: 'Türkçe' },
-    { id: 'en', label: 'English' }
+    { id: 'ar', label: 'Арабский' },
+    { id: 'tr', label: 'Турецкий' },
+    { id: 'en', label: 'Английский' }
   ];
 
   if (loading) {
@@ -237,11 +237,11 @@ export const Library: React.FC<LibraryProps> = ({ user }) => {
                           <div className="space-y-2">
                               <label className="text-[11px] font-semibold text-muted ml-1">Dil</label>
                               <select required className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:ring-1 focus:ring-brand outline-none transition-all text-text" value={newBook.language} onChange={e => setNewBook({...newBook, language: e.target.value as Language})}>
-                                  <option value="az">Azərbaycan</option>
+                                  <option value="az">Азербайджанский</option>
                                   <option value="ru">Русский</option>
-                                  <option value="ar">العربية</option>
-                                  <option value="tr">Türkçe</option>
-                                  <option value="en">English</option>
+                                  <option value="ar">Арабский</option>
+                                  <option value="tr">Турецкий</option>
+                                  <option value="en">Английский</option>
                               </select>
                           </div>
                           <div className="space-y-2">
