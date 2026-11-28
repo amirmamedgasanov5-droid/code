@@ -19,7 +19,7 @@ const timeAgo = (iso: string): string => {
 };
 
 const ICONS = {
-  info: <Info className="w-4 h-4 text-indigo-600" />,
+  info: <Info className="w-4 h-4 text-brand-600" />,
   success: <CheckCircle2 className="w-4 h-4 text-green-600" />,
   warning: <AlertTriangle className="w-4 h-4 text-amber-600" />,
 };
@@ -94,7 +94,7 @@ export const NotificationBell: React.FC<{ user: User }> = ({ user }) => {
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
             <span className="text-sm font-semibold text-text">Bildirişlər</span>
             {unread > 0 && (
-              <button onClick={markAll} className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
+              <button onClick={markAll} className="text-xs text-brand-600 hover:underline flex items-center gap-1">
                 <Check className="w-3 h-3" /> Hamısını oxundu et
               </button>
             )}
@@ -108,14 +108,14 @@ export const NotificationBell: React.FC<{ user: User }> = ({ user }) => {
                   key={n.id}
                   onClick={() => markRead(n)}
                   className={`w-full text-left px-4 py-3 flex gap-3 border-b border-border last:border-b-0 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors ${
-                    n.read ? '' : 'bg-indigo-50/60 dark:bg-indigo-950/20'
+                    n.read ? '' : 'bg-brand-50/60 dark:bg-brand-950/20'
                   }`}
                 >
                   <span className="mt-0.5 shrink-0">{ICONS[n.type] || ICONS.info}</span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
                       <span className="text-sm font-medium text-text truncate">{n.title}</span>
-                      {!n.read && <span className="w-2 h-2 rounded-full bg-indigo-600 shrink-0" />}
+                      {!n.read && <span className="w-2 h-2 rounded-full bg-brand-600 shrink-0" />}
                     </span>
                     <span className="block text-xs text-muted leading-snug mt-0.5">{n.message}</span>
                     <span className="block text-[11px] text-muted/80 mt-1">{timeAgo(n.createdAt)}</span>

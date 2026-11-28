@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, CheckSquare, Square, Loader2, ListTodo, Sparkles } from 'lucide-react';
+import { X, Plus, Trash2, CheckSquare, Square, Loader2, ListTodo, Bookmark } from 'lucide-react';
 import { db } from '../../../firebase';
 import { collection, onSnapshot, query, where, addDoc, serverTimestamp, deleteDoc, doc, updateDoc, orderBy } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../../utils/firestoreError';
@@ -86,7 +86,7 @@ export const Todo: React.FC<TodoProps> = ({ user, onClose }) => {
   const progress = todos.length > 0 ? (completedCount / todos.length) * 100 : 0;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-slate-900/50 z-[200] flex items-center justify-center p-4">
       <div className="bg-white w-full max-w-xl h-[80vh] rounded-2xl shadow-md flex flex-col overflow-hidden">
         {/* Header */}
         <div className="p-6 border-b border-border bg-slate-50">
@@ -128,7 +128,7 @@ export const Todo: React.FC<TodoProps> = ({ user, onClose }) => {
             <button 
               type="submit"
               disabled={adding || !newTodo.trim()}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-brand text-white rounded-xl hover:scale-105 transition-all disabled:opacity-50"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-brand text-white rounded-xl transition-all disabled:opacity-50"
             >
               {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
             </button>

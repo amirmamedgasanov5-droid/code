@@ -370,7 +370,7 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
             {isTeacher && view === 'list' && (
               <button 
                 onClick={() => setView('create')}
-                className="bg-brand text-white px-3 py-1.5 rounded-xl text-[11px] font-semibold hover:scale-105 transition-all flex items-center space-x-1.5"
+                className="bg-brand text-white px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-all flex items-center space-x-1.5"
               >
                 <Plus className="w-2.5 h-2.5" />
                 <span>Yarat</span>
@@ -409,7 +409,7 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
         </div>
 
         {notice && view === 'list' && (
-          <div className="px-4 py-2 text-xs text-indigo-700 bg-indigo-50 border-b border-border">{notice}</div>
+          <div className="px-4 py-2 text-xs text-brand-700 bg-brand-50 border-b border-border">{notice}</div>
         )}
 
         {/* Content */}
@@ -462,7 +462,7 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
                               {st === 'closed' && 'Müddət bitib'}
                               {st === 'legacy' && 'Müddətsiz'}
                             </span>
-                            {exam.translations?.ru && <span className="px-2.5 py-1 rounded-full text-[11px] bg-indigo-50 text-indigo-700">RU tərcümə var</span>}
+                            {exam.translations?.ru && <span className="px-2.5 py-1 rounded-full text-[11px] bg-brand-50 text-brand-700">RU tərcümə var</span>}
                             <button onClick={() => sendExam(exam)} className="btn-primary !px-4 !py-1.5 !text-[11px]">
                               <Send className="w-3 h-3" />
                               <span>{st === 'draft' ? 'Göndər · 2 gün' : 'Yenidən göndər (+2 gün)'}</span>
@@ -601,7 +601,7 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
                 <button 
                   onClick={handleCreateExam}
                   disabled={!newExam.title || newExam.questions.length === 0}
-                  className="w-full bg-brand text-white py-4 rounded-2xl font-semibold text-xs hover:scale-[1.02] transition-all disabled:opacity-50 disabled:scale-100"
+                  className="w-full bg-brand text-white py-4 rounded-2xl font-semibold text-xs transition-all disabled:opacity-50"
                 >
                   İmtahanı Yarat
                 </button>
@@ -666,7 +666,7 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
                     </div>
                   </div>
                   <div className="bg-neutral-50 dark:bg-neutral-900 p-6 rounded-2xl border border-border">
-                    <div className="flex items-center space-x-3 text-indigo-500 mb-2">
+                    <div className="flex items-center space-x-3 text-brand-500 mb-2">
                       <Clock className="w-4 h-4" />
                       <span className="text-[11px] font-semibold ">Son Aktivlik</span>
                     </div>
@@ -720,7 +720,7 @@ export const ExamService: React.FC<ExamServiceProps> = ({ user, onClose, initial
                         <div key={sub.id}>
                           <div className="p-4 flex flex-wrap items-center gap-4">
                             <div className="flex items-center space-x-3 min-w-[180px] flex-1">
-                              <div className="w-8 h-8 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600">
+                              <div className="w-8 h-8 bg-brand-50 rounded-full flex items-center justify-center text-brand-600">
                                 <UserIcon className="w-4 h-4" />
                               </div>
                               <div className="min-w-0">

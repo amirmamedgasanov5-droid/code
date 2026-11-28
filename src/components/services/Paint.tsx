@@ -276,13 +276,13 @@ export const Paint: React.FC<PaintProps> = ({ user, onClose }) => {
   };
 
   return (
-    <div className={`fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[200] flex items-center justify-center ${isFullScreen ? 'p-0' : 'p-4'}`}>
+    <div className={`fixed inset-0 bg-slate-900/50 z-[200] flex items-center justify-center ${isFullScreen ? 'p-0' : 'p-4'}`}>
       <div className={`bg-white shadow-md flex flex-col overflow-hidden transition-all duration-300 ${isFullScreen ? 'w-full h-full rounded-0' : 'w-full max-w-5xl h-[85vh] rounded-2xl'}`}>
         {/* Header */}
         <div className="p-4 border-b border-border flex items-center justify-between bg-slate-50">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <div className="w-2 h-2 bg-green-500 rounded-full" />
               <h3 className="font-semibold text-text text-[11px]">Canlı Rəsm</h3>
             </div>
             
@@ -383,7 +383,7 @@ export const Paint: React.FC<PaintProps> = ({ user, onClose }) => {
                 key={id}
                 initial={false}
                 animate={{ x: cursor.x, y: cursor.y }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                 className="absolute pointer-events-none z-50 flex flex-col items-start"
                 style={{ left: 0, top: 0 }}
               >

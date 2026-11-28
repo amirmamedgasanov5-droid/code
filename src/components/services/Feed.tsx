@@ -110,7 +110,7 @@ export const Feed: React.FC<FeedProps> = ({ user, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-slate-900/50 z-[200] flex items-center justify-center p-4">
       <div className="bg-white w-full max-w-2xl h-[90vh] rounded-2xl shadow-md flex flex-col overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-border bg-white flex items-center justify-between sticky top-0 z-10">
@@ -181,7 +181,7 @@ export const Feed: React.FC<FeedProps> = ({ user, onClose }) => {
               <button 
                 type="submit"
                 disabled={posting || !newPost.trim()}
-                className="bg-brand text-white px-6 py-2 rounded-full font-semibold text-[11px] hover:scale-[1.02] disabled:opacity-50 transition-all flex items-center space-x-2"
+                className="bg-brand text-white px-6 py-2 rounded-full font-semibold text-[11px] disabled:opacity-50 transition-all flex items-center space-x-2"
               >
                 {posting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                 <span>Paylaş</span>

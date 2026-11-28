@@ -5,7 +5,7 @@ import { db } from '../firebase';
 import { collection, onSnapshot, query, where, addDoc, serverTimestamp, deleteDoc, doc, getDocs } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../src/utils/firestoreError';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShoppingBag, LayoutGrid, Download, Trash2, ExternalLink, Loader2, Sparkles, Paintbrush, Calculator, FileText, Gamepad2, ClipboardList } from 'lucide-react';
+import { ShoppingBag, LayoutGrid, Download, Trash2, ExternalLink, Loader2, Bookmark, Paintbrush, Calculator, FileText, Gamepad2, ClipboardList } from 'lucide-react';
 import { Paint } from '../src/components/services/Paint';
 import { Notes } from '../src/components/services/Notes';
 import { Todo } from '../src/components/services/Todo';
@@ -127,9 +127,9 @@ export const Services: React.FC<ServicesProps> = ({ user }) => {
       case 'file-text': return <FileText className="w-5 h-5" />;
       case 'gamepad-2': return <Gamepad2 className="w-5 h-5" />;
       case 'check-square': return <LayoutGrid className="w-5 h-5" />;
-      case 'rss': return <Sparkles className="w-5 h-5" />;
+      case 'rss': return <Bookmark className="w-5 h-5" />;
       case 'clipboard-list': return <ClipboardList className="w-5 h-5" />;
-      default: return <Sparkles className="w-5 h-5" />;
+      default: return <Bookmark className="w-5 h-5" />;
     }
   };
 
@@ -151,7 +151,7 @@ export const Services: React.FC<ServicesProps> = ({ user }) => {
         return <ExamService user={user} onClose={() => setActiveService(null)} />;
       default:
         return (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/50 z-[200] flex items-center justify-center p-4">
             <div className="bg-white p-8 rounded-2xl shadow-md text-center space-y-4">
               <h3 className="text-xl font-semibold text-text">Bu servis hələ hazır deyil</h3>
               <p className="text-muted text-sm">Tezliklə istifadəyə veriləcək!</p>
@@ -265,7 +265,7 @@ export const Services: React.FC<ServicesProps> = ({ user }) => {
                         className={`w-full flex items-center justify-center space-x-2 py-3 rounded-xl font-semibold text-[11px] transition-all ${
                           isInstalled 
                           ? 'bg-slate-100 text-muted cursor-not-allowed' 
-                          : 'bg-brand text-white hover:scale-[1.02]'
+                          : 'bg-brand text-white'
                         }`}
                       >
                         {installing === service.id ? (

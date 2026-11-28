@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Banner } from '../types';
 
 const TONES: Record<Banner['tone'], string> = {
-  indigo: 'bg-indigo-50 dark:bg-indigo-950/30 border-indigo-100 dark:border-indigo-900/40 text-indigo-900 dark:text-indigo-100',
+  indigo: 'bg-brand-50 dark:bg-brand-950/30 border-brand-100 dark:border-brand-900/40 text-brand-900 dark:text-brand-100',
   slate: 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100',
   emerald: 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/40 text-emerald-900 dark:text-emerald-100',
   rose: 'bg-rose-50 dark:bg-rose-950/30 border-rose-100 dark:border-rose-900/40 text-rose-900 dark:text-rose-100',
@@ -29,7 +29,7 @@ export const BannerCarousel: React.FC<Props> = ({ banners }) => {
               href={b.linkUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-medium transition-colors"
             >
               {b.linkLabel || 'Ətraflı'} <ExternalLink className="w-3 h-3" />
             </a>
@@ -91,7 +91,7 @@ export const BannerCarousel: React.FC<Props> = ({ banners }) => {
           initial="enter"
           animate="center"
           exit="exit"
-          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
           drag={count > 1 ? 'x' : false}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.2}
@@ -124,7 +124,7 @@ export const BannerCarousel: React.FC<Props> = ({ banners }) => {
               <button
                 key={i}
                 onClick={() => go(i, i > idx ? 1 : -1)}
-                className={`h-1.5 rounded-full transition-all ${i === current ? 'w-5 bg-indigo-600' : 'w-1.5 bg-indigo-300'}`}
+                className={`h-1.5 rounded-full transition-all ${i === current ? 'w-5 bg-brand-600' : 'w-1.5 bg-brand-300'}`}
                 aria-label={`Slayd ${i + 1}`}
               />
             ))}

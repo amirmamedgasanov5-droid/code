@@ -203,7 +203,7 @@ export default function App() {
               <AlertCircle className="w-12 h-12 text-text mb-6" />
               <h2 className="text-2xl font-bold text-text tracking-tight ">Sistem Xətası</h2>
               <p className="text-muted mt-2 text-[10px] font-bold max-w-xs">İnternet bağlantısını yoxlayın və ya yenidən daxil olun.</p>
-              <button onClick={() => window.location.reload()} className="mt-8 bg-brand text-white px-8 py-3 rounded-xl font-bold text-[10px] shadow-lg active:scale-95 transition-all">Yenidən yoxla</button>
+              <button onClick={() => window.location.reload()} className="mt-8 bg-brand text-white px-8 py-3 rounded-xl font-bold text-[10px] active:scale-95 transition-all">Yenidən yoxla</button>
               <button onClick={() => signOut(auth)} className="mt-4 text-muted font-bold text-[10px] hover:text-text transition-colors">Çıxış et</button>
           </div>
       );
@@ -299,14 +299,13 @@ export default function App() {
 function AnimatedRoutes({ user }: { user: User }) {
   const location = useLocation();
   return (
-    <AnimatePresence mode="wait">
+    <>
       <motion.div
         key={location.pathname}
-        initial={{ opacity: 0, y: 8 }}
+        initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
-        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full"
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full page-stagger"
       >
         {isParentUser(user) ? (
           <Routes location={location}>
@@ -340,6 +339,6 @@ function AnimatedRoutes({ user }: { user: User }) {
         </Routes>
         )}
       </motion.div>
-    </AnimatePresence>
+    </>
   );
 }

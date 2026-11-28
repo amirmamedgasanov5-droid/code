@@ -64,7 +64,7 @@ export const UsernameSetup: React.FC<UsernameSetupProps> = ({ user }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-xl z-[1000] flex items-center justify-center p-6">
+    <div className="fixed inset-0 bg-background/80 z-[1000] flex items-center justify-center p-6">
       <motion.div 
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -103,14 +103,14 @@ export const UsernameSetup: React.FC<UsernameSetupProps> = ({ user }) => {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-brand text-white py-5 rounded-2xl font-semibold text-[11px] shadow-md hover:opacity-95 transition-all flex items-center justify-center gap-3"
+            className="w-full bg-brand text-white py-5 rounded-2xl font-semibold text-[11px] hover:opacity-95 transition-all flex items-center justify-center gap-3"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Təsdiqlə'}
           </button>
         </form>
 
-        <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
-          <p className="text-[11px] font-semibold text-indigo-600 leading-relaxed text-center">
+        <div className="p-4 bg-brand-50 rounded-2xl border border-brand-100">
+          <p className="text-[11px] font-semibold text-brand-600 leading-relaxed text-center">
             İstifadəçi adı sistemdə səni tanımaq üçün istifadə olunacaq.
           </p>
         </div>

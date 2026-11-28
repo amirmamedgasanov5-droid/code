@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ChevronRight, Sparkles, Home, Calendar, BookOpen, Library, MessageCircle, Settings, User as UserIcon, Archive, CheckSquare } from 'lucide-react';
+import { X, ChevronRight, Bookmark, Home, Calendar, BookOpen, Library, MessageCircle, Settings, User as UserIcon, Archive, CheckSquare } from 'lucide-react';
 import { User } from '../types';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -27,7 +27,7 @@ export const Tutorial: React.FC<TutorialProps> = ({ user }) => {
     {
       title: "Xoş Gəldiniz!",
       content: "Nəsihetlər Mədrəsesi portalına xoş gəldiniz. Gəlin sizə platformanı necə istifadə edəcəyinizi göstərək.",
-      icon: Sparkles
+      icon: Bookmark
     },
     {
       title: "Ana Səhifə",
@@ -161,7 +161,7 @@ export const Tutorial: React.FC<TutorialProps> = ({ user }) => {
             <div className="space-y-3">
               <p className="text-muted text-xs font-medium leading-relaxed">{step.content}</p>
               {step.instruction && (
-                <div className="flex items-center gap-2 text-brand text-[11px] font-semibold animate-pulse">
+                <div className="flex items-center gap-2 text-brand text-[11px] font-semibold">
                   <ChevronRight className="w-3 h-3" />
                   {step.instruction}
                 </div>
@@ -181,7 +181,7 @@ export const Tutorial: React.FC<TutorialProps> = ({ user }) => {
                 )}
                 <button 
                   onClick={nextStep}
-                  className="bg-brand text-white px-6 py-2 rounded-xl font-semibold text-[11px] shadow-md flex items-center gap-2 transition-all"
+                  className="bg-brand text-white px-6 py-2 rounded-xl font-semibold text-[11px] flex items-center gap-2 transition-all"
                 >
                   {currentStep === steps.length - 1 ? "Bitir" : "Növbəti"}
                   <ChevronRight className="w-3 h-3" />

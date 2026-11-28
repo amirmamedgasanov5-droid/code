@@ -83,13 +83,13 @@ export const Notes: React.FC<NotesProps> = ({ user, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-slate-900/50 z-[200] flex items-center justify-center p-4">
       <div className="bg-white w-full max-w-5xl h-[85vh] rounded-2xl shadow-md flex overflow-hidden">
         {/* Sidebar */}
         <div className="w-64 border-r border-border bg-slate-50 flex flex-col">
           <div className="p-4 border-b border-border flex items-center justify-between">
             <h3 className="font-semibold text-text text-[11px]">Qeydlər</h3>
-            <button onClick={createNote} className="p-1.5 bg-brand text-white rounded-xl hover:scale-105 transition-all">
+            <button onClick={createNote} className="p-1.5 bg-brand text-white rounded-xl transition-all">
               <Plus className="w-4 h-4" />
             </button>
           </div>

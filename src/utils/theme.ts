@@ -4,9 +4,9 @@ export type ThemeId = 'classic' | 'minimal' | 'dark';
 export type ThemeLayout = 'side' | 'top';
 
 export const THEMES: { id: ThemeId; name: string; desc: string; layout: ThemeLayout }[] = [
-  { id: 'classic', name: 'Klassik', desc: 'Hazırkı dizayn: yan menyu, indiqo rəng, yüngül kartlar.', layout: 'side' },
+  { id: 'classic', name: 'Klassik', desc: 'Hazırkı dizayn: yan menyu, yaşıl rəng, yüngül kartlar.', layout: 'side' },
   { id: 'minimal', name: 'Minimal', desc: 'Menyu yuxarıda, ağ vərəq, çoxlu boş yer, sakit boz düymələr.', layout: 'top' },
-  { id: 'dark', name: 'Tünd', desc: 'Qaranlıq «komanda mərkəzi»: yığcam, yassı yan panel, bənövşəyi vurğu.', layout: 'side' },
+  { id: 'dark', name: 'Tünd', desc: 'Qaranlıq «komanda mərkəzi»: yığcam, yassı yan panel, yaşıl vurğu.', layout: 'side' },
 ];
 
 const PREVIEW_KEY = 'ui_theme_preview';

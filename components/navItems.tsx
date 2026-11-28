@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Calendar, BookOpen, User, ClipboardList, MessageCircle,
-  Library, Settings, Sparkles, LayoutGrid,
+  Library, Settings, Bookmark, LayoutGrid,
   Award, Headphones, ShieldAlert,
   Trophy, ShieldCheck, Home, Megaphone, BarChart3
 } from 'lucide-react';
@@ -30,7 +30,7 @@ export const buildNavSections = (user: UserType | null, t: (typeof translations)
         { to: "/library", icon: Library, label: t.library || "Kitabxana" },
         { to: "/quran", icon: Headphones, label: t.quran || "Qurani-Kərim" },
         { to: "/knowledge-base", icon: BookOpen, label: t.knowledge_base || "Elmi Baza" },
-        { to: "/extra", icon: Sparkles, label: t.extra || "Əlavə Dərslər" },
+        { to: "/extra", icon: Bookmark, label: t.extra || "Əlavə Dərslər" },
       ]
     },
     {

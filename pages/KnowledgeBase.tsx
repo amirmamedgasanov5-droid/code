@@ -95,8 +95,8 @@ export const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ user }) => {
 
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-border pb-5">
                 <div className="flex items-center gap-4">
-                    <div className="p-2.5 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl">
-                        <BookOpen className="w-5 h-5 text-indigo-600" />
+                    <div className="p-2.5 bg-brand-50 dark:bg-brand-950/40 rounded-xl">
+                        <BookOpen className="w-5 h-5 text-brand-600" />
                     </div>
                     <div>
                         <h1 className="text-xl font-semibold tracking-tight text-text">{t.knowledge_base}</h1>
@@ -118,7 +118,7 @@ export const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ user }) => {
                     {isAuthorized && (
                         <button 
                             onClick={() => setShowForm(true)}
-                            className="bg-brand text-white p-3 rounded-xl shadow-md hover:opacity-90 transition-all"
+                            className="bg-brand text-white p-3 rounded-xl hover:opacity-90 transition-all"
                         >
                             <Plus className="w-5 h-5" />
                         </button>
@@ -167,7 +167,7 @@ export const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ user }) => {
                             <button 
                                 type="submit" 
                                 disabled={isSaving}
-                                className="md:col-span-2 bg-brand text-white py-4 rounded-xl font-semibold text-xs shadow-md hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                                className="md:col-span-2 bg-brand text-white py-4 rounded-xl font-semibold text-xs hover:opacity-90 transition-all flex items-center justify-center gap-2"
                             >
                                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                                 Əlavə et
@@ -189,7 +189,7 @@ export const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ user }) => {
                             key={resource.id}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="group p-6 bg-surface border border-border rounded-2xl hover:border-brand/40 transition-all shadow-sm hover:shadow-md flex flex-col justify-between"
+                            className="group p-6 bg-surface border border-border rounded-2xl hover:border-brand/40 transition-all shadow-sm flex flex-col justify-between"
                         >
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">

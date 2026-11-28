@@ -1,3 +1,4 @@
+import { Logo } from './Logo';
 import React, { useRef, useState } from 'react';
 import { Download, Printer } from 'lucide-react';
 import html2canvas from 'html2canvas';
@@ -31,7 +32,7 @@ export const DiplomaCard: React.FC<DiplomaCardProps> = ({ data }) => {
   const [isDownloading, setIsDownloading] = useState(false);
 
   const dateStr = data.date || new Date().toLocaleDateString('az-AZ');
-  const serialNo = data.serialNumber || `NM-2026-${(data.id || '0000').slice(0, 4).toUpperCase()}`;
+  const serialNo = data.serialNumber || `IS-2026-${(data.id || '0000').slice(0, 4).toUpperCase()}`;
 
   const download = async () => {
     if (!cardRef.current) return;
@@ -75,12 +76,12 @@ export const DiplomaCard: React.FC<DiplomaCardProps> = ({ data }) => {
         ref={cardRef}
         className="relative w-full aspect-[16/10.8] min-h-[340px] bg-white text-slate-900 rounded-2xl border border-slate-200 p-3 select-none"
       >
-        <div className="h-full w-full rounded-xl border-2 border-indigo-700 p-6 sm:p-10 flex flex-col justify-between text-center">
+        <div className="h-full w-full rounded-xl border-2 border-brand-700 p-6 sm:p-10 flex flex-col justify-between text-center">
           <div className="space-y-2">
-            <div className="text-[11px] sm:text-xs font-semibold text-indigo-700">
-              Nəsihətlər Mədrəsəsi
+            <div className="flex items-center justify-center gap-2 text-[11px] sm:text-xs font-semibold text-brand-700">
+              <Logo className="w-6 h-6" />İsnad Mədrəsəsi
             </div>
-            <div className="inline-block px-3 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[11px] sm:text-xs font-medium">
+            <div className="inline-block px-3 py-0.5 rounded-full bg-brand-50 text-brand-700 text-[11px] sm:text-xs font-medium">
               {data.title || TAGS[data.type]}
             </div>
           </div>

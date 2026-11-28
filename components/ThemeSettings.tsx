@@ -120,7 +120,7 @@ export const ThemeSettings: React.FC = () => {
         </div>
         <div className="text-xs text-muted text-right">
           <div>Hamı üçün aktiv: <span className="text-text font-medium">{nameOf(published)}</span></div>
-          {preview && <div className="text-indigo-600 dark:text-indigo-400">Sizdə sınaq: {nameOf(preview)}</div>}
+          {preview && <div className="text-brand-600 dark:text-brand-400">Sizdə sınaq: {nameOf(preview)}</div>}
         </div>
       </div>
 
@@ -133,7 +133,7 @@ export const ThemeSettings: React.FC = () => {
               type="button"
               onClick={() => choose(t.id)}
               className={`text-left rounded-2xl border p-3 transition-colors ${
-                selected ? 'border-indigo-600 ring-2 ring-indigo-600/15' : 'border-border hover:border-indigo-300'
+                selected ? 'border-brand-600 ring-2 ring-brand-600/15' : 'border-border hover:border-brand-300'
               }`}
             >
               <div className="mb-3"><Mini id={t.id} /></div>
@@ -141,7 +141,7 @@ export const ThemeSettings: React.FC = () => {
                 <span className="text-sm font-semibold text-text">{t.name}</span>
                 <span className="flex items-center gap-1 text-[11px]">
                   {published === t.id && <span className="px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-muted flex items-center gap-1"><Globe className="w-3 h-3" /> hamıda</span>}
-                  {selected && <Check className="w-4 h-4 text-indigo-600" />}
+                  {selected && <Check className="w-4 h-4 text-brand-600" />}
                 </span>
               </div>
               <p className="text-xs text-muted mt-1 leading-snug">{t.desc}</p>

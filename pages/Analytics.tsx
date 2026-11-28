@@ -283,7 +283,7 @@ export const Analytics: React.FC<{ user: User }> = () => {
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="text-xs text-indigo-600 dark:text-indigo-400">{SECTION_LABEL[e.page] || e.page || '—'}</div>
+                  <div className="text-xs text-brand-600 dark:text-brand-400">{SECTION_LABEL[e.page] || e.page || '—'}</div>
                   <div className="text-[11px] text-muted">{e.since ? timeAgo(new Date(e.since).toISOString()) : ''}</div>
                 </div>
               </div>
@@ -304,8 +304,8 @@ export const Analytics: React.FC<{ user: User }> = () => {
                     <span className="text-text">{SECTION_LABEL[s.key] || s.key}</span>
                     <span className="text-muted">{s.count}</span>
                   </div>
-                  <div className="h-2 rounded-full bg-indigo-100 dark:bg-indigo-950 overflow-hidden">
-                    <div className="h-full rounded-full bg-indigo-600" style={{ width: `${(s.count / maxSection) * 100}%` }} />
+                  <div className="h-2 rounded-full bg-brand-100 dark:bg-brand-950 overflow-hidden">
+                    <div className="h-full rounded-full bg-brand-600" style={{ width: `${(s.count / maxSection) * 100}%` }} />
                   </div>
                 </div>
               ))
@@ -325,7 +325,7 @@ export const Analytics: React.FC<{ user: User }> = () => {
               <div key={d.day} className="flex-1 flex flex-col items-center justify-end h-full gap-1.5 min-w-0">
                 <span className="text-[11px] text-muted">{d.count}</span>
                 <div
-                  className="w-full rounded-t-lg bg-indigo-600"
+                  className="w-full rounded-t-lg bg-brand-600"
                   style={{ height: `${Math.max(4, (d.count / maxDaily) * 100)}%`, opacity: d.count === 0 ? 0.25 : 1 }}
                   title={`${d.day}: ${d.count}`}
                 />
@@ -357,7 +357,7 @@ export const Analytics: React.FC<{ user: User }> = () => {
                 key={t.id}
                 onClick={() => setFilter(t.id)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap border transition-colors ${
-                  filter === t.id ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-surface border-border text-muted hover:text-text'
+                  filter === t.id ? 'bg-brand-600 border-brand-600 text-white' : 'bg-surface border-border text-muted hover:text-text'
                 }`}
               >
                 {t.label}
@@ -370,7 +370,7 @@ export const Analytics: React.FC<{ user: User }> = () => {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Ad, e-poçt və ya istifadəçi adı"
-              className="pl-9 pr-3 py-2 text-xs bg-surface border border-border rounded-xl outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 w-full md:w-72"
+              className="pl-9 pr-3 py-2 text-xs bg-surface border border-border rounded-xl outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 w-full md:w-72"
             />
           </div>
         </div>

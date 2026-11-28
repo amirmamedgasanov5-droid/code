@@ -10,7 +10,7 @@ import {
   ShieldCheck, User as UserIcon, BookOpen, ClipboardList, 
   Calendar, Award, AlertTriangle, MessageSquare, Lock, 
   Key, CheckCircle2, XCircle, ChevronRight, Send, 
-  LogOut, Phone, Mail, Sparkles, Star, Trophy, Loader2
+  LogOut, Phone, Mail, Bookmark, Star, Trophy, Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { calculateStudentXP, getRankByXP, getRankProgress } from '../src/utils/rankService';
@@ -162,7 +162,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
         onChange={e => setLinkCode(e.target.value.toUpperCase())}
         placeholder="Dəvət kodu"
         maxLength={12}
-        className="flex-1 px-3.5 py-2.5 bg-surface border border-border rounded-xl text-sm tracking-widest outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15"
+        className="flex-1 px-3.5 py-2.5 bg-surface border border-border rounded-xl text-sm tracking-widest outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
         required
       />
       <button type="submit" disabled={linking || !linkCode.trim()} className="btn-primary !px-5 disabled:opacity-50">
@@ -328,7 +328,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
       {/* Clean Academic Header Banner */}
       <div className="rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 p-6  flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
         <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400">
+          <div className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 dark:text-brand-400">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>Valideyn Portalı · Rəsmi Nəzarət Sistemi</span>
           </div>
@@ -345,7 +345,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
         {/* If authenticated, show quick student chip */}
         {isAuthenticatedParent && selectedStudent && (
           <div className="flex items-center gap-2.5 bg-neutral-50 dark:bg-neutral-800/60 px-3.5 py-2 rounded-xl border border-neutral-200/80 dark:border-neutral-700/80 shrink-0">
-            <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-semibold text-xs">
+            <div className="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center font-semibold text-xs">
               {selectedStudent.name.charAt(0)}
             </div>
             <div>
@@ -375,7 +375,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
           <div className="card space-y-4 text-center">
             {isTeacherOrAdmin ? (
               <>
-                <div className="w-10 h-10 mx-auto rounded-xl bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center text-indigo-600">
+                <div className="w-10 h-10 mx-auto rounded-xl bg-brand-50 dark:bg-brand-950/40 flex items-center justify-center text-brand-600">
                   <UserIcon className="w-5 h-5" />
                 </div>
                 <div className="space-y-1">
@@ -390,7 +390,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                       setIsAuthenticatedParent(true);
                     }
                   }}
-                  className="w-full px-3 py-2.5 bg-surface border border-border rounded-xl text-sm text-text outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2.5 bg-surface border border-border rounded-xl text-sm text-text outline-none focus:border-brand-500"
                   defaultValue=""
                 >
                   <option value="">-- Tələbəni seçin --</option>
@@ -403,7 +403,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
               </>
             ) : isParent ? (
               <>
-                <div className="w-10 h-10 mx-auto rounded-xl bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center text-indigo-600">
+                <div className="w-10 h-10 mx-auto rounded-xl bg-brand-50 dark:bg-brand-950/40 flex items-center justify-center text-brand-600">
                   {portalReady ? <Lock className="w-5 h-5" /> : <Loader2 className="w-5 h-5 animate-spin" />}
                 </div>
                 {portalReady ? (
@@ -442,7 +442,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                     key={c.uid}
                     onClick={() => setSelectedStudent(c)}
                     className={`px-3.5 py-1.5 rounded-xl text-xs font-medium border transition-colors ${
-                      selectedStudent?.uid === c.uid ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-surface border-border text-muted hover:text-text'
+                      selectedStudent?.uid === c.uid ? 'bg-brand-600 border-brand-600 text-white' : 'bg-surface border-border text-muted hover:text-text'
                     }`}
                   >
                     {c.name}
@@ -476,7 +476,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1.5 border cursor-pointer ${
                     isActive
-                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      ? 'bg-brand-600 text-white border-brand-600'
                       : 'bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 border-neutral-200/80 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-100'
                   }`}
                 >
@@ -494,7 +494,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {/* Child Card */}
                 <div className="md:col-span-2 p-6 rounded-2xl bg-surface border-2 border-border shadow-sm flex items-center gap-5">
-                  <div className="w-20 h-20 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-3xl font-semibold shadow-md">
+                  <div className="w-20 h-20 rounded-2xl bg-brand-600 text-white flex items-center justify-center text-3xl font-semibold">
                     {selectedStudent?.avatar ? (
                       <img src={selectedStudent.avatar} alt={selectedStudent.name} className="w-full h-full object-cover rounded-2xl" referrerPolicy="no-referrer" />
                     ) : (
@@ -504,12 +504,12 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                   <div className="space-y-1">
                     <span className="text-[11px] font-semibold text-muted">Tələbə Profili</span>
                     <h2 className="text-xl font-semibold text-text">{selectedStudent?.name}</h2>
-                    <span className="text-xs font-semibold text-indigo-600 block">{selectedStudent?.className || '1-A sinfi'}</span>
+                    <span className="text-xs font-semibold text-brand-600 block">{selectedStudent?.className || '1-A sinfi'}</span>
                     <div className="flex items-center gap-2 pt-1">
                       <span className="px-3 py-1 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-semibold text-[11px]">
                         {currentRank.icon} {currentRank.name} Rütbəsi
                       </span>
-                      <span className="px-3 py-1 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 font-semibold text-[11px]">
+                      <span className="px-3 py-1 rounded-xl bg-brand-100 dark:bg-brand-950 text-brand-800 dark:text-brand-300 font-semibold text-[11px]">
                         {studentStats.xp} XP
                       </span>
                     </div>
@@ -519,7 +519,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                 {/* GPA Card */}
                 <div className="p-6 rounded-2xl bg-surface border-2 border-border shadow-sm flex flex-col justify-between text-center">
                   <span className="text-xs font-semibold text-muted">Ümumi Orta Bal</span>
-                  <div className="text-4xl font-semibold text-indigo-600 my-2">
+                  <div className="text-4xl font-semibold text-brand-600 my-2">
                     {studentStats.gpa} / 5.0
                   </div>
                   <span className="text-[11px] font-semibold text-muted">Bütün fənlər üzrə yekun</span>
@@ -528,7 +528,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                 {/* Attendance Rate Card */}
                 <div className="p-6 rounded-2xl bg-surface border-2 border-border shadow-sm flex flex-col justify-between text-center">
                   <span className="text-xs font-semibold text-muted">Davamiyyət Faizi</span>
-                  <div className="text-4xl font-semibold text-indigo-600 my-2">
+                  <div className="text-4xl font-semibold text-brand-600 my-2">
                     {studentStats.attendancePlusCount + studentStats.attendanceMinusCount > 0
                       ? `${Math.round((studentStats.attendancePlusCount / (studentStats.attendancePlusCount + studentStats.attendanceMinusCount)) * 100)}%`
                       : '100%'}
@@ -546,7 +546,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                     <span>{currentRank.icon}</span>
                     <span>Cari Səviyyə: {currentRank.name} ({currentRank.title})</span>
                   </span>
-                  <span className="text-indigo-600 font-semibold">
+                  <span className="text-brand-600 font-semibold">
                     {progress.nextRank ? `Növbəti Rütbəyə: ${progress.remainingXp} XP` : 'Maksimum Səviyyə! '}
                   </span>
                 </div>
@@ -555,7 +555,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${progress.progressPercent}%` }}
-                    className="h-full bg-indigo-600 rounded-full"
+                    className="h-full bg-brand-600 rounded-full"
                   />
                 </div>
 
@@ -566,7 +566,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                   </div>
                   <div className="p-3 rounded-2xl bg-background border border-border text-center">
                     <span className="text-[11px] font-semibold text-muted block">4 Qiymətləri</span>
-                    <span className="text-base font-semibold text-indigo-500">{studentStats.foursCount} ədəd</span>
+                    <span className="text-base font-semibold text-brand-500">{studentStats.foursCount} ədəd</span>
                   </div>
                   <div className="p-3 rounded-2xl bg-background border border-border text-center">
                     <span className="text-[11px] font-semibold text-muted block">İntizam Qeydləri</span>
@@ -574,7 +574,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                   </div>
                   <div className="p-3 rounded-2xl bg-background border border-border text-center">
                     <span className="text-[11px] font-semibold text-muted block">Tərifnamələr</span>
-                    <span className="text-base font-semibold text-indigo-500">{congratulations.length} ədəd</span>
+                    <span className="text-base font-semibold text-brand-500">{congratulations.length} ədəd</span>
                   </div>
                 </div>
               </div>
@@ -589,7 +589,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                   Rəsmi Tələbə Vəsiqəsi
                 </h2>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                  Nəsihətlər Mədrəsəsi Akademik Şurası tərəfindən təsdiq olunmuş unikal QR-kodlu və möhürlü tələbə vəsiqəsi
+                  İsnad Mədrəsəsi Akademik Şurası tərəfindən təsdiq olunmuş unikal QR-kodlu və möhürlü tələbə vəsiqəsi
                 </p>
               </div>
 
@@ -621,7 +621,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                     <div key={subId} className="p-5 rounded-2xl bg-surface border-2 border-border space-y-2 shadow-sm">
                       <div className="flex justify-between items-center">
                         <h4 className="font-semibold text-sm text-text">{SUBJECT_NAMES[subId]}</h4>
-                        <span className="px-2.5 py-1 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 font-semibold text-xs">
+                        <span className="px-2.5 py-1 rounded-xl bg-brand-100 dark:bg-brand-950 text-brand-800 dark:text-brand-300 font-semibold text-xs">
                           {avg}
                         </span>
                       </div>
@@ -635,9 +635,9 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                               key={idx}
                               className={`w-6 h-6 rounded-xl flex items-center justify-center font-semibold text-xs ${
                                 m === '5' ? 'bg-amber-400 text-yellow-950' :
-                                m === '4' ? 'bg-indigo-200 text-indigo-900' :
+                                m === '4' ? 'bg-brand-200 text-brand-900' :
                                 m === '3' ? 'bg-slate-200 text-slate-800' :
-                                m === '+' ? 'bg-indigo-200 text-indigo-900' :
+                                m === '+' ? 'bg-brand-200 text-brand-900' :
                                 'bg-rose-200 text-rose-900'
                               }`}
                             >
@@ -670,8 +670,8 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                         </div>
                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-semibold text-sm ${
                           entry.mark === '5' ? 'bg-amber-400 text-yellow-950 shadow' :
-                          entry.mark === '4' ? 'bg-indigo-400 text-white shadow' :
-                          entry.mark === '+' ? 'bg-indigo-500 text-white shadow' :
+                          entry.mark === '4' ? 'bg-brand-400 text-white shadow' :
+                          entry.mark === '+' ? 'bg-brand-500 text-white shadow' :
                           'bg-slate-200 text-slate-800'
                         }`}>
                           {entry.mark}
@@ -688,9 +688,9 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
           {activeTab === 'attendance' && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-6 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 border-2 border-indigo-300 dark:border-indigo-800 text-center">
-                  <span className="text-xs font-semibold text-indigo-800 dark:text-indigo-300 block">Dərsdə İştirak (+)</span>
-                  <span className="text-4xl font-semibold text-indigo-600 my-2 block">
+                <div className="p-6 rounded-2xl bg-brand-50 dark:bg-brand-950/30 border-2 border-brand-300 dark:border-brand-800 text-center">
+                  <span className="text-xs font-semibold text-brand-800 dark:text-brand-300 block">Dərsdə İştirak (+)</span>
+                  <span className="text-4xl font-semibold text-brand-600 my-2 block">
                     {studentStats.attendancePlusCount} dərs
                   </span>
                   <span className="text-[11px] font-semibold text-muted">Müvəffəqiyyətlə iştirak edib</span>
@@ -726,7 +726,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
 
               {complaints.length === 0 ? (
                 <div className="p-10 rounded-2xl bg-surface border-2 border-border text-center space-y-2">
-                  <CheckCircle2 className="w-12 h-12 text-indigo-500 mx-auto" />
+                  <CheckCircle2 className="w-12 h-12 text-brand-500 mx-auto" />
                   <h4 className="font-semibold text-base text-text">Heç bir intizam xəbərdarlığı yoxdur!</h4>
                   <p className="text-xs text-muted">Övladınız mədrəsə daxili intizam qaydalarına nümunəvi şəkildə əməl edir.</p>
                 </div>
@@ -781,7 +781,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                         reason: cert.reason || 'Mədrəsədə göstərdiyi yüksək nizam-intizam və əla qiymətlərə görə təltif edilir.',
                         teacherName: cert.teacherName || 'Mədrəsə Rəhbərliyi',
                         date: cert.date || (cert.createdAt?.seconds ? new Date(cert.createdAt.seconds * 1000).toLocaleDateString('az-AZ') : '2026-cı il'),
-                        serialNumber: cert.serialNumber || `NM-2026-${cert.id?.slice(0, 4).toUpperCase() || '0000'}`,
+                        serialNumber: cert.serialNumber || `IS-2026-${cert.id?.slice(0, 4).toUpperCase() || '0000'}`,
                       };
 
                       return (
@@ -796,7 +796,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
 
               {/* CONGRATULATIONS & PRAISES */}
               <div className="space-y-4 pt-2">
-                <h4 className="text-xs font-semibold text-indigo-500 flex items-center gap-1.5">
+                <h4 className="text-xs font-semibold text-brand-500 flex items-center gap-1.5">
                   <span>Müəllimlərin Tərifnamələri ({congratulations.length})</span>
                 </h4>
 
@@ -811,7 +811,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {congratulations.map(cong => (
-                      <div key={cong.id} className="p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-transparent border border-amber-300 dark:border-amber-700/50 space-y-3">
+                      <div key={cong.id} className="p-6 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-300 dark:border-amber-700/50 space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="px-3 py-1 rounded-xl bg-amber-400 text-yellow-950 font-semibold text-xs flex items-center gap-1.5 shadow-sm">
                             <Award className="w-3.5 h-3.5" /> Rəsmi Tərifnamə
@@ -862,7 +862,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
               {/* Write Note Form */}
               <div className="bg-surface p-6 sm:p-8 rounded-2xl border-2 border-border shadow-sm space-y-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-indigo-500 text-white flex items-center justify-center text-xl shadow">
+                  <div className="w-12 h-12 rounded-2xl bg-brand-500 text-white flex items-center justify-center text-xl shadow">
                     <Send className="w-6 h-6" />
                   </div>
                   <div>
@@ -886,7 +886,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                         value={parentName}
                         onChange={(e) => setParentName(e.target.value)}
                         placeholder="məs: İlqar Əliyev"
-                        className="w-full px-4 py-3 bg-background border border-border rounded-xl font-semibold text-xs text-text outline-none focus:border-indigo-500"
+                        className="w-full px-4 py-3 bg-background border border-border rounded-xl font-semibold text-xs text-text outline-none focus:border-brand-500"
                         required
                       />
                     </div>
@@ -899,7 +899,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                         value={parentPhone}
                         onChange={(e) => setParentPhone(e.target.value)}
                         placeholder="+994 50 000 00 00"
-                        className="w-full px-4 py-3 bg-background border border-border rounded-xl font-semibold text-xs text-text outline-none focus:border-indigo-500"
+                        className="w-full px-4 py-3 bg-background border border-border rounded-xl font-semibold text-xs text-text outline-none focus:border-brand-500"
                       />
                     </div>
                   </div>
@@ -913,7 +913,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                       value={noteSubject}
                       onChange={(e) => setNoteSubject(e.target.value)}
                       placeholder="məs: Dərslər üzrə əlavə hazırlıq haqqında"
-                      className="w-full px-4 py-3 bg-background border border-border rounded-xl font-semibold text-xs text-text outline-none focus:border-indigo-500"
+                      className="w-full px-4 py-3 bg-background border border-border rounded-xl font-semibold text-xs text-text outline-none focus:border-brand-500"
                       required
                     />
                   </div>
@@ -927,7 +927,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                       value={noteMessage}
                       onChange={(e) => setNoteMessage(e.target.value)}
                       placeholder="Müraciətinizi ətraflı qeyd edin..."
-                      className="w-full px-4 py-3 bg-background border border-border rounded-xl font-semibold text-xs text-text outline-none focus:border-indigo-500 resize-none"
+                      className="w-full px-4 py-3 bg-background border border-border rounded-xl font-semibold text-xs text-text outline-none focus:border-brand-500 resize-none"
                       required
                     />
                   </div>
@@ -935,7 +935,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                   <button
                     type="submit"
                     disabled={isSendingNote}
-                    className="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-2xl border-indigo-800 shadow-md transition-transform flex items-center justify-center gap-2"
+                    className="px-8 py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs rounded-2xl border-brand-800 transition-transform flex items-center justify-center gap-2"
                   >
                     {isSendingNote ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                     <span>Müraciəti Göndər</span>
@@ -957,7 +957,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                       <div key={pn.id} className="p-5 rounded-2xl bg-surface border-2 border-border space-y-3 shadow-sm">
                         <div className="flex items-center justify-between">
                           <span className={`px-3 py-1 rounded-xl text-[11px] font-semibold ${
-                            pn.status === 'resolved' ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300' :
+                            pn.status === 'resolved' ? 'bg-brand-100 dark:bg-brand-950 text-brand-800 dark:text-brand-300' :
                             'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
                           }`}>
                             {pn.status === 'resolved' ? 'Cavablandırılıb' : 'Baxılır'}
@@ -971,8 +971,8 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                         </div>
 
                         {pn.reply && (
-                          <div className="p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-900/40 space-y-1">
-                            <span className="text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 block">
+                          <div className="p-4 rounded-2xl bg-brand-50/50 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-900/40 space-y-1">
+                            <span className="text-[11px] font-semibold text-brand-700 dark:text-brand-300 block">
                               Mədrəsə Rəhbərliyinin Cavabı ({pn.repliedBy || 'Müdiriyyət'}):
                             </span>
                             <p className="text-xs font-semibold text-text">{pn.reply}</p>
@@ -997,7 +997,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                                 <div className="flex gap-2">
                                   <button
                                     onClick={() => handleReplyNote(pn.id)}
-                                    className="px-4 py-2 bg-indigo-600 text-white font-semibold text-xs rounded-xl"
+                                    className="px-4 py-2 bg-brand-600 text-white font-semibold text-xs rounded-xl"
                                   >
                                     Cavabı Göndər
                                   </button>
@@ -1012,7 +1012,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ user }) => {
                             ) : (
                               <button
                                 onClick={() => setReplyingNoteId(pn.id)}
-                                className="px-4 py-2 bg-indigo-600/10 text-indigo-600 font-semibold text-xs rounded-xl hover:bg-indigo-600/20"
+                                className="px-4 py-2 bg-brand-600/10 text-brand-600 font-semibold text-xs rounded-xl hover:bg-brand-600/20"
                               >
                                 Valideynə Cavab Yaz
                               </button>

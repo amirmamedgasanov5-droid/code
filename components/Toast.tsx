@@ -22,7 +22,7 @@ export const Toast: React.FC<ToastProps> = ({ message, type, isVisible, onClose 
 
   return (
     <div className="fixed bottom-8 right-8 z-[200] animate-slide-up">
-      <div className={`flex items-center space-x-4 p-4 pr-12 rounded-2xl shadow-md border ${
+      <div className={`flex items-center space-x-4 p-4 pr-12 rounded-2xl border ${
         type === 'success' 
           ? 'bg-zinc-900 border-zinc-800 text-white' 
           : 'bg-red-50 border-red-100 text-red-800'

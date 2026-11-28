@@ -263,7 +263,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               placeholder="Elanın başlığı"
               value={newAnnounce.title}
               onChange={(e) => setNewAnnounce({ ...newAnnounce, title: e.target.value })}
-              className="sm:col-span-2 w-full px-3.5 py-2.5 text-xs bg-surface border border-border rounded-xl outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15"
+              className="sm:col-span-2 w-full px-3.5 py-2.5 text-xs bg-surface border border-border rounded-xl outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15"
               required
             />
             <select
@@ -281,7 +281,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
             value={newAnnounce.content}
             onChange={(e) => setNewAnnounce({ ...newAnnounce, content: e.target.value })}
             rows={3}
-            className="w-full px-3.5 py-2.5 text-xs bg-surface border border-border rounded-xl outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 resize-none"
+            className="w-full px-3.5 py-2.5 text-xs bg-surface border border-border rounded-xl outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 resize-none"
           />
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">Ləğv et</button>
@@ -297,7 +297,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         <section className="lg:col-span-5 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold tracking-tight">Tapşırıqlarım</h2>
-            <button onClick={() => navigate('/homework')} className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+            <button onClick={() => navigate('/homework')} className="text-xs text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1">
               Hamısı <ChevronRight className="w-3 h-3" />
             </button>
           </div>
@@ -327,7 +327,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         <section className="lg:col-span-7 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold tracking-tight">Kurslarım</h2>
-            <button onClick={() => navigate('/extra')} className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+            <button onClick={() => navigate('/extra')} className="text-xs text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1">
               Hamısı <ChevronRight className="w-3 h-3" />
             </button>
           </div>
@@ -349,7 +349,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                     </div>
                     <div className="flex items-center justify-between text-[11px]">
                       <span className="text-muted truncate">Müəllim: {c.teacherName}</span>
-                      <span className={`px-2 py-0.5 rounded-xl font-medium ${enrolled ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300' : 'bg-neutral-100 text-muted dark:bg-neutral-800'}`}>
+                      <span className={`px-2 py-0.5 rounded-xl font-medium ${enrolled ? 'bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300' : 'bg-neutral-100 text-muted dark:bg-neutral-800'}`}>
                         {enrolled ? 'Qeydiyyatdasınız' : 'Açıqdır'}
                       </span>
                     </div>
@@ -375,7 +375,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                 placeholder="Elanlarda axtar"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-3 py-2 text-xs bg-surface border border-border rounded-xl outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 w-44 sm:w-56 placeholder:text-muted"
+                className="pl-9 pr-3 py-2 text-xs bg-surface border border-border rounded-xl outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 w-44 sm:w-56 placeholder:text-muted"
               />
             </div>
             <button onClick={() => navigate('/schedule')} className="btn-secondary">
@@ -393,18 +393,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               return (
                 <div
                   key={lesson.id}
-                  className={`card !p-4 space-y-2.5 ${isOngoing ? 'border-indigo-300 dark:border-indigo-700 bg-indigo-50/40 dark:bg-indigo-950/20' : ''}`}
+                  className={`card !p-4 space-y-2.5 ${isOngoing ? 'border-brand-300 dark:border-brand-700 bg-brand-50/40 dark:bg-brand-950/20' : ''}`}
                 >
                   <div className="flex items-center gap-2 text-[11px]">
                     <span className="px-2 py-0.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-muted">{lesson.time}</span>
-                    {isOngoing && <span className="px-2 py-0.5 rounded-xl bg-indigo-600 text-white font-medium">Canlı</span>}
+                    {isOngoing && <span className="px-2 py-0.5 rounded-xl bg-brand-600 text-white font-medium">Canlı</span>}
                     {lesson.room && <span className="text-muted truncate">{lesson.room}</span>}
                   </div>
                   <h3 className="text-sm font-semibold text-text leading-snug">{lesson.subject}</h3>
                   <div className="flex items-center justify-between text-[11px] text-muted">
                     <span className="truncate">{lesson.teacherName}</span>
                     {lesson.lessonLink ? (
-                      <a href={lesson.lessonLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
+                      <a href={lesson.lessonLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-brand-600 dark:text-brand-400 hover:underline">
                         Qoşul <ExternalLink className="w-3 h-3" />
                       </a>
                     ) : (
@@ -447,7 +447,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 
           <div className="card flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center text-indigo-600 dark:text-indigo-300">
+              <div className="w-9 h-9 rounded-xl bg-brand-50 dark:bg-brand-950/40 flex items-center justify-center text-brand-600 dark:text-brand-300">
                 <Trophy className="w-4 h-4" />
               </div>
               <div>
@@ -490,7 +490,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                   <div
                     key={day}
                     className={`text-xs py-1.5 rounded-xl transition-colors ${
-                      isToday ? 'bg-indigo-600 text-white font-semibold' : 'text-text hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                      isToday ? 'bg-brand-600 text-white font-semibold' : 'text-text hover:bg-neutral-100 dark:hover:bg-neutral-800'
                     }`}
                   >
                     {day}
@@ -511,7 +511,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                 return (
                   <div key={msg.id || idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                     <div className={`px-3 py-2 rounded-xl max-w-[85%] text-xs ${
-                      isMe ? 'bg-indigo-600 text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-text'
+                      isMe ? 'bg-brand-600 text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-text'
                     }`}>
                       {!isMe && <p className="text-[11px] font-medium opacity-60 mb-0.5">{msg.senderName}</p>}
                       <p className="leading-snug">{msg.text}</p>
@@ -527,12 +527,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                 placeholder="Mesaj yazın..."
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                className="w-full bg-surface border border-border rounded-xl py-2.5 px-3.5 pr-10 text-xs outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 placeholder:text-muted"
+                className="w-full bg-surface border border-border rounded-xl py-2.5 px-3.5 pr-10 text-xs outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 placeholder:text-muted"
               />
               <button
                 type="submit"
                 disabled={!newMessage.trim()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-indigo-600 p-1.5 disabled:opacity-30 cursor-pointer"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-brand-600 p-1.5 disabled:opacity-30 cursor-pointer"
                 aria-label="Göndər"
               >
                 <Send className="w-3.5 h-3.5" />

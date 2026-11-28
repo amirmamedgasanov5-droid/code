@@ -67,7 +67,7 @@ export const CongratulationsOverlay: React.FC<CongratulationsOverlayProps> = ({ 
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-950/60">
                 <motion.div
                     initial={{ scale: 0.96, opacity: 0, y: 12 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -79,14 +79,14 @@ export const CongratulationsOverlay: React.FC<CongratulationsOverlayProps> = ({ 
                             onClick={handleOpen}
                             className="bg-white dark:bg-neutral-900 rounded-2xl p-10 shadow-md cursor-pointer border border-border flex flex-col items-center text-center space-y-6"
                         >
-                            <div className="w-14 h-14 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
+                            <div className="w-14 h-14 bg-brand-600 rounded-xl flex items-center justify-center text-white">
                                 <Mail size={26} />
                             </div>
                             <div>
                                 <h2 className="text-lg font-semibold text-text">Yeni təbrikiniz var</h2>
                                 <p className="text-muted text-xs mt-2">Müəlliminiz sizə təbrik göndərib</p>
                             </div>
-                            <div className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium text-xs transition-colors">
+                            <div className="px-6 py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-medium text-xs transition-colors">
                                 Aç
                             </div>
                         </div>
@@ -96,14 +96,14 @@ export const CongratulationsOverlay: React.FC<CongratulationsOverlayProps> = ({ 
                             animate={{ opacity: 1 }}
                             className="bg-white dark:bg-neutral-900 rounded-2xl p-8 sm:p-10 shadow-md border border-border relative overflow-hidden min-h-[360px] flex flex-col"
                         >
-                            <div className="absolute top-0 left-0 w-full h-1 bg-indigo-600" />
+                            <div className="absolute top-0 left-0 w-full h-1 bg-brand-600" />
                             <button onClick={handleClose} className="absolute top-5 right-5 p-2 text-muted hover:text-text transition-colors z-10">
                                 <X size={20} />
                             </button>
 
                             <div className="flex-1 space-y-6 relative z-10">
                                 <header className="space-y-2">
-                                    <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                                    <div className="flex items-center gap-2 text-brand-600 dark:text-brand-400">
                                         <MailOpen size={16} />
                                         <span className="text-xs font-medium">Təbriknamə</span>
                                     </div>

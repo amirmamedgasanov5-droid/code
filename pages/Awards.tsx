@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AwardItem, User } from '../types';
-import { Award as AwardIcon, Trophy, Medal, Star, Plus, Loader2, Sparkles, FileText, CheckCircle2 } from 'lucide-react';
+import { Award as AwardIcon, Trophy, Medal, Star, Plus, Loader2, Bookmark, FileText, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { db } from '../firebase';
 import { collection, onSnapshot, query, where, orderBy, getDocs } from 'firebase/firestore';
@@ -68,7 +68,7 @@ export const Awards: React.FC<AwardsProps> = ({ user }) => {
             reason: item.reason || 'Mədrəsədə göstərdiyi yüksək nizam-intizam və əla qiymətlərə görə təltif edilir.',
             teacherName: item.teacherName || 'Mədrəsə Rəhbərliyi',
             date: item.date || (item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleDateString('az-AZ') : '2026-cı il'),
-            serialNumber: item.serialNumber || `NM-2026-${item.id.slice(0, 4).toUpperCase()}`,
+            serialNumber: item.serialNumber || `IS-2026-${item.id.slice(0, 4).toUpperCase()}`,
             imageUrl: item.imageUrl
         };
     };
@@ -133,7 +133,7 @@ export const Awards: React.FC<AwardsProps> = ({ user }) => {
                 <div className="p-4 bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 rounded-2xl  flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center text-neutral-700 dark:text-neutral-200">
-                            <Sparkles className="w-4 h-4" />
+                            <Bookmark className="w-4 h-4" />
                         </div>
                         <div>
                             <h3 className="text-xs font-medium text-neutral-900 dark:text-neutral-100">
@@ -148,7 +148,7 @@ export const Awards: React.FC<AwardsProps> = ({ user }) => {
                     <button 
                         type="button"
                         onClick={() => setShowGeneratorModal(true)}
-                        className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-xl transition-colors  flex items-center gap-1.5 shrink-0 cursor-pointer"
+                        className="px-3.5 py-1.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-medium rounded-xl transition-colors  flex items-center gap-1.5 shrink-0 cursor-pointer"
                     >
                         <Plus className="w-3.5 h-3.5" />
                         <span>Yeni Diplom Tərtib Et</span>
@@ -172,7 +172,7 @@ export const Awards: React.FC<AwardsProps> = ({ user }) => {
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
                 >
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-24 gap-3">
@@ -191,7 +191,7 @@ export const Awards: React.FC<AwardsProps> = ({ user }) => {
                                         <div className="w-8 h-8 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 flex items-center justify-center">
                                             <Medal className="w-4 h-4" />
                                         </div>
-                                        <span className="text-[11px] tabular-nums text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-2 py-0.5 rounded">
+                                        <span className="text-[11px] tabular-nums text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/50 px-2 py-0.5 rounded">
                                             Qazanıldı
                                         </span>
                                     </div>

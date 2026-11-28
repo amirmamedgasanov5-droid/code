@@ -420,8 +420,8 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
             <div className="text-xl font-semibold tabular-nums text-amber-600 dark:text-amber-400">{activeWarningsCount}</div>
           </div>
           <div className="p-4">
-            <span className="text-[11px] tabular-nums text-indigo-600 dark:text-indigo-400 block mb-1">Həll Olunmuş</span>
-            <div className="text-xl font-semibold tabular-nums text-indigo-600 dark:text-indigo-400">
+            <span className="text-[11px] tabular-nums text-brand-600 dark:text-brand-400 block mb-1">Həll Olunmuş</span>
+            <div className="text-xl font-semibold tabular-nums text-brand-600 dark:text-brand-400">
               {complaints.filter(c => c.status === 'resolved').length}
             </div>
           </div>
@@ -433,13 +433,13 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
         <div className={`p-4 rounded-xl border ${
           complaints.length > 0 
             ? 'bg-amber-50/40 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900/40 text-amber-900 dark:text-amber-200' 
-            : 'bg-indigo-50/40 border-indigo-200 dark:bg-indigo-950/20 dark:border-indigo-900/40 text-indigo-900 dark:text-indigo-200'
+            : 'bg-brand-50/40 border-brand-200 dark:bg-brand-950/20 dark:border-brand-900/40 text-brand-900 dark:text-brand-200'
         }`}>
           <div className="flex items-center gap-2 mb-1">
             {complaints.length > 0 ? (
               <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             ) : (
-              <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <ShieldCheck className="w-4 h-4 text-brand-600 dark:text-brand-400" />
             )}
             <h2 className="text-xs font-semibold">
               {complaints.length > 0 
@@ -465,7 +465,7 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
             placeholder="Tələbə adı və ya səbəb axtar..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-7 py-1.5 bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 rounded-xl text-xs font-medium text-neutral-900 dark:text-neutral-100 focus:outline-none focus:border-indigo-500 transition-colors"
+            className="w-full pl-9 pr-7 py-1.5 bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 rounded-xl text-xs font-medium text-neutral-900 dark:text-neutral-100 focus:outline-none focus:border-brand-500 transition-colors"
           />
           {searchQuery && (
             <button
@@ -495,7 +495,7 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
                   <motion.span
                     layoutId="complaints-filter-pill"
                     className="absolute inset-0 bg-white dark:bg-neutral-900 rounded-xl  border border-neutral-200/80 dark:border-neutral-800"
-                    transition={{ type: "spring", bounce: 0.15, duration: 0.3 }}
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                   />
                 )}
                 <span className="relative z-10 flex items-center gap-1">
@@ -531,7 +531,7 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.16, ease: "easeOut" }}
+            transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
             className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 overflow-hidden divide-y divide-neutral-200/60 dark:divide-neutral-800/60 "
           >
             {filteredComplaints.map((c) => {
@@ -549,7 +549,7 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
                       <div className="flex flex-wrap items-center gap-2">
                         {getTypeBadge(c.type, c.isBlocked)}
                         {c.status === 'resolved' && (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] tabular-nums bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-900/40">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] tabular-nums bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-400 border border-brand-200/60 dark:border-brand-900/40">
                             <CheckCircle2 className="w-2.5 h-2.5" />
                             Həll olunub
                           </span>
@@ -597,7 +597,7 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
                           {c.isBlocked && (
                             <button
                               onClick={() => handleUnblockStudent(c)}
-                              className="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-900/60 rounded text-[11px] font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                              className="px-2 py-1 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/40 text-brand-700 dark:text-brand-400 border border-brand-200/80 dark:border-brand-900/60 rounded text-[11px] font-medium flex items-center gap-1 transition-colors cursor-pointer"
                             >
                               <Unlock className="w-3 h-3" />
                               <span>Bloku aç</span>
@@ -632,12 +632,12 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
       {/* Creation Modal (Admin Only) */}
       <AnimatePresence>
         {showModal && isAdmin && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-4 bg-neutral-950/60 backdrop-blur-xs overflow-y-auto">
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-4 bg-neutral-950/60 overflow-y-auto">
             <motion.div
               initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.98, opacity: 0 }}
-              transition={{ duration: 0.16, ease: "easeOut" }}
+              transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
               className="bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 w-full max-w-xl rounded-2xl shadow-md overflow-hidden my-auto"
             >
               {/* Modal Header */}
@@ -674,7 +674,7 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
                     value={selectedStudentUid}
                     onChange={(e) => setSelectedStudentUid(e.target.value)}
                     required
-                    className="w-full p-2 bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl text-xs font-medium text-neutral-900 dark:text-neutral-100 focus:border-indigo-500 outline-none"
+                    className="w-full p-2 bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl text-xs font-medium text-neutral-900 dark:text-neutral-100 focus:border-brand-500 outline-none"
                   >
                     <option value="">-- Tələbəni seçin --</option>
                     {students.map((s) => (
@@ -698,7 +698,7 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
                         onClick={() => setTitle(preset)}
                         className={`px-2 py-1 rounded-xl text-[11px] border transition-colors cursor-pointer ${
                           title === preset
-                            ? 'bg-indigo-600 text-white border-neutral-900 dark:border-neutral-100'
+                            ? 'bg-brand-600 text-white border-neutral-900 dark:border-neutral-100'
                             : 'bg-neutral-50 dark:bg-neutral-800/40 border-neutral-200/80 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-400'
                         }`}
                       >
@@ -719,7 +719,7 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
                     placeholder="Məsələn: Dərsdə intizamsızlıq"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full p-2 bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl text-xs font-medium text-neutral-900 dark:text-neutral-100 focus:border-indigo-500 outline-none"
+                    className="w-full p-2 bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl text-xs font-medium text-neutral-900 dark:text-neutral-100 focus:border-brand-500 outline-none"
                   />
                 </div>
 
@@ -734,7 +734,7 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
                     placeholder="Hadisənin təfərrüatları və qeydlər..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full p-2 bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl text-xs font-normal text-neutral-900 dark:text-neutral-100 focus:border-indigo-500 outline-none resize-none"
+                    className="w-full p-2 bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl text-xs font-normal text-neutral-900 dark:text-neutral-100 focus:border-brand-500 outline-none resize-none"
                   />
                 </div>
 
@@ -749,7 +749,7 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
                       onClick={() => { setType('warning'); setApplyBlock(false); }}
                       className={`p-2 rounded-xl border text-center transition-colors cursor-pointer ${
                         type === 'warning' && !applyBlock
-                          ? 'bg-indigo-600 text-white border-neutral-900 dark:border-neutral-100'
+                          ? 'bg-brand-600 text-white border-neutral-900 dark:border-neutral-100'
                           : 'bg-neutral-50 dark:bg-neutral-800/40 border-neutral-200/80 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400'
                       }`}
                     >
@@ -762,7 +762,7 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
                       onClick={() => { setType('reprimand'); setApplyBlock(false); }}
                       className={`p-2 rounded-xl border text-center transition-colors cursor-pointer ${
                         type === 'reprimand' && !applyBlock
-                          ? 'bg-indigo-600 text-white border-neutral-900 dark:border-neutral-100'
+                          ? 'bg-brand-600 text-white border-neutral-900 dark:border-neutral-100'
                           : 'bg-neutral-50 dark:bg-neutral-800/40 border-neutral-200/80 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400'
                       }`}
                     >
@@ -775,7 +775,7 @@ export const Complaints: React.FC<ComplaintsProps> = ({ user }) => {
                       onClick={() => { setType('final_warning'); setApplyBlock(false); }}
                       className={`p-2 rounded-xl border text-center transition-colors cursor-pointer ${
                         type === 'final_warning' && !applyBlock
-                          ? 'bg-indigo-600 text-white border-neutral-900 dark:border-neutral-100'
+                          ? 'bg-brand-600 text-white border-neutral-900 dark:border-neutral-100'
                           : 'bg-neutral-50 dark:bg-neutral-800/40 border-neutral-200/80 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400'
                       }`}
                     >

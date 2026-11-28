@@ -9,6 +9,7 @@ import { LangSwitch } from './LangSwitch';
 import { isAdminUser } from '../src/utils/roles';
 import { NotificationBell } from './NotificationBell';
 import { buildNavSections } from './navItems';
+import { Logo } from './Logo';
 
 interface SidebarProps {
   user: UserType | null;
@@ -36,8 +37,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, onLogout, collapsed, onT
       {/* Mobile top bar */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-surface border-b border-border flex items-center justify-between px-4 z-[100]">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs font-semibold">N</div>
-          <span className="text-sm font-semibold tracking-tight text-text">Nəsihətlər</span>
+          <Logo className="w-7 h-7" />
+          <span className="text-sm font-semibold tracking-tight text-text">İsnad</span>
         </div>
         <div className="flex items-center gap-2">
           {user && <NotificationBell user={user} />}
@@ -53,18 +54,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, onLogout, collapsed, onT
 
       {/* Floating rail */}
       <aside
-        className={`${hideDesktop ? 'lg:hidden' : ''} fixed top-4 bottom-4 left-4 ${collapsed ? 'lg:w-[72px]' : 'lg:w-60'} w-64 bg-surface border border-border rounded-2xl shadow-sm flex flex-col z-[110] transition-all duration-200 lg:translate-x-0 ${
+        className={`${hideDesktop ? 'lg:hidden' : ''} fixed top-4 bottom-4 left-4 ${collapsed ? 'lg:w-[72px]' : 'lg:w-60'} w-64 bg-surface border border-border rounded-2xl flex flex-col z-[110] transition-[width,transform] duration-300 ease-[var(--ease-out-expo)] lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-[120%]'
         }`}
       >
         <div className={`h-16 flex items-center ${collapsed ? 'lg:justify-center' : ''} px-4 gap-2.5 shrink-0`}>
-          <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm font-semibold shrink-0">N</div>
-          <span className={`text-sm font-semibold tracking-tight text-text ${collapsed ? 'lg:hidden' : ''}`}>Nəsihətlər</span>
+          <Logo className="w-9 h-9" />
+          <span className={`text-sm font-semibold tracking-tight text-text ${collapsed ? 'lg:hidden' : ''}`}>İsnad</span>
         </div>
 
         <button
           onClick={onToggleCollapsed}
-          className="hidden lg:flex absolute -right-3 top-[52px] w-6 h-6 rounded-full bg-surface border border-border items-center justify-center text-indigo-600 shadow-sm hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors"
+          className="hidden lg:flex absolute -right-3 top-[52px] w-6 h-6 rounded-full bg-surface border border-border items-center justify-center text-brand-600 shadow-sm hover:bg-brand-50 dark:hover:bg-brand-950/40 transition-colors"
           aria-label="Menyunu genişləndir / yığ"
         >
           <ChevronRight className={`w-3.5 h-3.5 transition-transform ${collapsed ? '' : 'rotate-180'}`} />
@@ -81,14 +82,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, onLogout, collapsed, onT
                 className={({ isActive }) =>
                   `relative flex items-center gap-3 ${collapsed ? 'lg:justify-center lg:px-0' : ''} px-3 h-10 rounded-xl text-[13px] font-medium transition-colors ${
                     isActive
-                      ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300'
+                      ? 'bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300'
                       : 'text-muted hover:text-text hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
-                    {isActive && <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full bg-indigo-600" />}
+                    {isActive && <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full bg-brand-600" />}
                     <item.icon className="w-[18px] h-[18px] shrink-0" />
                     <span className={`truncate ${collapsed ? 'lg:hidden' : ''}`}>{item.label}</span>
                   </>
@@ -102,7 +103,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, onLogout, collapsed, onT
           <LangSwitch className={`w-full justify-center mb-2 ${collapsed ? 'lg:hidden' : ''}`} />
           <div className={`flex items-center ${collapsed ? 'lg:flex-col lg:gap-2' : ''} justify-between gap-2 p-1.5`}>
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden">
+              <div className="w-9 h-9 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden">
                 {user?.photoURL || user?.avatar ? (
                   <img src={user?.photoURL || user?.avatar} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (

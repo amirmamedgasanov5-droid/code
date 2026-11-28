@@ -162,9 +162,9 @@ export const TaskSolver: React.FC<TaskSolverProps> = ({
         )}
         {questions.length > 0 && (
           <div className={`${onLangChange ? '' : 'ml-auto '}flex items-center gap-3 min-w-[160px]`}>
-            <div className="flex-1 h-1.5 rounded-full bg-indigo-100 dark:bg-indigo-950 overflow-hidden">
+            <div className="flex-1 h-1.5 rounded-full bg-brand-100 dark:bg-brand-950 overflow-hidden">
               <div
-                className="h-full bg-indigo-600 transition-all"
+                className="h-full bg-brand-600 transition-all"
                 style={{ width: `${(answeredCount / questions.length) * 100}%` }}
               />
             </div>
@@ -208,7 +208,7 @@ export const TaskSolver: React.FC<TaskSolverProps> = ({
                 <button
                   onClick={() => setImgIdx(i => Math.min(images.length - 1, i + 1))}
                   disabled={imgIdx === images.length - 1}
-                  className="w-11 h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 disabled:opacity-40 flex items-center justify-center"
+                  className="w-11 h-11 rounded-xl bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 disabled:opacity-40 flex items-center justify-center"
                   aria-label={L.next}
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -217,7 +217,7 @@ export const TaskSolver: React.FC<TaskSolverProps> = ({
             )}
             <button
               onClick={() => setFullscreen(true)}
-              className="w-11 h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 flex items-center justify-center"
+              className="w-11 h-11 rounded-xl bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 flex items-center justify-center"
               aria-label={L.fullscreen}
             >
               <Maximize2 className="w-4 h-4" />
@@ -260,7 +260,7 @@ export const TaskSolver: React.FC<TaskSolverProps> = ({
               </div>
             )}
             {isLocked && !isChoice && (
-              <div className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium bg-indigo-50 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300">
+              <div className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium bg-brand-50 text-brand-700 dark:bg-brand-950/30 dark:text-brand-300">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>{L.recorded}</span>
               </div>
@@ -268,8 +268,8 @@ export const TaskSolver: React.FC<TaskSolverProps> = ({
 
             <div className="flex items-center gap-2 text-sm text-muted">
               <span>{L.task} {idx + 1}</span>
-              <span className="text-indigo-600">*</span>
-              <Info className="w-4 h-4 text-indigo-500" />
+              <span className="text-brand-600">*</span>
+              <Info className="w-4 h-4 text-brand-500" />
             </div>
 
             <p className="text-lg text-text leading-snug">{q.text}</p>
@@ -279,7 +279,7 @@ export const TaskSolver: React.FC<TaskSolverProps> = ({
                 {q.options?.map((opt, oIdx) => {
                   const selected = value === oIdx;
                   const isRight = hasCorrect && oIdx === q.correctIndex;
-                  let tone = 'bg-indigo-50 dark:bg-indigo-950/30 text-text';
+                  let tone = 'bg-brand-50 dark:bg-brand-950/30 text-text';
                   if (isLocked && isRight) tone = 'bg-green-50 dark:bg-green-950/30 text-green-800 dark:text-green-200';
                   else if (isLocked && selected && !isRight) tone = 'bg-red-50 dark:bg-red-950/30 text-red-800 dark:text-red-200';
                   return (
@@ -290,15 +290,15 @@ export const TaskSolver: React.FC<TaskSolverProps> = ({
                         disabled={isLocked}
                         onClick={() => setAnswer(q.id, oIdx)}
                         className={`flex items-center gap-3 rounded-full pl-4 pr-6 py-3 text-sm transition-colors text-left ${tone} ${
-                          !isLocked && !selected ? 'hover:bg-indigo-100 dark:hover:bg-indigo-950/60' : ''
+                          !isLocked && !selected ? 'hover:bg-brand-100 dark:hover:bg-brand-950/60' : ''
                         } ${isLocked ? 'cursor-default' : 'cursor-pointer'}`}
                       >
                         <span
                           className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                            selected ? 'border-indigo-600' : 'border-indigo-300'
+                            selected ? 'border-brand-600' : 'border-brand-300'
                           }`}
                         >
-                          {selected && <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />}
+                          {selected && <span className="w-2.5 h-2.5 rounded-full bg-brand-600" />}
                         </span>
                         <span>{opt}</span>
                       </button>
@@ -313,7 +313,7 @@ export const TaskSolver: React.FC<TaskSolverProps> = ({
                 onChange={e => setAnswer(q.id, e.target.value)}
                 rows={3}
                 placeholder={L.placeholder}
-                className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 disabled:bg-neutral-50 dark:disabled:bg-neutral-900 resize-y"
+                className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 disabled:bg-neutral-50 dark:disabled:bg-neutral-900 resize-y"
               />
             )}
 
@@ -331,11 +331,11 @@ export const TaskSolver: React.FC<TaskSolverProps> = ({
               hasCorrect && (
                 <div className="flex flex-wrap items-center gap-3 pt-1">
                   <div className="flex items-stretch rounded-xl overflow-hidden border border-border text-sm">
-                    <span className="bg-indigo-700 text-white px-4 py-2.5">{L.yourAnswer}</span>
+                    <span className="bg-brand-700 text-white px-4 py-2.5">{L.yourAnswer}</span>
                     <span className="px-4 py-2.5 bg-surface text-text">{(value as number) + 1}</span>
                   </div>
                   <div className="flex items-stretch rounded-xl overflow-hidden border border-border text-sm">
-                    <span className="bg-indigo-700 text-white px-4 py-2.5">{L.rightAnswer}</span>
+                    <span className="bg-brand-700 text-white px-4 py-2.5">{L.rightAnswer}</span>
                     <span className="px-4 py-2.5 bg-surface text-text">{(q.correctIndex as number) + 1}</span>
                   </div>
                 </div>
@@ -356,12 +356,12 @@ export const TaskSolver: React.FC<TaskSolverProps> = ({
             onChange={e => setText(e.target.value)}
             rows={questions.length > 0 ? 3 : 6}
             placeholder={questions.length > 0 ? L.notePh : L.answerPh}
-            className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 resize-y"
+            className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 resize-y"
           />
           <div className="flex items-center gap-3 flex-wrap">
             <input type="file" accept="image/*" className="hidden" id="solver-image" onChange={e => setImage(e.target.files?.[0] || null)} />
             <label htmlFor="solver-image" className="btn-secondary cursor-pointer">
-              <ImageIcon className="w-3.5 h-3.5 text-indigo-600" />
+              <ImageIcon className="w-3.5 h-3.5 text-brand-600" />
               <span className="max-w-[240px] truncate">{image ? image.name : L.addImage}</span>
             </label>
             {image && (

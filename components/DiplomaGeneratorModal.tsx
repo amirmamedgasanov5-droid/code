@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { db, auth } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Sparkles, Send, Loader2, Award, BookOpen, Shield, Trophy, CheckCircle2 } from 'lucide-react';
+import { X, Bookmark, Send, Loader2, Award, BookOpen, Shield, Trophy, CheckCircle2 } from 'lucide-react';
 import { DiplomaCard, DiplomaData } from './DiplomaCard';
 
 interface Student {
@@ -94,7 +94,7 @@ export const DiplomaGeneratorModal: React.FC<DiplomaGeneratorModalProps> = ({
 
     setIsSaving(true);
     try {
-      const serialNumber = `NM-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const serialNumber = `IS-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
       const dateString = new Date().toLocaleDateString('az-AZ', { day: 'numeric', month: 'long', year: 'numeric' });
 
       // 1. Save to `certificates` collection
@@ -148,12 +148,12 @@ export const DiplomaGeneratorModal: React.FC<DiplomaGeneratorModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-6 bg-neutral-950/60 backdrop-blur-xs overflow-y-auto custom-scrollbar">
+      <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-6 bg-neutral-950/60 overflow-y-auto custom-scrollbar">
         <motion.div
           initial={{ opacity: 0, scale: 0.98, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.98, y: 12 }}
-          transition={{ duration: 0.18, ease: "easeOut" }}
+          transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
           className="relative w-full max-w-5xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 rounded-2xl shadow-md p-5 sm:p-8 space-y-6 my-auto max-h-[92vh] overflow-y-auto custom-scrollbar"
         >
           {/* Header */}
@@ -191,7 +191,7 @@ export const DiplomaGeneratorModal: React.FC<DiplomaGeneratorModalProps> = ({
                 <select
                   value={selectedStudentId}
                   onChange={(e) => setSelectedStudentId(e.target.value)}
-                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl text-xs font-medium text-neutral-900 dark:text-neutral-100 outline-none focus:border-indigo-500 transition-all"
+                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl text-xs font-medium text-neutral-900 dark:text-neutral-100 outline-none focus:border-brand-500 transition-all"
                   required
                 >
                   <option value="">-- Tələbə seçin ({students.length} nəfər) --</option>
@@ -219,7 +219,7 @@ export const DiplomaGeneratorModal: React.FC<DiplomaGeneratorModalProps> = ({
                         onClick={() => handleTemplateSelect(idx)}
                         className={`p-2.5 rounded-xl border text-left transition-all flex items-start gap-2 cursor-pointer ${
                           isSelected
-                            ? 'bg-indigo-600 text-white border-neutral-900 dark:border-neutral-100 '
+                            ? 'bg-brand-600 text-white border-neutral-900 dark:border-neutral-100 '
                             : 'bg-neutral-50 dark:bg-neutral-800/40 border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600'
                         }`}
                       >
@@ -255,7 +255,7 @@ export const DiplomaGeneratorModal: React.FC<DiplomaGeneratorModalProps> = ({
                   type="text"
                   value={customTitle}
                   onChange={(e) => setCustomTitle(e.target.value)}
-                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl text-xs font-medium text-neutral-900 dark:text-neutral-100 outline-none focus:border-indigo-500 transition-colors"
+                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl text-xs font-medium text-neutral-900 dark:text-neutral-100 outline-none focus:border-brand-500 transition-colors"
                 />
               </div>
 
@@ -268,7 +268,7 @@ export const DiplomaGeneratorModal: React.FC<DiplomaGeneratorModalProps> = ({
                   rows={3}
                   value={customReason}
                   onChange={(e) => setCustomReason(e.target.value)}
-                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl text-xs font-medium text-neutral-900 dark:text-neutral-100 outline-none focus:border-indigo-500 leading-relaxed resize-none transition-colors"
+                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl text-xs font-medium text-neutral-900 dark:text-neutral-100 outline-none focus:border-brand-500 leading-relaxed resize-none transition-colors"
                 />
               </div>
 
@@ -277,7 +277,7 @@ export const DiplomaGeneratorModal: React.FC<DiplomaGeneratorModalProps> = ({
                 type="button"
                 onClick={handleSaveAndSend}
                 disabled={isSaving || !selectedStudentId}
-                className="w-full py-2.5 rounded-xl btn-indigo font-semibold text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full py-2.5 rounded-xl btn-brand font-semibold text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isSaving ? (
                   <>
@@ -286,7 +286,7 @@ export const DiplomaGeneratorModal: React.FC<DiplomaGeneratorModalProps> = ({
                   </>
                 ) : successMessage ? (
                   <>
-                    <CheckCircle2 className="w-4 h-4 text-indigo-200" />
+                    <CheckCircle2 className="w-4 h-4 text-brand-200" />
                     <span>Valideyn Portalına Göndərildi!</span>
                   </>
                 ) : (
@@ -302,7 +302,7 @@ export const DiplomaGeneratorModal: React.FC<DiplomaGeneratorModalProps> = ({
             <div className="lg:col-span-7 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <Bookmark className="w-4 h-4 text-amber-500" />
                   <span className="text-xs font-semibold text-text">
                     Diplom önbaxışı
                   </span>

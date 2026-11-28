@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Trophy, Star, BookOpen, Timer, Users, Maximize2, Minimize2, Loader2, CheckCircle2, AlertCircle, Plus, Trash2, Edit2, Save, Sparkles } from 'lucide-react';
+import { X, Trophy, Star, BookOpen, Timer, Users, Maximize2, Minimize2, Loader2, CheckCircle2, AlertCircle, Plus, Trash2, Edit2, Save, Bookmark } from 'lucide-react';
 import { rtdb, auth, db } from '../../../firebase';
 import { ref, onValue, set, push, onChildAdded, off, remove, serverTimestamp as rtdbTimestamp, runTransaction } from 'firebase/database';
 import { collection, doc, setDoc, serverTimestamp as firestoreTimestamp, onSnapshot, query, orderBy, addDoc, deleteDoc } from 'firebase/firestore';
@@ -262,7 +262,7 @@ export const IslamicGames: React.FC<IslamicGamesProps> = ({ user, onClose }) => 
   }, [scrambleIndex]);
 
   return (
-    <div className={`fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[200] flex items-center justify-center ${isFullScreen ? 'p-0' : 'p-4'}`}>
+    <div className={`fixed inset-0 bg-slate-900/50 z-[200] flex items-center justify-center ${isFullScreen ? 'p-0' : 'p-4'}`}>
       <div className={`bg-white shadow-md flex flex-col overflow-hidden transition-all duration-300 ${isFullScreen ? 'w-full h-full rounded-0' : 'w-full max-w-4xl h-[80vh] rounded-2xl'}`}>
         {/* Header */}
         <div className="p-4 border-b border-border flex items-center justify-between bg-slate-50">
@@ -337,7 +337,7 @@ export const IslamicGames: React.FC<IslamicGamesProps> = ({ user, onClose }) => 
                   </div>
                   <button 
                     onClick={addQuestion}
-                    className="w-full bg-brand text-white py-3 rounded-xl font-semibold text-xs hover:scale-[1.02] transition-all flex items-center justify-center space-x-2"
+                    className="w-full bg-brand text-white py-3 rounded-xl font-semibold text-xs transition-all flex items-center justify-center space-x-2"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Əlavə Et</span>
@@ -374,9 +374,9 @@ export const IslamicGames: React.FC<IslamicGamesProps> = ({ user, onClose }) => 
           <div className="flex-1 p-8 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto">
             <button 
               onClick={() => setActiveGame('quiz')}
-              className="group bg-white border-2 border-slate-100 p-8 rounded-2xl hover:border-brand/20 hover:shadow-md transition-all text-left space-y-4"
+              className="group bg-white border-2 border-slate-100 p-8 rounded-2xl hover:border-brand/20 transition-all text-left space-y-4"
             >
-              <div className="w-12 h-12 bg-brand/5 rounded-2xl flex items-center justify-center text-brand group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 bg-brand/5 rounded-2xl flex items-center justify-center text-brand transition-transform">
                 <BookOpen className="w-6 h-6" />
               </div>
               <div>
@@ -397,10 +397,10 @@ export const IslamicGames: React.FC<IslamicGamesProps> = ({ user, onClose }) => 
 
             <button 
               onClick={() => setActiveGame('scramble')}
-              className="group bg-white border-2 border-slate-100 p-8 rounded-2xl hover:border-brand/20 hover:shadow-md transition-all text-left space-y-4"
+              className="group bg-white border-2 border-slate-100 p-8 rounded-2xl hover:border-brand/20 transition-all text-left space-y-4"
             >
-              <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-500 group-hover:scale-110 transition-transform">
-                <Sparkles className="w-6 h-6" />
+              <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-500 transition-transform">
+                <Bookmark className="w-6 h-6" />
               </div>
               <div>
                 <h4 className="font-semibold text-text text-lg">Hərfləri Tap</h4>
@@ -412,7 +412,7 @@ export const IslamicGames: React.FC<IslamicGamesProps> = ({ user, onClose }) => 
                   <span>Tək nəfərli</span>
                 </div>
                 <div className="flex items-center space-x-1 text-[11px] font-semibold text-orange-500">
-                  <Sparkles className="w-3 h-3 fill-orange-500" />
+                  <Bookmark className="w-3 h-3 fill-orange-500" />
                   <span>Yeni</span>
                 </div>
               </div>
@@ -433,7 +433,7 @@ export const IslamicGames: React.FC<IslamicGamesProps> = ({ user, onClose }) => 
               {activeGame === 'quiz' ? (
                 gameState?.status === 'waiting' ? (
                   <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
-                    <div className="w-20 h-20 bg-brand/5 rounded-full flex items-center justify-center text-brand animate-bounce">
+                    <div className="w-20 h-20 bg-brand/5 rounded-full flex items-center justify-center text-brand">
                       <Star className="w-10 h-10 fill-brand" />
                     </div>
                     <div className="space-y-2">
@@ -442,7 +442,7 @@ export const IslamicGames: React.FC<IslamicGamesProps> = ({ user, onClose }) => 
                     </div>
                     <button 
                       onClick={startGame}
-                      className="bg-brand text-white px-8 py-3 rounded-2xl font-semibold text-xs hover:scale-105 transition-all"
+                      className="bg-brand text-white px-8 py-3 rounded-2xl font-semibold text-xs transition-all"
                     >
                       Yarışı Başlat
                     </button>
@@ -510,7 +510,7 @@ export const IslamicGames: React.FC<IslamicGamesProps> = ({ user, onClose }) => 
                     />
                     <button 
                       type="submit"
-                      className="w-full bg-orange-500 text-white py-4 rounded-2xl font-semibold text-[11px] hover:scale-[1.02] transition-all"
+                      className="w-full bg-orange-500 text-white py-4 rounded-2xl font-semibold text-[11px] transition-all"
                     >
                       Yoxla
                     </button>

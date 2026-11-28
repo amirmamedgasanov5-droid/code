@@ -2,7 +2,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import React, { useState, useEffect } from 'react';
 import { User } from '../types';
-import { Mail, Hash, Shield, GraduationCap, Camera, Loader2, Users, User as UserIcon, QrCode, X, Sparkles, Printer, Download } from 'lucide-react';
+import { Mail, Hash, Shield, GraduationCap, Camera, Loader2, Users, User as UserIcon, QrCode, X, Bookmark, Printer, Download } from 'lucide-react';
 import { translations } from '../i18n';
 import { uploadImageToImgBB } from '../src/utils/imgbb';
 import { db } from '../firebase';
@@ -34,7 +34,7 @@ const UserList: React.FC = () => {
     <div className="space-y-6 mt-12">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-semibold border-2 border-indigo-200">
+          <div className="w-12 h-12 bg-brand-600 rounded-2xl flex items-center justify-center text-white font-semibold border-2 border-brand-200">
             <Users className="w-6 h-6" />
           </div>
           <div>
@@ -46,15 +46,15 @@ const UserList: React.FC = () => {
 
       <div className="grid gap-4">
         {users.map(u => (
-          <div key={u.uid} className="bg-surface p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-indigo-200 transition-all">
+          <div key={u.uid} className="bg-surface p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-brand-200 transition-all">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-indigo-950 border-2 border-indigo-200 flex items-center justify-center text-indigo-200 font-semibold text-xl overflow-hidden">
+              <div className="w-14 h-14 rounded-2xl bg-brand-950 border-2 border-brand-200 flex items-center justify-center text-brand-200 font-semibold text-xl overflow-hidden">
                 {u.photoURL ? <img src={u.photoURL} alt={u.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : u.name.charAt(0)}
               </div>
               <div>
                 <p className="text-base font-semibold text-text tracking-tight">{u.name}</p>
                 <p className="text-xs text-muted tabular-nums font-semibold">@{u.username || 'user'}</p>
-                <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-xl text-[11px] font-semibold ${u.role === 'teacher' ? 'bg-indigo-100 text-indigo-700' : 'bg-indigo-500 text-white'}`}>
+                <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-xl text-[11px] font-semibold ${u.role === 'teacher' ? 'bg-brand-100 text-brand-700' : 'bg-brand-500 text-white'}`}>
                   {u.role === 'teacher' ? 'Müəllim' : 'Şagird'}
                 </span>
               </div>
@@ -64,7 +64,7 @@ const UserList: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedUserForCard(u)}
-                className="px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs border-indigo-200 shadow-md transition-all flex items-center gap-2"
+                className="px-4 py-2.5 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs border-brand-200 transition-all flex items-center gap-2"
               >
                 <QrCode className="w-4 h-4" />
                 <span>Vəsiqəyə bax</span>
@@ -76,7 +76,7 @@ const UserList: React.FC = () => {
 
       {/* Modal for viewing any user's 3D ID-Card */}
       {selectedUserForCard && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
           <div className="relative w-full max-w-xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 rounded-2xl shadow-md p-6 sm:p-7 space-y-5 my-auto">
             <div className="flex items-center justify-between border-b border-neutral-200/70 dark:border-neutral-800 pb-3">
               <div className="flex items-center gap-2.5">
@@ -132,15 +132,15 @@ export const Profile: React.FC<ProfileProps> = ({ user }) => {
     <div className="max-w-6xl mx-auto space-y-6 pb-16">
       {/* Header */}
       <header className="space-y-1 pb-5 border-b border-border">
-        <div className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400">
-          <Sparkles className="w-3.5 h-3.5" />
+        <div className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 dark:text-brand-400">
+          <Bookmark className="w-3.5 h-3.5" />
           <span>Rəsmi Mədrəsə Şəxsi Kabineti</span>
         </div>
         <h1 className="text-xl font-semibold tracking-tight text-text">
           {t.profile} & Vəsiqə
         </h1>
         <p className="text-xs text-muted mt-0.5">
-          Nəsihətlər Mədrəsəsi • Respublika İslam Akademiyası
+          İsnad Mədrəsəsi • Onlayn Mədrəsə
         </p>
       </header>
 
@@ -175,7 +175,7 @@ export const Profile: React.FC<ProfileProps> = ({ user }) => {
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.18, ease: "easeOut" }}
+          transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
         >
           {/* TAB 1: 3D OFFICIAL STUDENT ID CARD */}
           {profileTab === 'card' && (
@@ -256,7 +256,7 @@ export const Profile: React.FC<ProfileProps> = ({ user }) => {
                       </div>
                       <div>
                           <p className="text-[11px] text-muted font-semibold ">Təhsil Ocağı</p>
-                          <p className="text-sm font-semibold text-text tracking-tight">Nəsihətlər Mədrəsəsi</p>
+                          <p className="text-sm font-semibold text-text tracking-tight">İsnad Mədrəsəsi</p>
                       </div>
                   </div>
               </div>

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { User, Language, Theme } from '../types';
 import { auth, db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
-import { Globe, Moon, Sun, Monitor, Loader2, Palette, Sparkles } from 'lucide-react';
+import { Globe, Moon, Sun, Monitor, Loader2, Palette, Bookmark } from 'lucide-react';
 import { translations } from '../i18n';
 import { setUiLang } from '../src/utils/uiLang';
 import { ThemeSettings } from '../components/ThemeSettings';
@@ -75,7 +75,7 @@ export const Settings: React.FC<SettingsProps> = ({ user }) => {
         <section className="space-y-5">
             <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-background rounded-xl flex items-center justify-center border border-border shadow-sm">
-                    <Sparkles className="w-5 h-5 text-text" />
+                    <Bookmark className="w-5 h-5 text-text" />
                 </div>
                 <h2 className="text-xl font-semibold text-text tracking-tight">Vizual Effektlər</h2>
             </div>
@@ -94,7 +94,7 @@ export const Settings: React.FC<SettingsProps> = ({ user }) => {
                         disabled={isUpdating}
                         className={`flex items-center justify-between p-6 rounded-2xl border transition-all ${
                             (user as any)[effect.id] 
-                            ? 'bg-brand text-white border-brand shadow-md' 
+                            ? 'bg-brand text-white border-brand' 
                             : 'bg-surface border-border text-muted hover:border-brand/20'
                         }`}
                     >
@@ -125,7 +125,7 @@ export const Settings: React.FC<SettingsProps> = ({ user }) => {
                         disabled={isUpdating}
                         className={`flex flex-col items-center justify-center p-6 rounded-2xl border transition-all group ${
                             user.language === lang.id 
-                            ? 'bg-brand text-white border-brand shadow-md' 
+                            ? 'bg-brand text-white border-brand' 
                             : 'bg-surface border-border text-muted hover:border-brand/20'
                         }`}
                     >

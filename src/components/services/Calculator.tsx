@@ -68,10 +68,10 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose }) => {
   const numClass = `${btnClass} bg-slate-50 text-text hover:bg-slate-100 border border-slate-100`;
   const opClass = `${btnClass} bg-brand/10 text-brand hover:bg-brand hover:text-white border border-brand/10`;
   const actionClass = `${btnClass} bg-slate-100 text-muted hover:bg-slate-200 border border-slate-200`;
-  const equalClass = `${btnClass} bg-brand text-white hover:scale-[1.02] col-span-2`;
+  const equalClass = `${btnClass} bg-brand text-white col-span-2`;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-slate-900/50 z-[200] flex items-center justify-center p-4">
       <motion.div 
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}

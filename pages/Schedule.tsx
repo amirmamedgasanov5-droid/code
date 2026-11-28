@@ -145,7 +145,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ user }) => {
                         <motion.span
                           layoutId="schedule-lang-pill"
                           className="absolute inset-0 bg-white dark:bg-neutral-900 rounded-xl  border border-neutral-200/80 dark:border-neutral-800"
-                          transition={{ type: "spring", bounce: 0.15, duration: 0.3 }}
+                          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                         />
                       )}
                       <span className="relative z-10">{l.label}</span>
@@ -172,7 +172,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ user }) => {
               onClick={() => setSelectedDay('all')}
               className={`px-3 py-1.5 text-xs font-medium rounded-xl transition-colors whitespace-nowrap cursor-pointer ${
                 selectedDay === 'all'
-                  ? 'bg-indigo-600 text-white'
+                  ? 'bg-brand-600 text-white'
                   : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
               }`}
             >
@@ -188,7 +188,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ user }) => {
                   onClick={() => setSelectedDay(dayNum)}
                   className={`px-3 py-1.5 text-xs font-medium rounded-xl transition-colors whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
                     isSelected
-                      ? 'bg-indigo-600 text-white'
+                      ? 'bg-brand-600 text-white'
                       : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                   }`}
                 >
@@ -208,7 +208,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ user }) => {
                 initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
                 animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
                 exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
               >
                 <form onSubmit={handleAddLesson} className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 space-y-4 ">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -216,7 +216,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ user }) => {
                       <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">{t.subject}</label>
                       <input 
                         required 
-                        className="w-full bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl p-2 text-xs font-medium text-neutral-900 dark:text-neutral-100 outline-none focus:border-indigo-500 transition-colors" 
+                        className="w-full bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl p-2 text-xs font-medium text-neutral-900 dark:text-neutral-100 outline-none focus:border-brand-500 transition-colors" 
                         placeholder="Fənn adı" 
                         value={newLesson.subject} 
                         onChange={e => setNewLesson({...newLesson, subject: e.target.value})} 
@@ -232,7 +232,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ user }) => {
                             onClick={() => toggleDay(idx + 1)}
                             className={`px-2 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer ${
                               newLesson.daysOfWeek.includes(idx + 1)
-                                ? 'bg-indigo-600 text-white'
+                                ? 'bg-brand-600 text-white'
                                 : 'bg-transparent text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
                             }`}
                           >
@@ -244,7 +244,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ user }) => {
                     <div className="space-y-1">
                       <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">Dil</label>
                       <select 
-                        className="w-full bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl p-2 text-xs font-medium text-neutral-900 dark:text-neutral-100 outline-none focus:border-indigo-500 transition-colors" 
+                        className="w-full bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl p-2 text-xs font-medium text-neutral-900 dark:text-neutral-100 outline-none focus:border-brand-500 transition-colors" 
                         value={newLesson.language} 
                         onChange={e => setNewLesson({...newLesson, language: e.target.value as Language})}
                       >
@@ -260,7 +260,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ user }) => {
                       <input 
                         required 
                         type="url" 
-                        className="w-full bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl p-2 text-xs font-medium text-neutral-900 dark:text-neutral-100 outline-none focus:border-indigo-500 transition-colors" 
+                        className="w-full bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl p-2 text-xs font-medium text-neutral-900 dark:text-neutral-100 outline-none focus:border-brand-500 transition-colors" 
                         placeholder="Zoom/Meet link" 
                         value={newLesson.lessonLink} 
                         onChange={e => setNewLesson({...newLesson, lessonLink: e.target.value})} 
@@ -320,7 +320,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ user }) => {
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.16, ease: "easeOut" }}
+              transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
               className="space-y-6"
             >
               {t.days.map((dayName, index) => {

@@ -2,7 +2,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Homework as HomeworkType, User, Submission, Language, AssignmentType, Question, Exam, ExamSubmission } from '../types';
-import { Clock, Plus, X, Loader2, BookOpen, Send, CheckCircle2, AlertCircle, Users, ArrowLeft, MessageSquare, Globe, ClipboardList, PenTool, CheckSquare, Archive, Trash2, Save, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { Clock, Plus, X, Loader2, BookOpen, Send, CheckCircle2, AlertCircle, Users, ArrowLeft, MessageSquare, Globe, ClipboardList, PenTool, CheckSquare, Archive, Trash2, Save, Image as ImageIcon, Bookmark } from 'lucide-react';
 import { db, auth } from '../firebase';
 import { collection, onSnapshot, addDoc, query, orderBy, serverTimestamp, where, doc, updateDoc, setDoc, getDocs } from 'firebase/firestore';
 import { checkAchievements } from '../src/utils/achievementService';
@@ -354,7 +354,7 @@ export const Homework: React.FC<HomeworkProps> = ({ user }) => {
             <button onClick={() => setViewingSubmissionsFor(null)} className="flex items-center gap-3 text-muted font-semibold hover:text-text transition-colors text-[11px] ">
                 <ArrowLeft className="w-5 h-5" /> Geri qayıt
             </button>
-            <header className="p-6 bg-indigo-600 rounded-2xl text-white relative overflow-hidden">
+            <header className="p-6 bg-brand-600 rounded-2xl text-white relative overflow-hidden">
                 <div className="relative z-10 flex items-center gap-4">
                     <div className="p-3 bg-white/10 rounded-2xl">
                         <Users className="w-5 h-5" />
@@ -389,7 +389,7 @@ export const Homework: React.FC<HomeworkProps> = ({ user }) => {
                                         className="p-3 bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-100 transition-colors border border-amber-100"
                                         title="Təbrik et"
                                     >
-                                        <Sparkles size={20} />
+                                        <Bookmark size={20} />
                                     </button>
                                 </div>
                             ) : (
@@ -450,7 +450,7 @@ export const Homework: React.FC<HomeworkProps> = ({ user }) => {
 
             {/* GRADING MODAL */}
             {gradingSubmission && (
-                <div className="fixed inset-0 z-[700] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-reveal">
+                <div className="fixed inset-0 z-[700] flex items-center justify-center p-4 bg-black/60 animate-reveal">
                     <div className="bg-white dark:bg-neutral-900 w-full max-w-md rounded-2xl shadow-md border border-neutral-200/80 dark:border-neutral-800 overflow-hidden">
                         <div className="p-10 bg-brand text-white flex justify-between items-center">
                             <div className="flex items-center gap-4">
@@ -545,8 +545,8 @@ export const Homework: React.FC<HomeworkProps> = ({ user }) => {
       <header className="space-y-10 pb-12">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-5 pb-5 border-b border-border">
             <div className="space-y-2">
-                <div className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400">
-                    <Sparkles size={13} />
+                <div className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 dark:text-brand-400">
+                    <Bookmark size={13} />
                     <span className="text-[11px] font-semibold ">{t.homework} Mərkəzi</span>
                 </div>
                 <h1 className="text-xl font-semibold tracking-tight text-text">{t.homework}</h1>
@@ -555,9 +555,9 @@ export const Homework: React.FC<HomeworkProps> = ({ user }) => {
                 {user.role === 'teacher' && (
                     <button
                         onClick={() => setShowCongratulateModal('all' as any)}
-                        className="flex items-center gap-3 px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 transition-all font-semibold text-[11px] mt-3 group"
+                        className="flex items-center gap-3 px-4 py-2.5 bg-brand-600 text-white rounded-xl hover:bg-brand-500 transition-all font-semibold text-[11px] mt-3 group"
                     >
-                        <Sparkles size={16} className="group-hover:rotate-12 transition-transform" />
+                        <Bookmark size={16} className=" transition-transform" />
                         <span>Hamıya Təbrik Göndər</span>
                     </button>
                 )}
@@ -586,7 +586,7 @@ export const Homework: React.FC<HomeworkProps> = ({ user }) => {
                         <button 
                             key={cat.id}
                             onClick={() => setActiveCategory(cat.id as AssignmentType)}
-                            className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-all ${activeCategory === cat.id ? 'bg-surface text-indigo-600 shadow-sm' : 'text-muted hover:text-text'}`}
+                            className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-all ${activeCategory === cat.id ? 'bg-surface text-brand-600 shadow-sm' : 'text-muted hover:text-text'}`}
                         >
                             {cat.label}
                         </button>
@@ -705,7 +705,7 @@ export const Homework: React.FC<HomeworkProps> = ({ user }) => {
                 {/* QUESTION BUILDER */}
                 {(newHw.type === 'test' || newHw.type === 'mock') && (
                     <div className="space-y-10 p-10 bg-neutral-50/50 rounded-2xl border border-border/50 max-h-[700px] overflow-y-auto no-scrollbar">
-                        <div className="flex items-center justify-between sticky top-0 bg-neutral-50/80 backdrop-blur-md z-10 pb-6 border-b border-border/50 mb-8">
+                        <div className="flex items-center justify-between sticky top-0 bg-neutral-50/80 z-10 pb-6 border-b border-border/50 mb-8">
                             <div className="space-y-1">
                                 <h3 className="text-[11px] font-semibold text-brand">Sual-Cavab Qurucusu</h3>
                                 <p className="text-[11px] text-muted font-semibold ">Test tapşırıqlarını buradan idarə edin</p>
@@ -718,13 +718,13 @@ export const Homework: React.FC<HomeworkProps> = ({ user }) => {
                                 })}
                                 className="flex items-center gap-3 px-4 py-2.5 bg-brand text-white rounded-2xl text-[11px] font-semibold transition-all group"
                             >
-                                <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" /> Sual Əlavə Et
+                                <Plus className="w-4 h-4 transition-transform" /> Sual Əlavə Et
                             </button>
                         </div>
                         
                         <div className="space-y-10">
                             {newHw.questions.map((q, qIdx) => (
-                                <div key={q.id} className="p-10 bg-white rounded-2xl border border-border/50 space-y-8 shadow-sm hover:shadow-md transition-shadow">
+                                <div key={q.id} className="p-10 bg-white rounded-2xl border border-border/50 space-y-8 shadow-sm transition-shadow">
                                     <div className="flex justify-between items-start gap-8">
                                         <div className="flex-1 space-y-4">
                                             <div className="flex items-center gap-3">
@@ -899,7 +899,7 @@ export const Homework: React.FC<HomeworkProps> = ({ user }) => {
                         </div>
                         
                         <div className="space-y-1.5">
-                            <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-tight">{hw.title}</h3>
+                            <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors leading-tight">{hw.title}</h3>
                             <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed line-clamp-2 max-w-2xl">{hw.description}</p>
                             
                             {hw.imageUrl && (
@@ -934,7 +934,7 @@ export const Homework: React.FC<HomeworkProps> = ({ user }) => {
                                     {t.done}: <span className="text-brand text-lg ml-1">{totalSubs}</span>
                                 </div>
                                 {pendingSubs > 0 && (
-                                    <div className="text-[11px] font-semibold text-amber-600 bg-amber-50 px-4 py-1.5 rounded-full border border-amber-100 animate-pulse">
+                                    <div className="text-[11px] font-semibold text-amber-600 bg-amber-50 px-4 py-1.5 rounded-full border border-amber-100">
                                         {pendingSubs} {t.not_done}
                                     </div>
                                 )}
@@ -971,7 +971,7 @@ export const Homework: React.FC<HomeworkProps> = ({ user }) => {
                             ) : (
                                 <button 
                                     onClick={() => user.role === 'teacher' ? setViewingSubmissionsFor(hw) : setShowSubmitModal(hw)} 
-                                    className="w-full md:w-auto px-12 py-5 bg-brand text-white rounded-2xl text-[11px] font-semibold hover:scale-[1.02] transition-all "
+                                    className="w-full md:w-auto px-12 py-5 bg-brand text-white rounded-2xl text-[11px] font-semibold transition-all "
                                 >
                                     {user.role === 'teacher' ? t.read : t.send}
                                 </button>
@@ -990,12 +990,12 @@ export const Homework: React.FC<HomeworkProps> = ({ user }) => {
 
       {/* CONGRATULATE MODAL */}
       {showCongratulateModal && (
-          <div className="fixed inset-0 z-[700] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-reveal">
+          <div className="fixed inset-0 z-[700] flex items-center justify-center p-4 bg-slate-900/40 animate-reveal">
               <div className="bg-white w-full max-w-md rounded-2xl shadow-md border border-border/50 overflow-hidden">
                   <div className="p-10 bg-amber-500 text-white flex justify-between items-center">
                       <div className="flex items-center gap-4">
                           <div className="p-3 bg-white/10 rounded-2xl">
-                              <Sparkles className="w-6 h-6" />
+                              <Bookmark className="w-6 h-6" />
                           </div>
                           <h2 className="text-2xl font-semibold tracking-tight ">Təbrik Məktubu</h2>
                       </div>

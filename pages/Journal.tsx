@@ -188,7 +188,7 @@ export const Journal: React.FC<JournalV2Props> = ({ currentUser }) => {
                         <motion.div 
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                            className="absolute inset-0 bg-slate-900/40"
                             onClick={() => setSelectedMarkInfo(null)}
                         />
                         <motion.div 
@@ -203,7 +203,7 @@ export const Journal: React.FC<JournalV2Props> = ({ currentUser }) => {
                                 <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{selectedMarkInfo.subName}</h3>
                                 <p className="text-[11px] text-neutral-500 tabular-nums">{selectedMarkInfo.date}</p>
                             </div>
-                            <div className="text-3xl font-semibold tabular-nums text-indigo-600 dark:text-indigo-400 py-2">
+                            <div className="text-3xl font-semibold tabular-nums text-brand-600 dark:text-brand-400 py-2">
                                 {selectedMarkInfo.mark}
                             </div>
                             <button 
@@ -218,8 +218,8 @@ export const Journal: React.FC<JournalV2Props> = ({ currentUser }) => {
                 
                 <header className="flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="flex items-center gap-4">
-                        <div className="p-2.5 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl">
-                            <ClipboardList className="w-5 h-5 text-indigo-600" />
+                        <div className="p-2.5 bg-brand-50 dark:bg-brand-950/40 rounded-xl">
+                            <ClipboardList className="w-5 h-5 text-brand-600" />
                         </div>
                         <div>
                             <h1 className="text-xl font-semibold tracking-tight text-text">Mənim Jurnalım</h1>
@@ -229,7 +229,7 @@ export const Journal: React.FC<JournalV2Props> = ({ currentUser }) => {
                             </div>
                         </div>
                     </div>
-                    {loading && <div className="flex items-center gap-2 text-[11px] font-semibold text-brand animate-pulse">Yüklənir...</div>}
+                    {loading && <div className="flex items-center gap-2 text-[11px] font-semibold text-brand">Yüklənir...</div>}
                 </header>
 
                 <div className="bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 rounded-2xl  overflow-hidden">
@@ -278,7 +278,7 @@ export const Journal: React.FC<JournalV2Props> = ({ currentUser }) => {
                                                                 date: e.date,
                                                                 mark: e.mark
                                                             })}
-                                                            className={`w-7 h-7 rounded-xl flex items-center justify-center text-[11px] font-semibold border border-border/50 cursor-pointer hover:scale-110 transition-all ${e.mark === '5' ? 'bg-green-50 text-green-600' : e.mark === '4' ? 'bg-indigo-50 text-indigo-600' : e.mark === 'q' ? 'bg-red-50 text-red-600' : 'bg-slate-50 text-text'}`}
+                                                            className={`w-7 h-7 rounded-xl flex items-center justify-center text-[11px] font-semibold border border-border/50 cursor-pointer transition-all ${e.mark === '5' ? 'bg-green-50 text-green-600' : e.mark === '4' ? 'bg-brand-50 text-brand-600' : e.mark === 'q' ? 'bg-red-50 text-red-600' : 'bg-slate-50 text-text'}`}
                                                         >
                                                             {e.mark || '·'}
                                                         </span>
@@ -329,7 +329,7 @@ export const Journal: React.FC<JournalV2Props> = ({ currentUser }) => {
                     <motion.div 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                        className="absolute inset-0 bg-slate-900/40"
                         onClick={() => setSelectedMarkInfo(null)}
                     />
                     <motion.div 
@@ -344,7 +344,7 @@ export const Journal: React.FC<JournalV2Props> = ({ currentUser }) => {
                             <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{selectedMarkInfo.subName}</h3>
                             <p className="text-[11px] text-neutral-500 tabular-nums">{selectedMarkInfo.date}</p>
                         </div>
-                        <div className="text-3xl font-semibold tabular-nums text-indigo-600 dark:text-indigo-400 py-2">
+                        <div className="text-3xl font-semibold tabular-nums text-brand-600 dark:text-brand-400 py-2">
                             {selectedMarkInfo.mark}
                         </div>
                         <button 
@@ -359,8 +359,8 @@ export const Journal: React.FC<JournalV2Props> = ({ currentUser }) => {
 
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div className="flex items-center gap-4">
-                    <div className="p-2.5 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl">
-                        <ClipboardList className="w-5 h-5 text-indigo-600" />
+                    <div className="p-2.5 bg-brand-50 dark:bg-brand-950/40 rounded-xl">
+                        <ClipboardList className="w-5 h-5 text-brand-600" />
                     </div>
                     <div>
                         <h1 className="text-xl font-semibold tracking-tight text-text">Elektron Jurnal</h1>
@@ -508,7 +508,7 @@ export const Journal: React.FC<JournalV2Props> = ({ currentUser }) => {
                                                         <div className="relative">
                                                             <div 
                                                                 onClick={() => setEditingCell(isEditing ? null : {sid: s.uid, type, date: sub.id})}
-                                                                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer ${marks.length > 0 ? 'bg-brand text-white shadow-md' : 'border border-dashed border-border/60 text-slate-300 hover:border-brand/40'}`}
+                                                                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer ${marks.length > 0 ? 'bg-brand text-white' : 'border border-dashed border-border/60 text-slate-300 hover:border-brand/40'}`}
                                                             >
                                                                 {marks.map(m => <span key={m.id} className="text-[11px] font-semibold">{m.mark}</span>)}
                                                                 {marks.length === 0 && <span className="text-[11px] font-semibold">?</span>}
@@ -601,7 +601,7 @@ export const Journal: React.FC<JournalV2Props> = ({ currentUser }) => {
                         <table className="w-full text-left border-collapse min-w-[1200px]">
                             <thead>
                                 <tr className="bg-muted/5">
-                                    <th className="sticky left-0 z-20 bg-surface/95 backdrop-blur-sm p-6 text-[11px] font-semibold text-brand border-b border-border shadow-[5px_0_10px_-5px_rgba(0,0,0,0.1)]">
+                                    <th className="sticky left-0 z-20 bg-surface/95 p-6 text-[11px] font-semibold text-brand border-b border-border">
                                         Şagird
                                     </th>
                                     {dates.map((date) => (
@@ -617,7 +617,7 @@ export const Journal: React.FC<JournalV2Props> = ({ currentUser }) => {
                             <tbody className="divide-y divide-border">
                                 {filteredStudents.map((s) => (
                                     <tr key={s.uid} className={`hover:bg-brand/[0.02] transition-colors ${s.uid === auth.currentUser?.uid ? 'bg-brand/[0.03]' : ''}`}>
-                                        <td className="sticky left-0 z-10 bg-surface/95 backdrop-blur-sm p-6 border-r border-border/50 shadow-[5px_0_10px_-5px_rgba(0,0,0,0.1)]">
+                                        <td className="sticky left-0 z-10 bg-surface/95 p-6 border-r border-border/50">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-9 h-9 rounded-xl bg-brand/10 flex items-center justify-center text-[11px] font-semibold text-brand shrink-0">
                                                     {s.name.charAt(0)}
@@ -642,7 +642,7 @@ export const Journal: React.FC<JournalV2Props> = ({ currentUser }) => {
                                                                  onClick={() => setEditingCell(isEditing ? null : {sid: s.uid, type: 'daily', date})}>
                                                                 {cellMarks.map((m, idx) => (
                                                                     <React.Fragment key={m.id}>
-                                                                        <span className={`w-6 h-6 rounded-xl flex items-center justify-center text-[11px] font-semibold shadow-sm border border-border/20 ${m.mark === '5' ? 'bg-green-50 text-green-600' : m.mark === '+' ? 'bg-indigo-50 text-indigo-600' : m.mark === '-' || m.mark === 'q' ? 'bg-red-50 text-red-600' : 'bg-slate-50 text-text'}`}>
+                                                                        <span className={`w-6 h-6 rounded-xl flex items-center justify-center text-[11px] font-semibold shadow-sm border border-border/20 ${m.mark === '5' ? 'bg-green-50 text-green-600' : m.mark === '+' ? 'bg-brand-50 text-brand-600' : m.mark === '-' || m.mark === 'q' ? 'bg-red-50 text-red-600' : 'bg-slate-50 text-text'}`}>
                                                                             {m.mark}
                                                                         </span>
                                                                         {idx < cellMarks.length - 1 && <span className="text-[11px] text-slate-200">/</span>}
@@ -708,7 +708,7 @@ export const Journal: React.FC<JournalV2Props> = ({ currentUser }) => {
                                                         >
                                                             {cellMarks.map((m, idx) => (
                                                                 <React.Fragment key={m.id}>
-                                                                    <span className={`w-6 h-6 rounded-xl flex items-center justify-center text-[11px] font-semibold shadow-sm border border-border/20 ${m.mark === '5' ? 'bg-green-50 text-green-600' : m.mark === '+' ? 'bg-indigo-50 text-indigo-600' : m.mark === '-' || m.mark === 'q' ? 'bg-red-50 text-red-600' : 'bg-slate-50 text-text'}`}>
+                                                                    <span className={`w-6 h-6 rounded-xl flex items-center justify-center text-[11px] font-semibold shadow-sm border border-border/20 ${m.mark === '5' ? 'bg-green-50 text-green-600' : m.mark === '+' ? 'bg-brand-50 text-brand-600' : m.mark === '-' || m.mark === 'q' ? 'bg-red-50 text-red-600' : 'bg-slate-50 text-text'}`}>
                                                                         {m.mark}
                                                                     </span>
                                                                     {idx < cellMarks.length - 1 && <span className="text-[11px] text-slate-200">/</span>}
@@ -732,7 +732,7 @@ export const Journal: React.FC<JournalV2Props> = ({ currentUser }) => {
                                                         <div className="relative">
                                                             <div 
                                                                 onClick={() => setEditingCell(isEditing ? null : {sid: s.uid, type, date: 'summary'})}
-                                                                className={`w-12 h-12 rounded-2xl flex flex-wrap items-center justify-center gap-0.5 p-1 transition-all cursor-pointer ${cellMarks.length > 0 ? 'bg-brand text-white shadow-md' : 'border-2 border-dashed border-border text-slate-300 hover:border-brand/40'}`}
+                                                                className={`w-12 h-12 rounded-2xl flex flex-wrap items-center justify-center gap-0.5 p-1 transition-all cursor-pointer ${cellMarks.length > 0 ? 'bg-brand text-white' : 'border-2 border-dashed border-border text-slate-300 hover:border-brand/40'}`}
                                                             >
                                                                 {cellMarks.map((m, idx) => (
                                                                     <React.Fragment key={m.id}>
@@ -749,7 +749,7 @@ export const Journal: React.FC<JournalV2Props> = ({ currentUser }) => {
                                                                         initial={{ opacity: 0, scale: 0.95, y: filteredStudents.indexOf(s) < 2 ? -10 : 10 }}
                                                                         animate={{ opacity: 1, scale: 1, y: 0 }}
                                                                         exit={{ opacity: 0, scale: 0.95, y: filteredStudents.indexOf(s) < 2 ? -10 : 10 }}
-                                                                        className={`absolute ${filteredStudents.indexOf(s) < 2 ? 'top-full mt-3' : 'bottom-full mb-3'} right-0 z-50 bg-surface border border-border shadow-[0_20px_50px_rgba(0,0,0,0.2)] rounded-2xl p-4 flex flex-col gap-3 min-w-[200px]`}
+                                                                        className={`absolute ${filteredStudents.indexOf(s) < 2 ? 'top-full mt-3' : 'bottom-full mb-3'} right-0 z-50 bg-surface border border-border rounded-2xl p-4 flex flex-col gap-3 min-w-[200px]`}
                                                                     >
                                                                         <div className="text-center pb-2 border-b border-border">
                                                                             <p className="text-[11px] font-semibold text-brand ">Xülasə Qiymət</p>

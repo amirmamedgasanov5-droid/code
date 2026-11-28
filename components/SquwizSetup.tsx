@@ -139,14 +139,14 @@ export const SquwizSetup: React.FC<SquwizSetupProps> = ({ onComplete }) => {
                             <button 
                                 type="button" 
                                 onClick={() => setRole('student')} 
-                                className={`py-4 text-[11px] font-semibold rounded-2xl border transition-all ${role === 'student' ? 'bg-brand text-white border-brand shadow-md' : 'border-border text-muted hover:border-brand/20'}`}
+                                className={`py-4 text-[11px] font-semibold rounded-2xl border transition-all ${role === 'student' ? 'bg-brand text-white border-brand' : 'border-border text-muted hover:border-brand/20'}`}
                             >
                                 TƏLƏBƏ
                             </button>
                             <button 
                                 type="button" 
                                 onClick={() => setRole('teacher')} 
-                                className={`py-4 text-[11px] font-semibold rounded-2xl border transition-all ${role === 'teacher' ? 'bg-brand text-white border-brand shadow-md' : 'border-border text-muted hover:border-brand/20'}`}
+                                className={`py-4 text-[11px] font-semibold rounded-2xl border transition-all ${role === 'teacher' ? 'bg-brand text-white border-brand' : 'border-border text-muted hover:border-brand/20'}`}
                             >
                                 MÜƏLLİM
                             </button>
@@ -172,7 +172,7 @@ export const SquwizSetup: React.FC<SquwizSetupProps> = ({ onComplete }) => {
                     <button 
                         type="submit" 
                         disabled={loading || !firstName.trim() || !lastName.trim() || !email.trim()} 
-                        className="w-full bg-brand text-white py-5 rounded-2xl font-semibold text-[11px] shadow-md hover:opacity-95 transition-all flex items-center justify-center gap-3"
+                        className="w-full bg-brand text-white py-5 rounded-2xl font-semibold text-[11px] hover:opacity-95 transition-all flex items-center justify-center gap-3"
                     >
                         {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                             <>

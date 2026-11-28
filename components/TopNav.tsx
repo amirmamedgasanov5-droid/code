@@ -1,3 +1,4 @@
+import { Logo } from './Logo';
 import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { LogOut, ChevronDown } from 'lucide-react';
@@ -39,8 +40,8 @@ export const TopNav: React.FC<Props> = ({ user, onLogout }) => {
     <header className="topnav hidden lg:block fixed top-0 inset-x-0 z-[100]">
       <div className="max-w-[1080px] mx-auto px-8 h-[84px] flex items-center justify-between">
         <NavLink to="/" className="flex items-center gap-3">
-          <span className="w-9 h-9 rounded-full bg-neutral-900 text-white flex items-center justify-center text-sm">N</span>
-          <span className="text-[17px] tracking-tight text-text">Nəsihətlər</span>
+          <Logo className="w-9 h-9" />
+          <span className="text-[17px] tracking-tight text-text">İsnad</span>
         </NavLink>
 
         <nav className="flex items-center gap-7">

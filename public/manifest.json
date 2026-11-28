@@ -1,18 +1,14 @@
 {
-  "short_name": "Nəsihətlər",
-  "name": "Nəsihətlər Mədrəsəsi",
-  "description": "Nəsihətlər Mədrəsəsi platforması üçün rəsmi tətbiq.",
+  "short_name": "İsnad",
+  "name": "İsnad Mədrəsəsi",
+  "description": "İsnad onlayn mədrəsəsinin rəsmi platforması.",
   "scope": "./",
   "icons": [
-    {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ],
   "start_url": "./",
   "display": "standalone",
-  "theme_color": "#4f46e5",
-  "background_color": "#f6f7fb"
+  "theme_color": "#2f5224",
+  "background_color": "#f5f5f2"
 }

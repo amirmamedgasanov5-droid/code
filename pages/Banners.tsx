@@ -9,7 +9,7 @@ import { handleFirestoreError, OperationType } from '../src/utils/firestoreError
 import { Toast, ToastType } from '../components/Toast';
 
 const TONES: { id: Banner['tone']; label: string; swatch: string }[] = [
-  { id: 'indigo', label: 'İndiqo', swatch: 'bg-indigo-500' },
+  { id: 'indigo', label: 'İndiqo', swatch: 'bg-brand-500' },
   { id: 'slate', label: 'Boz', swatch: 'bg-slate-500' },
   { id: 'emerald', label: 'Yaşıl', swatch: 'bg-emerald-500' },
   { id: 'rose', label: 'Qırmızı', swatch: 'bg-rose-500' },
@@ -103,7 +103,7 @@ export const Banners: React.FC<{ user: User }> = ({ user }) => {
   };
 
   const input =
-    'w-full px-3.5 py-2.5 text-sm bg-surface border border-border rounded-xl outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15';
+    'w-full px-3.5 py-2.5 text-sm bg-surface border border-border rounded-xl outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15';
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-16">
@@ -141,7 +141,7 @@ export const Banners: React.FC<{ user: User }> = ({ user }) => {
             <div className="flex items-center gap-2">
               <input type="file" accept="image/*" id="banner-file" className="hidden" onChange={e => setFile(e.target.files?.[0] || null)} />
               <label htmlFor="banner-file" className="btn-secondary cursor-pointer flex-1 min-w-0">
-                <ImageIcon className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                <ImageIcon className="w-3.5 h-3.5 text-brand-600 shrink-0" />
                 <span className="truncate">{file ? file.name : 'və ya şəkil yüklə'}</span>
               </label>
               {file && (
@@ -162,7 +162,7 @@ export const Banners: React.FC<{ user: User }> = ({ user }) => {
                 type="button"
                 onClick={() => setForm({ ...form, tone: t.id })}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs transition-colors ${
-                  form.tone === t.id ? 'border-indigo-600 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300' : 'border-border text-muted hover:text-text'
+                  form.tone === t.id ? 'border-brand-600 bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300' : 'border-border text-muted hover:text-text'
                 }`}
               >
                 <span className={`w-2.5 h-2.5 rounded-full ${t.swatch}`} />
@@ -182,11 +182,11 @@ export const Banners: React.FC<{ user: User }> = ({ user }) => {
 
       {loading ? (
         <div className="py-16 flex justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+          <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
         </div>
       ) : banners.length === 0 ? (
         <div className="card text-center py-14">
-          <Megaphone className="w-8 h-8 text-indigo-300 mx-auto mb-3" />
+          <Megaphone className="w-8 h-8 text-brand-300 mx-auto mb-3" />
           <p className="text-sm text-muted">Hələ banner yoxdur. «Yeni banner» ilə ilkini əlavə edin.</p>
         </div>
       ) : (

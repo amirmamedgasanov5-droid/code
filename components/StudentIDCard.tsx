@@ -1,3 +1,4 @@
+import { Logo } from './Logo';
 import React, { useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import html2canvas from 'html2canvas';
@@ -21,7 +22,7 @@ export const StudentIDCard: React.FC<StudentIDCardProps> = ({ user, className = 
   const verificationCode = `VER-${rawId.slice(0, 6).toUpperCase()}-${idNum}`;
 
   const qrData = JSON.stringify({
-    institution: 'Nəsihətlər Mədrəsəsi',
+    institution: 'İsnad Mədrəsəsi',
     type: 'Student ID',
     serial,
     code: verificationCode,
@@ -74,11 +75,11 @@ export const StudentIDCard: React.FC<StudentIDCardProps> = ({ user, className = 
     <div className={`space-y-4 ${className}`}>
       <div className="w-full max-w-[460px] mx-auto">
         <div className={isFlipped ? 'hidden' : 'block'}>
-          <div ref={frontRef} className={`${cardBase} bg-indigo-700 text-white`}>
+          <div ref={frontRef} className={`${cardBase} bg-brand-700 text-white`}>
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-[11px] font-semibold tracking-wide">Nəsihətlər Mədrəsəsi</div>
-                <div className="text-[11px] text-indigo-200">Tələbə vəsiqəsi</div>
+                <div className="flex items-center gap-2"><span className="w-6 h-6 rounded-md bg-white flex items-center justify-center"><Logo className="w-4.5 h-4.5" /></span><span className="text-[11px] font-semibold tracking-wide">İsnad Mədrəsəsi</span></div>
+                <div className="text-[11px] text-brand-200">Tələbə vəsiqəsi</div>
               </div>
               <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/15">Aktiv</span>
             </div>
@@ -93,12 +94,12 @@ export const StudentIDCard: React.FC<StudentIDCardProps> = ({ user, className = 
               </div>
               <div className="min-w-0 space-y-1">
                 <h3 className="text-base font-semibold leading-tight break-words">{user.name}</h3>
-                {user.className && <div className="text-[11px] text-indigo-200">Sinif: {user.className}</div>}
-                {user.username && <div className="text-[11px] text-indigo-200">@{user.username}</div>}
+                {user.className && <div className="text-[11px] text-brand-200">Sinif: {user.className}</div>}
+                {user.username && <div className="text-[11px] text-brand-200">@{user.username}</div>}
               </div>
             </div>
 
-            <div className="flex items-end justify-between text-[11px] text-indigo-200">
+            <div className="flex items-end justify-between text-[11px] text-brand-200">
               <span className="tabular-nums">{serial}</span>
               <span>2026 / 2027</span>
             </div>
@@ -108,7 +109,7 @@ export const StudentIDCard: React.FC<StudentIDCardProps> = ({ user, className = 
         <div className={isFlipped ? 'block' : 'hidden'}>
           <div ref={backRef} className={`${cardBase} bg-white text-slate-900 border border-slate-200`}>
             <div className="flex items-center justify-between text-[11px] text-slate-500">
-              <span className="font-semibold text-slate-800">Nəsihətlər Mədrəsəsi</span>
+              <span className="font-semibold text-slate-800">İsnad Mədrəsəsi</span>
               <span className="tabular-nums">{serial}</span>
             </div>
             <div className="flex items-center gap-4">

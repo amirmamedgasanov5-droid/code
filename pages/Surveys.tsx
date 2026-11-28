@@ -148,14 +148,14 @@ export const Surveys: React.FC<SurveysProps> = ({ user }) => {
             initial={{ opacity: 0, height: 0, overflow: 'hidden' }} 
             animate={{ opacity: 1, height: 'auto', overflow: 'visible' }} 
             exit={{ opacity: 0, height: 0, overflow: 'hidden' }} 
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 space-y-4 "
           >
             <div className="space-y-3">
               <div className="space-y-1">
                 <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">Sorğu Başlığı</label>
                 <input 
-                  className="w-full bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl p-2 text-xs font-medium outline-none focus:border-indigo-500 transition-colors text-neutral-900 dark:text-neutral-100" 
+                  className="w-full bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl p-2 text-xs font-medium outline-none focus:border-brand-500 transition-colors text-neutral-900 dark:text-neutral-100" 
                   placeholder="Məsələn: Tədris keyfiyyətinin qiymətləndirilməsi" 
                   value={newSurvey.title} 
                   onChange={e => setNewSurvey({...newSurvey, title: e.target.value})} 
@@ -164,7 +164,7 @@ export const Surveys: React.FC<SurveysProps> = ({ user }) => {
               <div className="space-y-1">
                 <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">Təsvir</label>
                 <textarea 
-                  className="w-full bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl p-2 text-xs font-normal outline-none focus:border-indigo-500 transition-colors text-neutral-900 dark:text-neutral-100 resize-none" 
+                  className="w-full bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800 rounded-xl p-2 text-xs font-normal outline-none focus:border-brand-500 transition-colors text-neutral-900 dark:text-neutral-100 resize-none" 
                   placeholder="Sorğunun məqsədi və qeydlər..." 
                   rows={2} 
                   value={newSurvey.description} 
@@ -324,7 +324,7 @@ export const Surveys: React.FC<SurveysProps> = ({ user }) => {
                           {s.title}
                         </h3>
                         {s.mandatory && (
-                          <span className="text-[11px] tabular-nums px-1.5 py-0.2 rounded bg-indigo-600 text-white">
+                          <span className="text-[11px] tabular-nums px-1.5 py-0.2 rounded bg-brand-600 text-white">
                             Məcburi
                           </span>
                         )}
@@ -348,7 +348,7 @@ export const Surveys: React.FC<SurveysProps> = ({ user }) => {
                           onClick={() => toggleStatus(s.id, s.active)}
                           className={`px-2 py-1 rounded text-xs tabular-nums transition-colors cursor-pointer border ${
                             s.active 
-                              ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-400 dark:border-indigo-900/40' 
+                              ? 'bg-brand-50 text-brand-700 border-brand-200 dark:bg-brand-950/40 dark:text-brand-400 dark:border-brand-900/40' 
                               : 'bg-neutral-100 text-neutral-500 border-neutral-200 dark:bg-neutral-800 dark:border-neutral-700'
                           }`}
                         >
@@ -373,7 +373,7 @@ export const Surveys: React.FC<SurveysProps> = ({ user }) => {
                     ) : (
                       <>
                         {isAnswered ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/40">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-900/40">
                             <CheckCircle2 className="w-3 h-3" /> Tamamlanıb
                           </span>
                         ) : s.active ? (
@@ -399,7 +399,7 @@ export const Surveys: React.FC<SurveysProps> = ({ user }) => {
                         initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
                         animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
                         exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                        transition={{ duration: 0.18, ease: "easeOut" }}
+                        transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
                         className="mt-4 pt-4 border-t border-neutral-200/60 dark:border-neutral-800/60 space-y-3"
                       >
                         <div className="flex items-center justify-between">

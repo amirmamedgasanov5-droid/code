@@ -5,7 +5,7 @@ import { db } from '../firebase';
 import { collection, query, where, getDocs, addDoc, onSnapshot } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../src/utils/firestoreError';
 import { User, Survey, SurveyResponse } from '../types';
-import { CheckCircle2, ClipboardList, Loader2, Send, Sparkles, X } from 'lucide-react';
+import { CheckCircle2, ClipboardList, Loader2, Send, Bookmark, X } from 'lucide-react';
 import { Toast } from './Toast';
 
 interface SurveyModalProps {
@@ -158,7 +158,7 @@ export const SurveyModal: React.FC<SurveyModalProps> = ({ user }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className={`fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md ${hasMandatoryPending ? '' : 'pointer-events-auto'}`}
+          className={`fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40 ${hasMandatoryPending ? '' : 'pointer-events-auto'}`}
         >
         <motion.div 
           initial={{ scale: 0.9, y: 20 }}
@@ -204,7 +204,7 @@ export const SurveyModal: React.FC<SurveyModalProps> = ({ user }) => {
                     </p>
                   </div>
                 </div>
-                {user.effectsEnabled && <Sparkles className="w-5 h-5 text-slate-900 dark:text-white" />}
+                {user.effectsEnabled && <Bookmark className="w-5 h-5 text-slate-900 dark:text-white" />}
               </div>
 
               <div className="space-y-10 max-h-[50vh] overflow-y-auto custom-scrollbar pr-2">
@@ -223,7 +223,7 @@ export const SurveyModal: React.FC<SurveyModalProps> = ({ user }) => {
                             onClick={() => handleAnswer(q.id, opt)}
                             className={`p-5 rounded-2xl border text-left text-[11px] font-medium transition-all ${
                               answers[q.id] === opt 
-                              ? 'bg-indigo-600 border-indigo-600 text-white' 
+                              ? 'bg-brand-600 border-brand-600 text-white' 
                               : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500 hover:border-slate-200 dark:hover:border-slate-600'
                             }`}
                           >
@@ -246,7 +246,7 @@ export const SurveyModal: React.FC<SurveyModalProps> = ({ user }) => {
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-medium text-xs flex items-center justify-center gap-3 transition-all disabled:opacity-50"
+                className="w-full bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-medium text-xs flex items-center justify-center gap-3 transition-all disabled:opacity-50"
               >
                 {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Send className="w-4 h-4" /> Göndər</>}
               </button>

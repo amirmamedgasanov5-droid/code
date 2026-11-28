@@ -55,14 +55,13 @@ export const BlockedScreen: React.FC<BlockedScreenProps> = ({ user, onLogout }) 
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-slate-950/95 backdrop-blur-xl flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+    <div className="fixed inset-0 z-[9999] bg-slate-950/95 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
       <div className="bg-slate-900 border border-red-500/30 rounded-2xl max-w-lg w-full p-6 sm:p-8 text-center text-white relative overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-300">
         {/* Glow effect */}
-        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-red-600/20 rounded-full blur-3xl pointer-events-none" />
         
         {/* Top Badge */}
         <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-red-950/80 border border-red-500/40 text-red-500 mb-6">
-          <Lock className="w-10 h-10 animate-pulse text-red-400" />
+          <Lock className="w-10 h-10 text-red-400" />
           <div className="absolute -bottom-1 -right-1 bg-red-600 text-white p-1 rounded-full">
             <ShieldAlert className="w-4 h-4" />
           </div>
@@ -135,7 +134,7 @@ export const BlockedScreen: React.FC<BlockedScreenProps> = ({ user, onLogout }) 
               </div>
             </div>
           ) : isExpired ? (
-            <div className="text-xs font-semibold text-indigo-400 p-2 bg-indigo-950/40 border border-indigo-900/40 rounded-xl">
+            <div className="text-xs font-semibold text-brand-400 p-2 bg-brand-950/40 border border-brand-900/40 rounded-xl">
               Blok müddəti başa çatıb. Səhifəni yeniləyərək daxil ola bilərsiniz.
             </div>
           ) : (
@@ -161,7 +160,7 @@ export const BlockedScreen: React.FC<BlockedScreenProps> = ({ user, onLogout }) 
           {isExpired ? (
             <button
               onClick={() => window.location.reload()}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3.5 px-6 rounded-xl text-xs transition-all shadow-md"
+              className="w-full bg-brand-600 hover:bg-brand-500 text-white font-semibold py-3.5 px-6 rounded-xl text-xs transition-all"
             >
               Səhifəni Yenilə
             </button>
@@ -169,7 +168,7 @@ export const BlockedScreen: React.FC<BlockedScreenProps> = ({ user, onLogout }) 
           
           <button
             onClick={onLogout}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3.5 px-6 rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-md"
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3.5 px-6 rounded-xl text-xs transition-all flex items-center justify-center gap-2"
           >
             <LogOut className="w-4 h-4" />
             <span>Hesabdan Çıxış Et</span>

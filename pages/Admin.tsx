@@ -152,13 +152,13 @@ export const Admin: React.FC<{ user: User }> = ({ user }) => {
       const settingsRef = doc(db, 'school_settings', 'main');
       if (!(await getDoc(settingsRef)).exists()) {
         await setDoc(settingsRef, {
-          schoolName: 'Nəsihətlər Mədrəsəsi',
+          schoolName: 'İsnad Mədrəsəsi',
           adminEmail: ADMIN_EMAIL,
           createdAt: new Date().toISOString(),
         });
       }
       await addDoc(collection(db, 'banners'), {
-        title: 'Nəsihətlər Mədrəsəsinə xoş gəlmisiniz',
+        title: 'İsnad Mədrəsəsinə xoş gəlmisiniz',
         text: 'Yeni tədris ilində hamıya uğurlar. Bu banneri «Bannerlər» bölməsindən dəyişə və ya silə bilərsiniz.',
         imageUrl: '',
         linkUrl: '',
@@ -192,7 +192,7 @@ export const Admin: React.FC<{ user: User }> = ({ user }) => {
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-border">
         <div>
-          <div className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400">
+          <div className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 dark:text-brand-400">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>Yalnız idarəçi</span>
           </div>
@@ -222,18 +222,18 @@ export const Admin: React.FC<{ user: User }> = ({ user }) => {
       {requests.length > 0 && filter !== 'requests' && (
         <button
           onClick={() => setFilter('requests')}
-          className="w-full text-left card !p-4 flex items-center gap-3 border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/20"
+          className="w-full text-left card !p-4 flex items-center gap-3 border-brand-200 dark:border-brand-800 bg-brand-50/50 dark:bg-brand-950/20"
         >
-          <UserCheck className="w-4 h-4 text-indigo-600" />
+          <UserCheck className="w-4 h-4 text-brand-600" />
           <span className="text-sm text-text">{requests.length} nəfər müəllim olmaq istəyir. Baxmaq üçün klikləyin.</span>
         </button>
       )}
 
       {lastCode && (
-        <div className="card !p-5 border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="card !p-5 border-brand-200 dark:border-brand-800 bg-brand-50/50 dark:bg-brand-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <p className="text-xs text-muted">{lastCode.student} üçün valideyn kodu (bir dəfəlik):</p>
-            <p className="text-2xl font-semibold tracking-[0.3em] text-indigo-700 dark:text-indigo-300 mt-1 select-all">{lastCode.code}</p>
+            <p className="text-2xl font-semibold tracking-[0.3em] text-brand-700 dark:text-brand-300 mt-1 select-all">{lastCode.code}</p>
             <p className="text-[11px] text-muted mt-1">Valideynə verin. O, «Qeydiyyat → Valideyn» bölməsində kodu yazıb özü şifrə təyin edir.</p>
           </div>
           <div className="flex items-center gap-2">
@@ -270,7 +270,7 @@ export const Admin: React.FC<{ user: User }> = ({ user }) => {
               key={t.id}
               onClick={() => setFilter(t.id)}
               className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap border transition-colors ${
-                filter === t.id ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-surface border-border text-muted hover:text-text'
+                filter === t.id ? 'bg-brand-600 border-brand-600 text-white' : 'bg-surface border-border text-muted hover:text-text'
               }`}
             >
               {t.label} <span className="opacity-70">{t.n}</span>
@@ -283,14 +283,14 @@ export const Admin: React.FC<{ user: User }> = ({ user }) => {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Ad, e-poçt və ya istifadəçi adı"
-            className="pl-9 pr-3 py-2 text-xs bg-surface border border-border rounded-xl outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 w-full md:w-72"
+            className="pl-9 pr-3 py-2 text-xs bg-surface border border-border rounded-xl outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 w-full md:w-72"
           />
         </div>
       </div>
 
       {loading ? (
         <div className="py-16 flex justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+          <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
         </div>
       ) : (
         <div className="card !p-0 overflow-hidden divide-y divide-border">
@@ -301,13 +301,13 @@ export const Admin: React.FC<{ user: User }> = ({ user }) => {
             return (
               <div key={u.uid} className="px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden">
+                  <div className="w-9 h-9 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden">
                     {u.photoURL || u.avatar ? <img src={u.photoURL || u.avatar} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : (u.name || '?').charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-text truncate">{u.name}</span>
-                      {wantsTeacher && <span className="text-[11px] px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">Müəllim sorğusu</span>}
+                      {wantsTeacher && <span className="text-[11px] px-2 py-0.5 rounded-md bg-brand-100 text-brand-700 dark:bg-brand-950/50 dark:text-brand-300">Müəllim sorğusu</span>}
                       {u.isBlocked && <span className="text-[11px] px-2 py-0.5 rounded-md bg-red-50 text-red-600">Bloklanıb</span>}
                     </div>
                     <div className="text-[11px] text-muted truncate">{u.email}{u.className ? ` · ${u.className}` : ''}{u.username ? ` · @${u.username}` : ''}{u.role === 'parent' && u.childName ? ` · Övlad: ${u.childName}` : ''}</div>
@@ -336,7 +336,7 @@ export const Admin: React.FC<{ user: User }> = ({ user }) => {
                       <button onClick={() => rejectRequest(u)} className="btn-secondary !px-3 !py-1.5">Rədd et</button>
                     </>
                   )}
-                  {isMain && <span className="text-xs text-indigo-600 font-medium px-1">Baş idarəçi</span>}
+                  {isMain && <span className="text-xs text-brand-600 font-medium px-1">Baş idarəçi</span>}
                   <select
                     value={u.role}
                     onChange={e => changeRole(u, e.target.value as Role)}

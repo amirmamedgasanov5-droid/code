@@ -63,7 +63,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
           </div>
           <button 
             onClick={this.handleReset}
-            className="flex items-center gap-2 bg-brand text-white px-8 py-4 rounded-xl font-semibold text-[11px] shadow-md hover:opacity-90 transition-all"
+            className="flex items-center gap-2 bg-brand text-white px-8 py-4 rounded-xl font-semibold text-[11px] hover:opacity-90 transition-all"
           >
             <RefreshCw className="w-4 h-4" />
             Yenidən Yüklə
